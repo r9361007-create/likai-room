@@ -175,6 +175,12 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .est button b{flex:none}
 .est button span{flex:1;text-align:right;color:var(--muted);font-size:12px}
 .est button i{font-style:normal;color:var(--accent);font-weight:700;font-size:16px}
+/* ---------- AR ---------- */
+.ar-box{width:min(560px,100%)}
+.ar-body{padding:12px 20px 16px;overflow:auto}
+#mv{width:100%;height:46dvh;background:var(--surface);border-radius:12px;display:block}
+.ar-go{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:12px 22px;font-size:15px;box-shadow:var(--shadow)}
+#ar-msg{color:var(--ink);font-weight:600}
 /* ---------- 步驟列 ---------- */
 .steps{list-style:none;margin:0 0 12px;padding:0;display:flex;gap:4px;counter-reset:st}
 .steps li{flex:1;font-size:11px;color:#9fbcd1;border-top:3px solid rgba(255,255,255,.2);padding-top:5px;counter-increment:st;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -300,6 +306,7 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
         <button class="btn" id="s-dup">複製</button>
         <button class="btn del" id="s-del">刪除</button>
       </div>
+      <button class="btn pri wide" id="s-ar">用相機擺進客人家（AR）</button>
       <button class="more" id="s-more">更多設定（款式、顏色）<span>▾</span></button>
       <div class="more-body" id="s-more-body">
         <div id="s-opts"></div>
@@ -338,6 +345,18 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
       <div class="ss-foot">
         <label class="chk"><input type="checkbox" id="style-decor" checked> 自動加入風格軟裝（地毯、燈、植栽、掛畫；窗簾到商品手動加）</label>
         <div class="ss-btns"><button class="btn" id="style-back">← 上一頁</button><button class="btn pri" id="style-done">確定，開始擺家具</button></div>
+      </div>
+    </div>
+    <div class="setup" id="ar">
+      <div class="setup-box ar-box">
+        <div class="setup-head"><div><b id="ar-title">用相機擺擺看</b><div class="hint">按下方按鈕開相機，對著地板慢慢移動手機，家具會以實際大小出現</div></div><button class="x" id="ar-x" aria-label="關閉">×</button></div>
+        <div class="ar-body">
+          <model-viewer id="mv" ar ar-modes="webxr quick-look scene-viewer" ar-scale="fixed" ar-placement="floor" camera-controls touch-action="pan-y" shadow-intensity="1" exposure="1.1" interaction-prompt="none">
+            <button slot="ar-button" class="btn pri ar-go" id="ar-go">開啟相機，擺進家裡</button>
+          </model-viewer>
+          <p class="hint" id="ar-msg"></p>
+          <p class="hint">小技巧：先讓手機對著地板左右晃一下，等出現家具再用手指拖曳、兩指旋轉。iPhone 會用內建的 AR，Android 需要支援 Google ARCore 的手機。</p>
+        </div>
       </div>
     </div>
     <div class="setup" id="setup">
@@ -918,6 +937,47 @@ let moreOpen = false; try { moreOpen = localStorage.getItem('likai-room-more') =
 function syncMore() { $('#sel').classList.toggle('open', moreOpen); }
 $('#s-more').onclick = () => { moreOpen = !moreOpen; syncMore(); try { localStorage.setItem('likai-room-more', moreOpen ? '1' : '0'); } catch (e) { } };
 syncMore();
+/* ---------- AR：把選取的家具輸出成 3D 檔，交給 model-viewer 開相機 ---------- */
+let mvLoad = null;
+const loadMV = () => mvLoad ||= import('https://cdn.jsdelivr.net/npm/@google/model-viewer@4.0.0/dist/model-viewer.min.js');
+// 匯出用：換成乾淨的標準材質（原本的材質掛了特殊著色器和自訂資料，匯出器不認得）
+function plainMats(root) {
+  const cache = new Map();
+  root.traverse(o => {
+    o.userData = {};
+    if (!o.isMesh) return;
+    const conv = m => {
+      if (cache.has(m)) return cache.get(m);
+      const n = new THREE.MeshStandardMaterial({ color: m.color ? m.color.clone() : 0xffffff, map: m.map || null, roughness: m.roughness ?? 0.8, metalness: m.metalness ?? 0,
+        transparent: !!m.transparent, opacity: m.opacity ?? 1, side: m.side, emissive: m.emissive ? m.emissive.clone() : 0x000000 });
+      cache.set(m, n); return n;
+    };
+    o.material = Array.isArray(o.material) ? o.material.map(conv) : conv(o.material);
+  });
+}
+async function openAR() {
+  const it = cur(); if (!it) return;
+  const T = PRODUCTS[it.type];
+  $('#ar-title').textContent = `${T.name}：用相機擺擺看`; $('#ar-msg').textContent = '準備 3D 模型中…'; $('#ar-go').hidden = true;
+  $('#ar').classList.add('on'); pushPage('ar');
+  try {
+    await loadMV();
+    const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
+    const root = new THREE.Group(), g = buildModel({ ...it });
+    g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true);   // 公分 → 公尺
+    const glb = await new GLTFExporter().parseAsync(root, { binary: true });
+    const mv = $('#mv'), url = URL.createObjectURL(new Blob([glb], { type: 'model/gltf-binary' }));
+    if (mv.dataset.url) URL.revokeObjectURL(mv.dataset.url);
+    mv.dataset.url = url;
+    const loaded = new Promise((res, rej) => { mv.addEventListener('load', res, { once: true }); mv.addEventListener('error', rej, { once: true }); });
+    mv.src = url; await loaded;
+    $('#ar-go').hidden = !mv.canActivateAR;                     // 電腦或不支援的手機不顯示開相機按鈕
+    $('#ar-msg').textContent = mv.canActivateAR ? `實際尺寸 寬 ${it.w} × 深 ${it.d} × 高 ${it.h} 公分`
+      : '這台裝置不能開 AR 相機。請用手機（iPhone，或支援 Google ARCore 的 Android）打開網站再試。';
+  } catch (e) { $('#ar-msg').textContent = '模型準備失敗，請再試一次（' + (e.message || e.type || e) + '）'; }
+}
+function closeAR(byPop) { $('#ar').classList.remove('on'); if (!byPop) dropPage(); }
+$('#s-ar').onclick = openAR; $('#ar-x').onclick = () => closeAR(false);
 $('#s-rot').onclick = rotate; $('#s-del').onclick = remove; $('#s-dup').onclick = duplicate; $('#s-close').onclick = () => select(null);
 
 /* ================= 手動移動：離牆距離打字、方向鍵 ================= */
@@ -1160,6 +1220,7 @@ function pushPage(m) { if (history.state && history.state.m) history.replaceStat
 function dropPage() { if (history.state && history.state.m) { ignorePop = true; history.back(); } }
 addEventListener('popstate', () => {
   if (ignorePop) { ignorePop = false; return; }
+  if ($('#ar').classList.contains('on')) { closeAR(true); return; }
   if ($('#style').classList.contains('on')) { $('#style').classList.remove('on'); openSetup(setupFrom); }
   else if ($('#setup').classList.contains('on')) setupBack(true);
   else if ($('#quick').classList.contains('on') && project.started) closeQuick(true);
@@ -1377,7 +1438,7 @@ $('#share').onclick = async () => {
 };
 addEventListener('keydown', e => {
   if (e.target.matches('input,select')) return;
-  if ($('#quick').classList.contains('on') || $('#style').classList.contains('on')) return;
+  if ($('#quick').classList.contains('on') || $('#style').classList.contains('on') || $('#ar').classList.contains('on')) return;
   if ($('#setup').classList.contains('on')) { if (e.key === 'Escape') closeSetup(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
   else if (e.key === 'r' || e.key === 'R') rotate();
