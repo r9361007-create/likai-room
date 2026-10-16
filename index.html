@@ -103,6 +103,13 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .dims label{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--muted)}
 .dims input{width:100%;padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;background:#fff;font-size:16px;font-weight:600;color:var(--ink)}
 .dims input:focus{outline:none;border-color:var(--accent)}
+.swatches{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:6px 0 2px}
+.sw-l{font-size:11px;color:var(--muted);margin-right:2px;white-space:nowrap}
+.swatches button{width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:var(--c);padding:0;flex:none}
+.swatches button.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--accent)}
+.swatches button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sw-custom{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--accent);cursor:pointer}
+.sw-custom input{width:24px;height:24px;border:1px solid var(--line);border-radius:50%;padding:0;background:none;cursor:pointer}
 .dims .unit{font-size:12px;color:var(--muted);padding-bottom:9px}
 .opt{display:flex;align-items:center;gap:8px;margin:6px 0}
 .opt label{flex:1;font-size:12px;color:var(--muted)}
@@ -272,6 +279,7 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
         <label>高<input type="text" inputmode="decimal" autocomplete="off" id="s-h"></label>
         <span class="unit">公分</span>
       </div>
+      <div class="swatches" id="s-sw" role="group" aria-label="顏色"></div>
       <div class="movebox">
         <div><div class="hint">離牆距離（公分，可直接打字）</div>
           <div class="gaps" id="s-gaps">
@@ -842,6 +850,26 @@ function select(id, open = false) {
   selId = id; panelOpen = !!id && open; buildSelPanel(); refresh();
   if (id && !open && !tipShown) { tipShown = true; toast('點兩下家具可以修改尺寸、顏色'); }
 }
+// 常用色：窗簾、布料、木作都適用
+const SWATCHES = [['#f5f2ec', '米白'], ['#e8dfd0', '燕麥'], ['#d6c7b2', '奶茶'], ['#c3c7ca', '淺灰'], ['#7d8287', '深灰'],
+  ['#a9b79f', '莫蘭迪綠'], ['#9fb3c8', '霧藍'], ['#c49a6c', '焦糖'], ['#4f5d58', '墨綠'], ['#2b2b2b', '黑']];
+// 這件家具有哪些顏色可以改：款式選項可能會多帶一個（例如布加紗的紗簾顏色）
+function colorLabels(it) {
+  const T = PRODUCTS[it.type], L = { 1: T.c1, 2: T.c2, 3: T.c3 };
+  for (const g of optsOf(T)) { const o = g.list.find(x => x.id === it[g.key]); if (o && 'c3' in o) L[3] = o.c3; }
+  return L;
+}
+function renderSwatches(it) {
+  const L = colorLabels(it), now = String(it.color || '').toLowerCase();
+  $('#s-sw').innerHTML = `<span class="sw-l">${L[1] || '顏色'}</span>` + SWATCHES.map(([c, n]) =>
+    `<button class="${c === now ? 'on' : ''}" data-c="${c}" style="--c:${c}" title="${n}" aria-label="${n}"></button>`).join('')
+    + `<label class="sw-custom" title="自訂顏色"><input type="color" id="s-sw-custom" value="${/^#[0-9a-f]{6}$/i.test(now) ? now : '#ffffff'}"><span>自訂</span></label>`;
+}
+$('#s-sw').addEventListener('click', e => {
+  const b = e.target.closest('[data-c]'); if (!b) return;
+  editSel(it => { it.color = b.dataset.c; }); buildSelPanel();
+});
+$('#s-sw').addEventListener('change', e => { if (e.target.id === 's-sw-custom') { editSel(it => { it.color = e.target.value; }); buildSelPanel(); } });
 function buildSelPanel() {
   const it = cur(); $('#sel').classList.toggle('on', !!it && panelOpen); if (!it) return;
   const T = PRODUCTS[it.type];
@@ -849,8 +877,9 @@ function buildSelPanel() {
   $('#s-w').value = it.w; $('#s-d').value = it.d; $('#s-h').value = it.h;
   let h = '';
   for (const g of optsOf(T)) h += `<div class="opt"><label>${g.label}</label><select data-k="${g.key}">${g.list.map(o => `<option value="${o.id}" ${o.id === it[g.key] ? 'selected' : ''}>${o.name}</option>`).join('')}</select></div>`;
-  for (const [n, k] of [[1, 'color'], [2, 'color2'], [3, 'color3']]) if (T['c' + n]) h += `<div class="opt"><label>${T['c' + n]}</label><input type="color" data-k="${k}" value="${it[k]}"></div>`;
-  $('#s-opts').innerHTML = h;
+  const L = colorLabels(it);
+  for (const [n, k] of [[1, 'color'], [2, 'color2'], [3, 'color3']]) if (L[n]) h += `<div class="opt"><label>${L[n]}</label><input type="color" data-k="${k}" value="${it[k] || '#ffffff'}"></div>`;
+  $('#s-opts').innerHTML = h; renderSwatches(it);
 }
 function renderSel(bad) {
   const it = cur(); if (!it) return;
@@ -861,7 +890,7 @@ function renderSel(bad) {
   $('#s-warn').classList.toggle('on', bad.has(it.id)); $('#s-warn').textContent = bad.get(it.id) || '';
 }
 function editSel(fn) { const it = cur(); if (!it) return; snapshot(); fn(it); makeObj(it); fit(it, false); refresh(); save(); }
-$('#s-opts').addEventListener('change', e => { const k = e.target.dataset.k; if (k) editSel(it => { it[k] = e.target.value; }); });
+$('#s-opts').addEventListener('change', e => { const k = e.target.dataset.k; if (!k) return; editSel(it => { it[k] = e.target.value; }); if (e.target.tagName === 'SELECT') buildSelPanel(); });
 let colorSnap = false;
 $('#s-opts').addEventListener('input', e => {             // 拖曳顏色時即時更新，只記一次復原
   if (e.target.type !== 'color') return; const it = cur(); if (!it) return;
