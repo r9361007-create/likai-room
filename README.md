@@ -2,7 +2,8 @@
 
 莉凱家俱的 3D 空間配置網頁：輸入室內坪數與格局，設定門窗、裝潢風格，把莉凱家俱的沙發、床、餐桌、單椅、茶几擺進房間看看。
 
-- 正式網址：https://likai-room.netlify.app
+- 網址（GitHub Pages，推上 main 就自動更新）：https://r9361007-create.github.io/likai-room/
+- Netlify 版：https://likai-room.netlify.app（要手動拖資料夾上傳）
 - 純前端（Three.js），不需要伺服器，打開 `index.html` 就能用
 
 ## 檔案
