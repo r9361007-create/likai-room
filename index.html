@@ -123,6 +123,8 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
 .est li{display:flex;justify-content:space-between;align-items:baseline;padding:9px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:6px;background:#fff}
 .est li span{color:var(--muted);font-size:12px}
 .quick-foot{justify-content:space-between;gap:10px}
+.quick-foot #q-manual{margin-left:auto}
+.back-foot{justify-content:space-between;gap:10px}
 /* ---------- 手機 ---------- */
 @media (max-width:760px){
   .app{grid-template-columns:minmax(0,1fr);grid-template-rows:56dvh minmax(0,1fr)}
@@ -141,7 +143,8 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
   .addrow{grid-template-columns:repeat(2,1fr)}
   .setup-foot .btn{width:100%;padding:13px 0}
   .quick-body{grid-template-columns:1fr}
-  .quick-foot{flex-direction:column-reverse}
+  .quick-foot,.back-foot{flex-direction:column-reverse}
+  .quick-foot #q-manual{margin-left:0}
 }
 </style>
 <script type="importmap">
@@ -231,6 +234,7 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
           </div>
         </div>
         <div class="setup-foot quick-foot">
+          <button class="btn" id="q-back">← 返回</button>
           <button class="btn" id="q-manual">不知道，我自己輸入</button>
           <button class="btn pri" id="q-go">用這個開始</button>
         </div>
@@ -257,7 +261,7 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
             <p class="hint">位置怎麼量：站在房間裡面對那面牆，從<b>左邊牆角</b>量到門窗邊框。沒有的項目不用加。</p>
           </div>
         </div>
-        <div class="setup-foot"><button class="btn pri" id="setup-done">完成，開始擺家具</button></div>
+        <div class="setup-foot back-foot"><button class="btn" id="setup-back">← 上一頁</button><button class="btn pri" id="setup-done">完成，開始擺家具</button></div>
       </div>
     </div>
     <div class="loading" id="loading">載入 3D 模型中…</div>
@@ -327,10 +331,11 @@ function decode(s) {
   return o;
 }
 // 切換空間
-function switchSpace(i) {
+function switchSpace(i, origin) {
+  const from = project.cur;
   project.cur = i; state = project.spaces[i]; selId = null; undoStack = []; $('#undo').disabled = true;
   rebuildAll(); buildSelPanel(); renderSpaces(); filterLib(); roomSummary(); setView(view === 'top' ? 'top' : view === 'eye' ? 'eye' : 'orbit'); save();
-  if (!state.room.setup) openSetup();
+  if (!state.room.setup) openSetup(origin || { space: from });
 }
 function renderSpaces() {
   $('#spaces').innerHTML = project.spaces.map((s, i) => `<button class="sp ${i === project.cur ? 'on' : ''}" data-i="${i}">${esc(s.name)}<span>${s.items.length}</span></button>`).join('')
@@ -775,10 +780,15 @@ function renderEstimate() {
   $('#q-est').innerHTML = estimate(ping, qVal('q-rooms'), qVal('q-halls'))
     .map(e => `<li><b>${e.name}</b><span>約 ${e.ping} 坪・寬 ${e.w} × 深 ${e.d}</span></li>`).join('');
 }
-function openQuick() { renderEstimate(); $('#quick').classList.add('on'); }
+function openQuick() {
+  renderEstimate(); $('#quick').classList.add('on');
+  $('#q-back').style.display = project.started ? '' : 'none';             // 第一次來沒有上一頁
+  if (project.started) pushPage('quick');
+}
+function closeQuick(byPop) { $('#quick').classList.remove('on'); if (!byPop) dropPage(); }
 function startProject(spaces) {
   project = { cur: 0, started: true, spaces };
-  $('#quick').classList.remove('on'); switchSpace(0);
+  closeQuick(true); switchSpace(0, 'quick');                               // 門窗設定頁會接手這一頁紀錄
 }
 for (const id of ['q-rooms', 'q-halls']) $('#' + id).addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -826,10 +836,31 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
 $('#placed').addEventListener('click', e => { const li = e.target.closest('li'); if (li) select(+li.dataset.id); });
 /* ================= 設定房間（尺寸＋門窗） ================= */
 const OP_COLOR = { window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#b8683a' };
-function openSetup() { $('#setup-title').textContent = `設定${state.name}`; snapshot(); renderOps(); drawPlan(); $('#setup').classList.add('on'); }
+/* ---------- 上一頁：設定視窗、坪數視窗也能用手機的返回鍵關掉 ---------- */
+// setupFrom：'quick' 從坪數頁來、{ space: i } 從另一個空間切過來、'edit' 從「房間」分頁打開
+let setupFrom = 'edit', ignorePop = false;
+// 已經在某個視窗頁（坪數→門窗）就換掉這一頁，不疊新的；從主畫面打開才新增一頁
+function pushPage(m) { if (history.state && history.state.m) history.replaceState({ m }, ''); else history.pushState({ m }, ''); }
+function dropPage() { if (history.state && history.state.m) { ignorePop = true; history.back(); } }
+addEventListener('popstate', () => {
+  if (ignorePop) { ignorePop = false; return; }
+  if ($('#setup').classList.contains('on')) setupBack(true);
+  else if ($('#quick').classList.contains('on') && project.started) closeQuick(true);
+});
+function openSetup(from = 'edit') {
+  setupFrom = typeof from === 'string' || from.space !== project.cur ? from : 'edit';
+  $('#setup-title').textContent = `設定${state.name}`; snapshot(); renderOps(); drawPlan(); $('#setup').classList.add('on'); pushPage('setup');
+}
 function closeSetup() {
-  $('#setup').classList.remove('on'); state.room.setup = true; save(); roomSummary();
+  $('#setup').classList.remove('on'); state.room.setup = true; save(); roomSummary(); dropPage();
   setView(view === 'top' ? 'top' : 'orbit');
+}
+function setupBack(byPop) {
+  $('#setup').classList.remove('on');
+  if (setupFrom === 'quick') { if (!byPop) history.replaceState({ m: 'quick' }, ''); openQuick(); return; }   // 回到坪數、幾房幾廳
+  if (!byPop) dropPage();
+  if (setupFrom.space != null && project.spaces[setupFrom.space]) { switchSpace(setupFrom.space); return; }   // 回到原本的空間（這個空間下次進來還會問）
+  state.room.setup = true; save(); roomSummary();
 }
 function applyRoom() { buildRoom(); for (const it of state.items) fit(it, false); refresh(); drawPlan(); roomSummary(); save(); }
 function roomSummary() {
@@ -878,7 +909,9 @@ for (const k of ['w', 'd', 'h']) $('#r' + k).addEventListener('change', e => {
   e.target.value = state.room[k]; applyRoom(); renderOps();
 });
 $('#setup-done').onclick = closeSetup; $('#setup-x').onclick = closeSetup;
-$('#edit-room').onclick = openSetup;
+$('#setup-back').onclick = () => setupBack(false);
+$('#q-back').onclick = () => closeQuick(false);
+$('#edit-room').onclick = () => openSetup('edit');
 
 // 設定視窗裡的平面示意圖：上方後牆、下方前牆
 function drawPlan() {
