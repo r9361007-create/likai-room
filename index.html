@@ -390,8 +390,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js';
 import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js';
-import { EXTRA_PRODUCTS } from './extra-models.js';
-Object.assign(PRODUCTS, EXTRA_PRODUCTS);                 // 蜂巢簾、穿越簾
+import { registerExtras } from './extra-models.js';
+registerExtras(PRODUCTS);                                // 蜂巢簾、穿越簾、市面常見茶几
 
 const $ = s => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));

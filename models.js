@@ -876,9 +876,11 @@ function buildFloatLSofa(it) { // 懸浮平台 L 型：雙色平台底座＋黑�
   RB(g, aw, armH - pTop, al, 4, w / 2 - aw / 2, pTop + (armH - pTop) / 2, -d / 2 + al / 2, F);
   return mirrorIfLeft(it, g);
 }
+const SHAPES = [opt('rect', '方形'), opt('round', '圓形'), opt('oval', '橢圓形')];
 const BASES = { legs: '四腳', sled: '雪橇腳', x: '交叉腳', panel: '板腳', pedestal: '單柱底座', tulip: '喇叭底座', cross: '十字腳', drum: '實心底座' };
 const baseList = ids => ids.map(id => opt(id, BASES[id]));
 const LEGMATS = [opt('wood', '木頭'), opt('metal', '鐵件')];
+const legMat = it => surfMat(it.legmat === 'metal' ? 'metal' : 'wood', it.color2);
 function tableTop(g, shape, w, d, t, y, m) {
   if (shape === 'oval') return roundedTop(g, w, d, t, y - t / 2, m, Math.min(w, d) / 2 - 0.01); // 橢圓形＝長圓形（兩端半圓）
   if (shape === 'round') { const c = C(g, .5, .5, t, 0, y, 0, m, 64); c.scale.set(w, 1, d); return c; }
@@ -925,6 +927,26 @@ function tableBase(g, base, shape, w, d, lh, M, metal) { // 腳座由地面長�
       : [[w / 2 - 6, d / 2 - 6], [-(w / 2 - 6), d / 2 - 6], [w / 2 - 6, -(d / 2 - 6)], [-(w / 2 - 6), -(d / 2 - 6)]];
     for (const [x, z] of pts) metal ? C(g, 1.2, 1.2, lh, x, lh / 2, z, M, 10) : B(g, th, lh, th, x, lh / 2, z, M);
   }
+}
+const COFFEE_OPTS = [
+  { key: 'shape', label: '桌面形狀', list: SHAPES },
+  { key: 'base', label: '腳座', list: baseList(['legs', 'sled', 'x', 'panel', 'pedestal', 'drum']) },
+  { key: 'legmat', label: '腳材質', list: LEGMATS },
+];
+function buildCoffee(it) {
+  const g = new THREE.Group(), { w, d, h } = it;
+  const t = Math.min(4, h * 0.1), shape = it.shape || 'rect';
+  tableTop(g, shape, w, d, t, h - t / 2, topMat(it));
+  tableBase(g, it.base || 'legs', shape, w, d, h - t, legMat(it), it.legmat === 'metal');
+  return g;
+}
+function buildCoffeeSet(it) { // 組合茶几：一大一小、高低錯落
+  const g = new THREE.Group(), { w, d, h } = it;
+  const bw = w * 0.64, sw = w * 0.46, sd = d * 0.72;
+  const a = buildCoffee({ ...it, w: bw, d, h }), b = buildCoffee({ ...it, w: sw, d: sd, h: h * 0.8 });
+  a.position.set(-w / 2 + bw / 2, 0, 0); b.position.set(w / 2 - sw / 2, 0, d / 2 - sd / 2);
+  g.add(a, b);
+  return g;
 }
 const BAR_BASES = { key: 'base', label: '腳座', list: baseList(['legs', 'sled', 'panel']) };
 const BARROUND_BASES = { key: 'base', label: '腳座', list: baseList(['pedestal', 'tulip', 'cross']) };
@@ -2457,6 +2479,9 @@ TYPES = {
   roman: { sub: '窗簾', generic: true, name: '羅馬簾',     w: 160, d: 9,  h: 170, elev: 70, color: '#c9bfae', color2: '#f1ebe1', c1: '簾布顏色', c2: '上軌顏色', build: buildRoller, opts: ROLLER_OPTS, def: { style: 'roman', cmat: 'linen' }, noHit: true },
   woodblind: { sub: '窗簾', generic: true, name: '木百葉簾',   w: 150, d: 7,  h: 150, elev: 80, color: '#c49a6c', color2: '#c49a6c', c1: '葉片顏色', c2: null, build: buildBlinds, opts: BLIND_OPTS, def: { style: 'wood' }, noHit: true },
   alublind: { sub: '窗簾', generic: true, name: '鋁百葉簾',   w: 150, d: 7,  h: 150, elev: 80, color: '#d9dcdf', color2: '#d9dcdf', c1: '葉片顏色', c2: null, build: buildBlinds, opts: BLIND_OPTS, def: { style: 'alu' }, noHit: true },
+  coffee: { sub: '茶几', generic: true, name: '茶几',       w: 120, d: 60,  h: 42,  color: '#c49a6c', color2: '#222222', c1: '桌面',     c2: '桌腳',     build: buildCoffee, opts: COFFEE_OPTS },
+  coffeeset: { sub: '茶几', generic: true, name: '組合茶几',   w: 130, d: 80,  h: 42,  color: '#e9e4da', color2: '#b08d57', c1: '桌面',     c2: '桌腳',     build: buildCoffeeSet, opts: COFFEE_OPTS, def: { shape: 'round', base: 'legs', legmat: 'metal' } },
+  side: { sub: '茶几', generic: true, name: '小茶几',     w: 45,  d: 45,  h: 55,  color: '#5a3a28', color2: '#222222', c1: '桌面',     c2: '桌腳',     build: buildCoffee, opts: COFFEE_OPTS, def: { shape: 'round', base: 'pedestal', legmat: 'metal' } },
   ownDambo: { sub: '沙發', name: '花瓣沙發', w: 360, d: 156, h: 83.5, color: '#b8a797', color2: '#c4b6a7', color3: '#232b45', c1: '靠背／底座布料', c2: '座墊布料', c3: '抱枕顏色', build: buildDamboSofa, opts: [DAMBO_SIDE_OPT, DAMBO_BEND_OPT, DAMBO_PIL_OPT], def: { side: 'left', bk: 'open', rp: 'on' }, wall: true, own: true },
   ownGetBack: { sub: '沙發', name: 'GET BACK 沙發', w: 381, d: 163, h: 87, color: '#a5623c', color2: '#cfcbc4', color3: '#9a4a2a', c1: '皮革外殼', c2: '座墊／靠背布料', c3: '抱枕顏色', build: buildGetBackSofa, opts: [GETBACK_SIDE_OPT, GETBACK_PIL_OPT], def: { side: 'right', rp: 'on' }, wall: true, own: true },
   ownGermain: { sub: '沙發', name: '聖日耳曼沙發', w: 320, d: 153.5, h: 65, color: '#d9cdb8', color2: '#232325', color3: '#9a9790', c1: '沙發布料', c2: '抱枕顏色', c3: '點綴抱枕', build: buildGermainSofa, opts: [GERMAIN_SIDE_OPT, GERMAIN_PIL_OPT], def: { side: 'left', rp: 'on' }, wall: true, own: true }
