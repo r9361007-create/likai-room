@@ -110,6 +110,76 @@ function legs4(g, w, d, legH, inset, size, m, round = true) {
     else B(g, size, legH, size, x, legH / 2, z, m);
   }
 }
+const SOFA_STYLES = {
+  modern:  { name: '現代方正', legH: 10, legSize: 5, aw: 18, armH: 0.78, armR: 5, seat: 45, cushT: 12, cushR: 5, backT: 20, backR: 4, backCush: true },
+  nordic:  { name: '北歐細腳', legH: 20, legSize: 4.5, taper: true, aw: 9, armH: 0.7, armR: 3, seat: 46, cushT: 11, cushR: 4, backT: 12, backR: 3, backCush: true, oneSeat: true, bcT: 11 },
+  classic: { name: '美式捲扶手', legH: 6, legSize: 7, bun: true, aw: 22, armH: 0.8, armR: 4, roll: true, seat: 47, cushT: 14, cushR: 7, backT: 22, backR: 6, backCush: true, bcT: 17 },
+  chester: { name: '皮革拉扣', legH: 7, legSize: 6, bun: true, aw: 22, armFull: true, armR: 6, seat: 44, cushT: 10, cushR: 3, backT: 24, backR: 6, tufted: true, rough: 0.45 },
+  low:     { name: '低矮模組', legH: 0, aw: 14, armH: 0.55, armR: 6, seat: 38, cushT: 16, cushR: 7, backT: 14, backR: 5, backCush: true, bcT: 20, pillows: true, c2: '抱枕顏色' },
+};
+const SOFA_OPTS = [{ key: 'style', label: '款式', list: Object.entries(SOFA_STYLES).map(([id, v]) => ({ id, name: v.name, ...(v.c2 ? { c2: v.c2 } : {}) })) }];
+function buildSofa(it) {
+  const st = SOFA_STYLES[it.style] || SOFA_STYLES.modern;
+  const g = new THREE.Group(), { w, d, h } = it;
+  const F = fabMat(it), L = mat(it.color2, 0.55);
+  const legH = st.legH ? Math.min(st.legH, h * 0.25) : 0;
+  const seatTop = Math.min(st.seat, h * 0.62), baseTop = seatTop - st.cushT;
+  const aw = Math.min(st.aw, w * 0.14);
+  const bt = Math.min(st.backT, d * 0.25);
+  const rollR = st.roll ? aw * 0.62 : 0;
+  const armH = st.armFull ? h : Math.min(h * st.armH, 64);
+  // 腳
+  if (legH > 0) {
+    for (const x of [-w / 2 + 7, w / 2 - 7]) for (const z of [-d / 2 + 7, d / 2 - 7]) {
+      if (st.taper) C(g, st.legSize / 2, st.legSize * 0.25, legH, x * 0.97, legH / 2, z * 0.95, L, 12);
+      else if (st.bun) { const m = add(g, new THREE.SphereGeometry(st.legSize / 2, 16, 10), L, x, legH / 2, z); m.scale.y = legH / st.legSize; }
+      else C(g, st.legSize / 2, st.legSize * 0.4, legH, x, legH / 2, z, L, 12);
+    }
+  }
+  const y0 = legH;
+  RB(g, w, baseTop - y0, d, 3, 0, (y0 + baseTop) / 2, 0, F);
+  RB(g, w, h - y0, bt, st.backR, 0, (y0 + h) / 2, -d / 2 + bt / 2, F);
+  // 扶手
+  if (aw > 0) for (const sd of [-1, 1]) {
+    const ax = sd * (w / 2 - aw / 2), top = armH - rollR;
+    RB(g, aw, top - y0, d, st.armR, ax, (y0 + top) / 2, 0, F);
+    if (st.roll) {
+      const m = C(g, rollR, rollR, d, ax + sd * rollR * 0.25, top, 0, F, 24);
+      m.rotation.x = Math.PI / 2;
+    }
+  }
+  // 坐墊與靠墊
+  const inner = w - 2 * aw, cd = d - bt;
+  const n = seatsOf(it), cw = inner / n;
+  const bh = (h - seatTop) * 0.88;
+  for (let i = 0; i < n; i++) {
+    const x = -inner / 2 + cw * (i + .5);
+    RB(g, cw - 1.5, st.cushT, cd - 1, st.cushR, x, baseTop + st.cushT / 2, -d / 2 + bt + cd / 2, F);
+  }
+  if (st.backCush && bh > 12) {
+    const nb = n, bw = inner / nb, t = st.bcT || 14;
+    for (let i = 0; i < nb; i++) RB(g, bw - 3, bh, t, Math.min(8, t / 2), -inner / 2 + bw * (i + .5), seatTop + bh / 2, -d / 2 + bt + t / 2 - 1, F);
+  }
+  // 抱枕
+  if (st.pillows && inner > 60) {
+    const P = mat(it.color2, 0.95), ps = Math.min(42, inner * 0.3);
+    for (const sd of [-1, 1]) {
+      const m = RB(g, ps, ps, 11, 5, sd * (inner / 2 - ps / 2 - 4), seatTop + ps / 2 - 2, -d / 2 + bt + (st.bcT || 14) + 5, P); m.userData.pil = 1;
+      m.rotation.z = sd * 0.12; m.rotation.x = -0.15;
+    }
+  }
+  // 拉扣
+  if (st.tufted) {
+    const Bt = mat(it.color, 0.35), zf = -d / 2 + bt + 0.2;
+    const rows = Math.max(1, Math.floor((h - seatTop - 6) / 11)), cols = Math.max(2, Math.round((w - 2 * aw) / 13));
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const x = -inner / 2 + (inner / cols) * (c + (r % 2 ? 1 : .5)), y = seatTop + 8 + r * 11;
+      if (x > inner / 2 - 2) continue;
+      add(g, new THREE.SphereGeometry(0.9, 8, 6), Bt, x, y, zf);
+    }
+  }
+  return g;
+}
 const opt = (id, name, extra = {}) => ({ id, name, ...extra });
 const GLASS = new THREE.MeshStandardMaterial({ color: '#d6e6ea', transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.1, depthWrite: false });
 function glassPane(g, w, h, d, x, y, z) { const m = add(g, new THREE.BoxGeometry(w, h, d), GLASS, x, y, z); m.castShadow = false; return m; }
@@ -1250,6 +1320,50 @@ const topMat = (it, key = 'color') => surfMat(it.topmat || 'wood', it[key]);
 const bodyMat = (it, key = 'color') => surfMat(it.bodymat || ((TYPES[it.type] || {}).def || {}).bodymat || 'wood', it[key]);
 const fabMat = (it, key = 'color') => surfMat(it.fabric || 'fabric', it[key]);
 const MIRROR = new THREE.MeshStandardMaterial({ color: '#dfe7ea', roughness: 0.04, metalness: 0.95 });
+const ACCENT_OPTS = [{ key: 'style', label: '款式', list: [opt('lounge', '休閒扶手椅'), opt('shell', '貝殼椅'), opt('wing', '高背單椅'), opt('wood', '木框單椅')] }];
+function buildAccent(it) {
+  const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'lounge';
+  const F = fabMat(it), L = surfMat('wood', it.color2);
+  const seatH = Math.min(42, h * 0.5);
+  if (style === 'shell') {
+    const M = mat(it.color2, 0.3, 0.75), r = Math.min(w, d) / 2;
+    for (let k = 0; k < 4; k++) { const a = Math.PI / 4 + k * Math.PI / 2; rod(g, new V3(Math.cos(a) * r * 0.4, seatH - 9, Math.sin(a) * r * 0.4), new V3(Math.cos(a) * r * 0.78, 0, Math.sin(a) * r * 0.78), 1, M); }
+    C(g, .5, .5, 10, 0, seatH - 5, 0.04 * d, F, 40).scale.set(w * 0.88, 1, d * 0.82);
+    const shell = F.clone(); shell.side = THREE.DoubleSide; shell.userData.own = true;
+    const bh = h - seatH + 10;
+    const b = add(g, new THREE.CylinderGeometry(w / 2, w * 0.4, bh, 48, 1, true, Math.PI / 2 - 0.35, Math.PI + 0.7), shell, 0, seatH - 10 + bh / 2, 0);
+    b.scale.z = d / w;
+    return g;
+  }
+  if (style === 'wing') {
+    const legH = 12;
+    legs4(g, w, d, legH, 6, 4.5, L, true);
+    RB(g, w, seatH - legH - 8, d, 3, 0, legH + (seatH - legH - 8) / 2, 0, F);
+    RB(g, w - 26, 10, d - 16, 5, 0, seatH - 3, 6, F);
+    RB(g, w - 8, h - legH, 14, 5, 0, legH + (h - legH) / 2, -d / 2 + 7, F);
+    for (const s of [-1, 1]) {
+      RB(g, 13, 22, d - 10, 4, s * (w / 2 - 6.5), seatH + 5, 3, F);
+      const wg = RB(g, 11, h * 0.42, d * 0.42, 4, s * (w / 2 - 6), h - h * 0.21 - 2, -d / 2 + 14 + d * 0.21, F);
+      wg.rotation.y = s * 0.18;
+    }
+    return g;
+  }
+  if (style === 'wood') {
+    const armH = Math.min(h * 0.72, 60);
+    for (const s of [-1, 1]) {
+      const x = s * (w / 2 - 2.5);
+      B(g, 4, armH, 4, x, armH / 2, d / 2 - 5, L);
+      B(g, 4, armH - 4, 4, x, (armH - 4) / 2, -d / 2 + 5, L);
+      B(g, 6, 3, d - 2, x, armH, 0, L);
+      B(g, 3, 4, d - 12, x, 16, 0, L);
+    }
+    B(g, w - 6, 3, 4, 0, seatH - 14, d / 2 - 6, L); B(g, w - 6, 3, 4, 0, seatH - 14, -d / 2 + 6, L);
+    RB(g, w - 10, 12, d - 10, 5, 0, seatH - 6, 2, F);
+    const bk = RB(g, w - 12, h - seatH - 2, 13, 6, 0, seatH + (h - seatH - 2) / 2, -d / 2 + 10, F); bk.rotation.x = -0.18;
+    return g;
+  }
+  return buildSofa({ ...it, type: 'armchair', seats: '1', style: 'nordic' });
+}
 const RUG_OPTS = [{ key: 'shape', label: '形狀', list: [opt('rect', '長方形', { size: { w: 200, d: 140, h: 1 } }), opt('round', '圓形', { size: { w: 160, d: 160, h: 1 } })] }];
 function buildRugShaped(it) {
   if ((it.shape || 'rect') === 'rect') return buildRug(it);
@@ -2482,6 +2596,11 @@ TYPES = {
   coffee: { sub: '茶几', generic: true, name: '茶几',       w: 120, d: 60,  h: 42,  color: '#c49a6c', color2: '#222222', c1: '桌面',     c2: '桌腳',     build: buildCoffee, opts: COFFEE_OPTS },
   coffeeset: { sub: '茶几', generic: true, name: '組合茶几',   w: 130, d: 80,  h: 42,  color: '#e9e4da', color2: '#b08d57', c1: '桌面',     c2: '桌腳',     build: buildCoffeeSet, opts: COFFEE_OPTS, def: { shape: 'round', base: 'legs', legmat: 'metal' } },
   side: { sub: '茶几', generic: true, name: '小茶几',     w: 45,  d: 45,  h: 55,  color: '#5a3a28', color2: '#222222', c1: '桌面',     c2: '桌腳',     build: buildCoffee, opts: COFFEE_OPTS, def: { shape: 'round', base: 'pedestal', legmat: 'metal' } },
+  armchair: { sub: '單椅', generic: true, name: '單人沙發',   w: 90,  d: 88,  h: 80,  color: '#8e9099', color2: '#3a2c22', c1: '布料顏色', c2: '椅腳顏色', build: buildSofa, opts: [SEATS_OPT, ...SOFA_OPTS], def: { seats: '1' } },
+  lounge: { sub: '單椅', generic: true, name: '休閒單椅',   w: 78,  d: 82,  h: 82,  color: '#c9bfae', color2: '#8b5a3c', c1: '布料顏色', c2: '椅腳顏色', build: buildAccent, opts: ACCENT_OPTS, def: { style: 'lounge' } },
+  shellchair: { sub: '單椅', generic: true, name: '貝殼單椅',  w: 75,  d: 72,  h: 78,  color: '#d9a441', color2: '#b08d57', c1: '布料顏色', c2: '椅腳顏色', build: buildAccent, opts: ACCENT_OPTS, def: { style: 'shell' } },
+  wingchair: { sub: '單椅', generic: true, name: '高背單椅',   w: 80,  d: 85,  h: 105, color: '#3d5a80', color2: '#5a3a28', c1: '布料顏色', c2: '椅腳顏色', build: buildAccent, opts: ACCENT_OPTS, def: { style: 'wing' } },
+  woodchair: { sub: '單椅', generic: true, name: '木框單椅',   w: 70,  d: 78,  h: 78,  color: '#e9e4da', color2: '#c49a6c', c1: '坐墊顏色', c2: '木框顏色', build: buildAccent, opts: ACCENT_OPTS, def: { style: 'wood' } },
   ownDambo: { sub: '沙發', name: '花瓣沙發', w: 360, d: 156, h: 83.5, color: '#b8a797', color2: '#c4b6a7', color3: '#232b45', c1: '靠背／底座布料', c2: '座墊布料', c3: '抱枕顏色', build: buildDamboSofa, opts: [DAMBO_SIDE_OPT, DAMBO_BEND_OPT, DAMBO_PIL_OPT], def: { side: 'left', bk: 'open', rp: 'on' }, wall: true, own: true },
   ownGetBack: { sub: '沙發', name: 'GET BACK 沙發', w: 381, d: 163, h: 87, color: '#a5623c', color2: '#cfcbc4', color3: '#9a4a2a', c1: '皮革外殼', c2: '座墊／靠背布料', c3: '抱枕顏色', build: buildGetBackSofa, opts: [GETBACK_SIDE_OPT, GETBACK_PIL_OPT], def: { side: 'right', rp: 'on' }, wall: true, own: true },
   ownGermain: { sub: '沙發', name: '聖日耳曼沙發', w: 320, d: 153.5, h: 65, color: '#d9cdb8', color2: '#232325', color3: '#9a9790', c1: '沙發布料', c2: '抱枕顏色', c3: '點綴抱枕', build: buildGermainSofa, opts: [GERMAIN_SIDE_OPT, GERMAIN_PIL_OPT], def: { side: 'left', rp: 'on' }, wall: true, own: true }
@@ -2498,7 +2617,7 @@ export const ON_TOP = ['kitchen', 'sideboard', 'barisland', 'barwall', 'bartable
 for (const k of ['microwave', 'ricecooker', 'coffeemaker', 'oven']) if (TYPES[k]) TYPES[k].on = ON_TOP;
 const triSize = it => Math.max(18, Math.min(90, Math.round(Math.max(it.w || 0, it.d || 0, it.h || 0) * 0.3 / 6) * 6));
 export const PRODUCTS = TYPES;
-export const SUBS = ['沙發', '茶几', '邊几', '餐桌', '餐椅', '長凳', '餐櫃', '廚具', '中島', '吧檯桌', '吧檯椅', '廚房家電', '小家電', '床台', '床頭櫃', '化妝桌椅', '書桌', '地毯', '窗簾', '燈具', '植栽', '掛畫', '衛浴'];
+export const SUBS = ['沙發', '單椅', '茶几', '邊几', '餐桌', '餐椅', '長凳', '餐櫃', '廚具', '中島', '吧檯桌', '吧檯椅', '廚房家電', '小家電', '床台', '床頭櫃', '化妝桌椅', '書桌', '地毯', '窗簾', '燈具', '植栽', '掛畫', '衛浴'];
 export function optsOf(T) { return T.opts || []; }
 export function withDefaults(it) {
   const T = TYPES[it.type];
