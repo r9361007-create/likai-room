@@ -1,5 +1,5 @@
 /* 莉凱家俱自家商品 3D 模型
- * 來源：andytsai-000/furniture-planner 的自家商品，加上我們自己建的沙發（雷內新版、花瓣、GET BACK、聖日耳曼）
+ * 來源：andytsai-000/furniture-planner 的自家商品與廚房一般款，加上我們自己建的沙發（雷內新版、花瓣、GET BACK、聖日耳曼）
  * 自動擷取合併，請勿手改；原版或沙發建模更新時請 Claude 重新擷取。
  * 單位公分，原點在家具底部中心，正面朝 +Z。
  */
@@ -104,6 +104,12 @@ function RB(g, w, h, d, r, x, y, z, m) {
   return add(g, new RoundedBoxGeometry(w, h, d, 3, r), m, x, y, z);
 }
 function C(g, rt, rb, h, x, y, z, m, seg = 24) { return add(g, new THREE.CylinderGeometry(rt, rb, Math.max(h, .1), seg), m, x, y, z); }
+function legs4(g, w, d, legH, inset, size, m, round = true) {
+  for (const x of [-w / 2 + inset, w / 2 - inset]) for (const z of [-d / 2 + inset, d / 2 - inset]) {
+    if (round) C(g, size / 2, size * 0.4, legH, x, legH / 2, z, m, 12);
+    else B(g, size, legH, size, x, legH / 2, z, m);
+  }
+}
 const opt = (id, name, extra = {}) => ({ id, name, ...extra });
 const GLASS = new THREE.MeshStandardMaterial({ color: '#d6e6ea', transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.1, depthWrite: false });
 function glassPane(g, w, h, d, x, y, z) { const m = add(g, new THREE.BoxGeometry(w, h, d), GLASS, x, y, z); m.castShadow = false; return m; }
@@ -112,6 +118,11 @@ function rod(g, a, b, r, m) {
   const mesh = add(g, new THREE.CylinderGeometry(r, r, len, 10), m, (a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
   mesh.quaternion.setFromUnitVectors(new V3(0, 1, 0), dir.normalize());
   return mesh;
+}
+function slats(g, x, y, fw, fh, z, m, dark) {
+  B(g, fw, fh, 0.4, x, y, z - 0.9, dark);
+  const n = Math.max(2, Math.floor(fw / 3.6)), step = fw / n;
+  for (let i = 0; i < n; i++) B(g, step - 1.2, fh, 1.6, x - fw / 2 + step * (i + .5), y, z, m);
 }
 function mirrorIfLeft(it, g) { if (it.side !== 'left') return g; const o = new THREE.Group(); g.scale.x = -1; o.add(g); return o; }
 const seatList = max => Array.from({ length: max }, (_, i) => opt(String(i + 1), `${i + 1} 人座`));
@@ -865,8 +876,209 @@ function buildFloatLSofa(it) { // 懸浮平台 L 型：雙色平台底座＋黑�
   RB(g, aw, armH - pTop, al, 4, w / 2 - aw / 2, pTop + (armH - pTop) / 2, -d / 2 + al / 2, F);
   return mirrorIfLeft(it, g);
 }
+const BASES = { legs: '四腳', sled: '雪橇腳', x: '交叉腳', panel: '板腳', pedestal: '單柱底座', tulip: '喇叭底座', cross: '十字腳', drum: '實心底座' };
+const baseList = ids => ids.map(id => opt(id, BASES[id]));
+const LEGMATS = [opt('wood', '木頭'), opt('metal', '鐵件')];
+function tableTop(g, shape, w, d, t, y, m) {
+  if (shape === 'oval') return roundedTop(g, w, d, t, y - t / 2, m, Math.min(w, d) / 2 - 0.01); // 橢圓形＝長圓形（兩端半圓）
+  if (shape === 'round') { const c = C(g, .5, .5, t, 0, y, 0, m, 64); c.scale.set(w, 1, d); return c; }
+  return RB(g, w, t, d, Math.min(1.5, t / 2), 0, y, 0, m);
+}
+function tableBase(g, base, shape, w, d, lh, M, metal) { // 腳座由地面長到 lh（桌面下緣）
+  const rnd = shape !== 'rect', th = metal ? 2.5 : 5;
+  if (base === 'sled') {
+    const x = rnd ? w * 0.3 : w / 2 - 10, zl = rnd ? d * 0.6 : d - 16;
+    for (const s of [-1, 1]) {
+      for (const zs of [-1, 1]) B(g, th, lh, th, s * x, lh / 2, zs * (zl / 2 - th / 2), M);
+      B(g, th, th, zl, s * x, th / 2, 0, M);
+      B(g, th, th, zl, s * x, lh - th / 2, 0, M);
+    }
+  } else if (base === 'x') {
+    const x = rnd ? w * 0.3 : w / 2 - 10, span = (rnd ? d * 0.62 : d - 14) - th, L = Math.hypot(lh, span), a = Math.atan2(lh, span);
+    for (const s of [-1, 1]) for (const r of [-1, 1]) { const m = B(g, th, th, L, s * x, lh / 2, 0, M); m.rotation.x = r * a; }
+    B(g, 2 * x, th, th, 0, lh - th / 2, 0, M);
+  } else if (base === 'panel') {
+    const pt = metal ? 1.5 : 4, x = (rnd ? w * 0.3 : w / 2 - pt / 2 - 1), pd = rnd ? d * 0.55 : d - 4;
+    for (const s of [-1, 1]) B(g, pt, lh, pd, s * x, lh / 2, 0, M);
+  } else if (base === 'pedestal') {
+    if (w > 1.6 * d) {
+      for (const s of [-1, 1]) { C(g, th * 1.2, th * 1.2, lh, s * w * 0.28, lh / 2, 0, M, 20); B(g, 8, 2.5, d * 0.6, s * w * 0.28, 1.25, 0, M); }
+      B(g, w * 0.56, 4, 5, 0, lh - 6, 0, M);
+    } else {
+      C(g, th * 1.3, th * 1.3, lh, 0, lh / 2, 0, M, 20);
+      if (rnd) C(g, .5, .5, 2.5, 0, 1.25, 0, M, 40).scale.set(w * 0.5, 1, d * 0.5);
+      else B(g, w * 0.5, 2.5, d * 0.5, 0, 1.25, 0, M);
+    }
+  } else if (base === 'tulip') {
+    const r = Math.min(w, d) * 0.28;
+    C(g, th * 0.9, r, lh * 0.9, 0, lh * 0.45, 0, M, 40);
+    C(g, th * 1.2, th * 0.9, lh * 0.12, 0, lh * 0.94, 0, M, 20);
+  } else if (base === 'cross') {
+    const L = Math.min(w, d) * 0.62;
+    C(g, th * 1.1, th * 1.1, lh, 0, lh / 2, 0, M, 20);
+    B(g, L, 3, 6, 0, 1.5, 0, M); B(g, 6, 3, L, 0, 1.5, 0, M);
+  } else if (base === 'drum') {
+    if (rnd) C(g, .5, .5, lh, 0, lh / 2, 0, M, 48).scale.set(w * 0.62, 1, d * 0.62);
+    else B(g, w * 0.7, lh, d * 0.7, 0, lh / 2, 0, M);
+  } else {
+    const pts = rnd ? [[.33, .33], [-.33, .33], [.33, -.33], [-.33, -.33]].map(([a, b]) => [a * w, b * d])
+      : [[w / 2 - 6, d / 2 - 6], [-(w / 2 - 6), d / 2 - 6], [w / 2 - 6, -(d / 2 - 6)], [-(w / 2 - 6), -(d / 2 - 6)]];
+    for (const [x, z] of pts) metal ? C(g, 1.2, 1.2, lh, x, lh / 2, z, M, 10) : B(g, th, lh, th, x, lh / 2, z, M);
+  }
+}
+const BAR_BASES = { key: 'base', label: '腳座', list: baseList(['legs', 'sled', 'panel']) };
+const BARROUND_BASES = { key: 'base', label: '腳座', list: baseList(['pedestal', 'tulip', 'cross']) };
+const BAR_LEGMAT = { key: 'legmat', label: '腳材質', list: [opt('metal', '鐵件'), opt('wood', '木頭')] };
+function buildBarTable(it, kind) {
+  const g = new THREE.Group(), { w, d, h } = it, t = 4, metal = it.legmat !== 'wood', M = metal ? mat(it.color2, 0.32, 0.75) : mat(it.color2, 0.55);
+  const fy = Math.min(28, h * 0.27), fr = metal ? 2.2 : 3.5;                 // 踏腳桿的高度、粗細
+  if (kind === 'island') {                                                    // 中島吧檯：櫃體＋往座位那一側伸出去的檯面
+    const Bd = bodyMat(it), Tp = surfMat(it.topmat || 'slate', it.color3 || it.color), Dk = mat('#2b2a2a', 0.7), St = mat('#8a8d91', 0.3, 0.8);
+    const over = Math.min(28, d * 0.38), bd = d - over - 1.5, bz = -d / 2 + 1.5 + bd / 2, kick = 8, bh = h - t - kick;
+    B(g, w - 4, kick, bd - 6, 0, kick / 2, bz - 1, Dk);
+    B(g, w, bh, bd, 0, kick + bh / 2, bz, Bd);
+    const nd = Math.max(2, Math.round(w / 45)), dw = w / nd;                  // 工作那一側的門片
+    for (let i = 1; i < nd; i++) B(g, 0.4, bh - 1, 0.3, -w / 2 + dw * i, kick + bh / 2, -d / 2 + 1.45, Dk);
+    for (let i = 0; i < nd; i++) B(g, 1.2, 12, 1.2, -w / 2 + dw * (i + (i % 2 ? 0.14 : 0.86)), kick + bh - 12, -d / 2 + 0.9, St);
+    RB(g, w, t, d, 1, 0, h - t / 2, 0, Tp);
+    const rz = -d / 2 + 1.5 + bd + 5;                                               // 座位這一側的踏腳桿
+    C(g, 1.3, 1.3, w - 16, 0, 20, rz, St, 14).rotation.z = Math.PI / 2;
+    for (const sx of [-1, 0, 1]) B(g, 1.6, 1.6, 5, sx * (w / 2 - 14), 20, rz - 2.5, St);
+    return g;
+  }
+  if (kind === 'wall') {                                                      // 靠牆吧檯：固定在牆上的檯面＋三角支架
+    tableTop(g, 'rect', w, d, t, h - t / 2, topMat(it));
+    B(g, w - 4, 7, 1.8, 0, h - t - 3.5, -d / 2 + 0.9, M);
+    const bl = Math.min(30, h * 0.3);
+    for (const sx of [-1, 1]) { const x = sx * (w / 2 - Math.min(18, w * 0.15));
+      B(g, 2.4, bl, 2.4, x, h - t - bl / 2, -d / 2 + 1.2, M); B(g, 2.4, 2.4, d - 6, x, h - t - 1.2, -1, M);
+      rod(g, new V3(x, h - t - bl + 1.5, -d / 2 + 1.5), new V3(x, h - t - 2, d / 2 - 6), 1, M); }
+    return g;
+  }
+  if (kind === 'round') {                                                     // 圓形高腳桌
+    const base = it.base || 'pedestal';
+    tableTop(g, 'round', w, d, t, h - t / 2, topMat(it));
+    tableBase(g, base, 'round', w, d, h - t, M, metal);
+    if (base !== 'tulip') { const r = Math.min(w, d) * 0.3;
+      add(g, new THREE.TorusGeometry(r, 1.1, 10, 44), M, 0, fy, 0).rotation.x = Math.PI / 2;
+      B(g, 2 * r, 1.5, 1.5, 0, fy, 0, M); B(g, 1.5, 1.5, 2 * r, 0, fy, 0, M); }
+    return g;
+  }
+  const base = it.base || 'legs';                                             // 長型吧檯桌
+  tableTop(g, 'rect', w, d, t, h - t / 2, topMat(it));
+  tableBase(g, base, 'rect', w, d, h - t, M, metal);
+  if (base === 'legs') { for (const sz of [-1, 1]) B(g, w - 12, fr, fr, 0, fy, sz * (d / 2 - 6), M); for (const sx of [-1, 1]) B(g, fr, fr, d - 12, sx * (w / 2 - 6), fy + 12, 0, M); }
+  else if (base === 'sled') for (const sz of [-1, 1]) B(g, w - 20, fr, fr, 0, fy, sz * ((d - 16) / 2 - (metal ? 1.25 : 2.5)), M);
+  else B(g, w - 4, fr + 1, fr, 0, fy, 0, M);
+  return g;
+}
+function buildBarStool(it, style) {
+  const g = new THREE.Group(), { w, d, h } = it, S = fabMat(it), metal = it.legmat !== 'wood';
+  const L = metal ? mat(it.color2, 0.3, 0.75) : mat(it.color2, 0.55), lr = metal ? 1.1 : 1.7;
+  const seatH = style === 'round' ? h : Math.min(76, h * 0.76), fy = Math.max(18, seatH - 45);
+  // 四支外張的腳＋一圈踏腳：top／bot 是腳在坐面下和地面的位置（相對寬深的比例）
+  const splay = (top, bot, yTop, ring) => {
+    const at = y => { const k = (yTop - y) / yTop, f = top + (bot - top) * k; return [w * f, d * f]; };
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) rod(g, new V3(sx * w * top, yTop, sz * d * top), new V3(sx * w * bot, 0, sz * d * bot), lr, L);
+    const [fx, fz] = at(fy);
+    if (ring) { const m = add(g, new THREE.TorusGeometry(Math.SQRT2 * fx, lr * 0.8, 10, 44), L, 0, fy, 0); m.rotation.x = Math.PI / 2; m.scale.y = fz / fx; }
+    else for (const s of [-1, 1]) { rod(g, new V3(-fx, fy, s * fz), new V3(fx, fy, s * fz), lr * 0.8, L); rod(g, new V3(s * fx, fy, -fz), new V3(s * fx, fy, fz), lr * 0.8, L); }
+  };
+  if (style === 'round') {                                                    // 圓凳：圓形軟墊、沒有靠背
+    C(g, .5, .5, 2, 0, seatH - 8.2, 0, L, 40).scale.set(w * 0.9, 1, d * 0.9);
+    const m = add(g, new THREE.CylinderGeometry(.5, .5, 6, 40), S, 0, seatH - 4.2, 0); m.scale.set(w, 1, d);
+    add(g, new THREE.SphereGeometry(.5, 40, 12, 0, Math.PI * 2, 0, Math.PI / 2), S, 0, seatH - 1.25, 0).scale.set(w * 0.985, 2.4, d * 0.985);
+    splay(0.26, 0.45, seatH - 8.2, true);
+    return g;
+  }
+  if (style === 'swivel') {                                                   // 升降旋轉：圓盤底座＋中柱＋踏腳環
+    const Mt = mat(it.color2, 0.2, 0.85), r = Math.min(w, d) * 0.5;
+    C(g, r * 0.9, r, 2, 0, 1, 0, Mt, 44); C(g, 2.6, 2.6, seatH - 12, 0, 2 + (seatH - 12) / 2, 0, Mt, 20); C(g, 4.2, 4.6, 22, 0, 13, 0, Mt, 20);
+    add(g, new THREE.TorusGeometry(r * 0.78, 1, 10, 44), Mt, 0, fy, 0).rotation.x = Math.PI / 2;
+    B(g, r * 1.56, 1.4, 1.4, 0, fy, 0, Mt);
+    C(g, 9, 6, 3, 0, seatH - 10.5, 0, Mt, 20);
+    RB(g, w, 9, d - 3, 4, 0, seatH - 4.5, 1.5, S);
+    const bk = RB(g, w, Math.min(26, h - seatH + 4), 6, 2.8, 0, seatH - 4 + Math.min(26, h - seatH + 4) / 2, -d / 2 + 4, S); bk.rotation.x = -0.12;
+    return g;
+  }
+  if (style === 'wood') {                                                     // 實木高腳椅：後腳往上延伸成椅背
+    const W = L, ps = metal ? 2.6 : 3.6, x = w / 2 - ps / 2 - 1, z = d / 2 - ps / 2 - 1;
+    RB(g, w, 4.5, d - 2, 1.6, 0, seatH - 2.25, 1, S);
+    for (const sx of [-1, 1]) { B(g, ps, seatH - 4.5, ps, sx * x, (seatH - 4.5) / 2, z, W); B(g, ps, h, ps, sx * x, h / 2, -z, W); B(g, ps * 0.7, ps * 0.7, 2 * z, sx * x, fy + 14, 0, W); }
+    B(g, 2 * x, ps * 0.8, ps * 0.8, 0, fy, z, W); B(g, 2 * x, ps * 0.7, ps * 0.7, 0, fy + 8, -z, W);
+    B(g, 2 * x, 4, ps * 0.7, 0, seatH - 6.5, z, W);
+    RB(g, 2 * x + ps, 9, ps * 0.8, 1.2, 0, h - 5.5, -z, W);
+    const sh = h - 11 - seatH - 4; if (sh > 8) for (let i = -1; i <= 1; i++) B(g, 3.2, sh, 1.6, i * x * 0.55, seatH + 2 + sh / 2, -z, W);
+    return g;
+  }
+  // 低背吧檯椅：軟包坐墊＋一段矮靠背
+  RB(g, w, 8, d - 4, 3.2, 0, seatH - 4, 2, S);
+  const bh = Math.min(22, h - seatH + 2);
+  const bk = RB(g, w - 2, bh, 5, 2.4, 0, h - bh / 2, -d / 2 + 3.5, S); bk.rotation.x = -0.1;
+  for (const sx of [-1, 1]) rod(g, new V3(sx * (w / 2 - 8), seatH - 6, -d / 2 + 5), new V3(sx * (w / 2 - 8), h - bh + 3, -d / 2 + 3), lr * 0.8, L);
+  splay(0.36, 0.47, seatH - 8, false);
+  return g;
+}
+const KITCHEN_OPTS = [{ key: 'style', label: '門板款式', list: [opt('flat', '平板門'), opt('groove', '無把手'), opt('slat', '格柵門')] }];
+function buildCabinet(it, o = {}) {
+  const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'flat';
+  const Body = bodyMat(it), HD = mat(o.counter ? '#9a9a9a' : it.color2, 0.35, 0.6), dark = mat('#4b4540', 0.8);
+  const plinth = Math.min(8, h * 0.08), topT = o.counter ? 4 : o.top ? 2.5 : 0, bodyTop = h - topT, dh = bodyTop - plinth;
+  B(g, w - 4, plinth, d - 6, 0, plinth / 2, -3, dark);
+  if (style === 'glass') { // 中空櫃體才看得到層板
+    B(g, w, dh, 1.5, 0, plinth + dh / 2, -d / 2 + 0.75, Body);
+    for (const s of [-1, 1]) B(g, 1.8, dh, d - 2, s * (w / 2 - 0.9), plinth + dh / 2, -1, Body);
+    B(g, w, 1.8, d - 2, 0, bodyTop - 0.9, -1, Body);
+    B(g, w, 1.8, d - 2, 0, plinth + 0.9, -1, Body);
+    const ns = Math.max(1, Math.round(dh / 38));
+    for (let i = 1; i < ns; i++) B(g, w - 3.6, 1.5, d - 5, 0, plinth + dh * i / ns, -1.5, Body);
+  } else B(g, w, dh, d - 2, 0, plinth + dh / 2, -1, Body);
+  const n = Math.max(1, Math.round(w / (o.doorW || 50))), dw = w / n;
+  const tall = h > 140, hl = Math.min(tall ? 30 : 12, dh * 0.3), cy = plinth + dh / 2, zf = d / 2 - 0.9;
+  for (let i = 0; i < n; i++) {
+    const x = -w / 2 + dw * (i + .5);
+    const side = n === 1 ? -1 : (i % 2 === 0 ? 1 : -1), hx = x + side * (dw / 2 - 4);
+    const handle = () => {
+      if (o.counter) B(g, Math.min(16, dw * 0.4), 1.2, 1.5, x, bodyTop - 6, d / 2 + 0.7, HD);
+      else B(g, 1.5, hl, 2, hx, tall ? plinth + dh * 0.5 : bodyTop - 5 - hl / 2, d / 2 + 1, HD);
+    };
+    if (style === 'slat') { slats(g, x, cy, dw - 1, dh - 1, d / 2 - 0.8, Body, dark); continue; }
+    if (style === 'glass') {
+      const f = 4, z = d / 2 - 1;
+      B(g, dw - 0.6, f, 2, x, plinth + dh - f / 2 - 0.3, z, Body);
+      B(g, dw - 0.6, f, 2, x, plinth + f / 2 + 0.3, z, Body);
+      for (const s of [-1, 1]) B(g, f, dh - 0.6, 2, x + s * (dw / 2 - f / 2 - 0.3), cy, z, Body);
+      glassPane(g, dw - 2 * f, dh - 2 * f, 0.5, x, cy, z);
+      handle(); continue;
+    }
+    B(g, dw - 0.6, dh - 0.6, 1.8, x, cy, zf, Body);
+    if (style === 'groove') B(g, dw - 0.6, 1, 0.3, x, bodyTop - 2.5, d / 2 + 0.05, dark);
+    else handle();
+  }
+  if (o.top) RB(g, w + 0.6, topT, d + 0.6, 0.8, 0, h - topT / 2, 0, topMat(it, 'color3'));
+  if (o.counter) {
+    B(g, w + 1, topT, d + 1, 0, h - topT / 2, 0, topMat(it, 'color2'));
+    if (w > 100) {
+      B(g, Math.min(60, w * 0.3), 0.4, d * 0.6, -w * 0.18, h + 0.1, -2, mat('#b8bcc0', 0.25, 0.8));
+      C(g, 1.2, 1.2, 25, -w * 0.18, h + 12.5, -d / 2 + 8, mat('#b8bcc0', 0.25, 0.8), 12);
+    }
+  }
+  return g;
+}
+function buildFridge(it) {
+  const g = new THREE.Group(), { w, d, h } = it;
+  const Bd = mat(it.color, 0.35, 0.3), HD = mat(it.color2, 0.3, 0.7);
+  RB(g, w, h - 2, d - 3, 2, 0, 2 + (h - 2) / 2, -1.5, Bd);
+  const top = (h - 2) * 0.32;
+  B(g, w - 1, top - 0.8, 2, 0, h - top / 2, d / 2 - 1, Bd);
+  B(g, w - 1, h - 2 - top - 0.8, 2, 0, 2 + (h - 2 - top) / 2, d / 2 - 1, Bd);
+  B(g, 2, Math.min(25, top * 0.6), 2.5, -w / 2 + 6, h - top + top * 0.3, d / 2 + 1, HD);
+  B(g, 2, Math.min(40, h * 0.25), 2.5, -w / 2 + 6, h - top - 30, d / 2 + 1, HD);
+  return g;
+}
 const TOPMAT_LIST = [opt('wood', '木頭'), opt('marble', '大理石'), opt('slate', '陶板(岩板)'), opt('glass', '玻璃')];
 const TOPMAT_OPT = { key: 'topmat', label: '桌面材質', list: TOPMAT_LIST };
+const COUNTER_OPT = { key: 'topmat', label: '檯面材質', list: TOPMAT_LIST };
 const TEX = {};
 function surfTex(kind) {
   if (TEX[kind]) return TEX[kind];
@@ -951,8 +1163,88 @@ function surfMat(kind, col) {
   return m;
 }
 const topMat = (it, key = 'color') => surfMat(it.topmat || 'wood', it[key]);
+const bodyMat = (it, key = 'color') => surfMat(it.bodymat || ((TYPES[it.type] || {}).def || {}).bodymat || 'wood', it[key]);
 const fabMat = (it, key = 'color') => surfMat(it.fabric || 'fabric', it[key]);
 const MIRROR = new THREE.MeshStandardMaterial({ color: '#dfe7ea', roughness: 0.04, metalness: 0.95 });
+const SIDEBOARD_OPTS = [{ key: 'style', label: '款式', list: [opt('low', '矮櫃'), opt('slat', '格柵門矮櫃'), opt('tall', '高餐櫃（上玻璃櫃）', { size: { w: 120, d: 45, h: 200 } })] }, COUNTER_OPT];
+function buildSideboard(it) {
+  const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'low';
+  const Bd = bodyMat(it, 'color2'), knob = mat('#b08d57', 0.3, 0.8), dark = mat('#3b3632', 0.85);
+  const lowH = style === 'tall' ? Math.min(86, h * 0.45) : h, legH = style === 'tall' ? 6 : Math.min(14, lowH * 0.16), topT = 3;
+  if (style === 'tall') B(g, w - 4, legH, d - 6, 0, legH / 2, -3, dark); else legs4(g, w, d, legH, 5, 3.5, Bd, false);
+  const bh = lowH - legH - topT;
+  B(g, w, bh, d - 2, 0, legH + bh / 2, -1, Bd);
+  RB(g, w + 1, topT, d + 1, 1, 0, lowH - topT / 2, 0, topMat(it));
+  const n = Math.max(2, Math.round(w / 45)), dw = w / n, y = legH + bh / 2;
+  for (let i = 0; i < n; i++) {
+    const x = -w / 2 + dw * (i + .5);
+    if (style === 'slat') { slats(g, x, y, dw - 1, bh - 1, d / 2 - 0.8, Bd, dark); continue; }
+    B(g, dw - 0.6, bh - 0.6, 1.8, x, y, d / 2 - 0.9, Bd);
+    add(g, new THREE.SphereGeometry(1.3, 10, 8), knob, x + (i % 2 ? -1 : 1) * (dw / 2 - 5), y + bh * 0.25, d / 2 + 0.6);
+  }
+  if (style === 'tall') { // 上層玻璃展示櫃（內縮）
+    const ud = d * 0.7, uz = -d / 2 + ud / 2, uy0 = lowH, uh = h - lowH;
+    B(g, w, uh, 1.5, 0, uy0 + uh / 2, -d / 2 + 0.75, Bd);
+    for (const s of [-1, 1]) B(g, 2, uh, ud, s * (w / 2 - 1), uy0 + uh / 2, uz, Bd);
+    B(g, w, 3, ud, 0, h - 1.5, uz, Bd);
+    const ns = Math.max(1, Math.round(uh / 35));
+    for (let i = 1; i < ns; i++) B(g, w - 4, 1.5, ud - 3, 0, uy0 + uh * i / ns, uz, Bd);
+    const nu = Math.max(2, Math.round(w / 50)), uw = w / nu, zf = -d / 2 + ud;
+    for (let i = 0; i < nu; i++) {
+      const x = -w / 2 + uw * (i + .5);
+      B(g, uw - 0.6, 3, 2, x, h - 4.5, zf, Bd); B(g, uw - 0.6, 3, 2, x, uy0 + 1.5, zf, Bd);
+      for (const s of [-1, 1]) B(g, 3, uh - 6, 2, x + s * (uw / 2 - 1.8), uy0 + uh / 2 - 1.5, zf, Bd);
+      glassPane(g, uw - 6, uh - 9, 0.5, x, uy0 + uh / 2 - 1.5, zf);
+    }
+  }
+  return g;
+}
+function glowMat(col) {
+  const k = 'glow|' + col;
+  if (!MATS.has(k)) MATS.set(k, new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.45, roughness: 0.8, side: THREE.DoubleSide }));
+  return MATS.get(k);
+}
+function buildOven(it) {
+  const g = new THREE.Group(), { w, d, h } = it, Bd = surfMat('lacquer', it.color), M = surfMat('metal', it.color2);
+  RB(g, w, h, d, 1.5, 0, h / 2, 0, Bd);
+  B(g, w * 0.72, h * 0.62, 0.5, -w * 0.1, h * 0.46, d / 2 + 0.1, DARKGLASS());
+  const hb = C(g, 0.8, 0.8, w * 0.6, -w * 0.1, h * 0.83, d / 2 + 2, M, 10); hb.rotation.z = Math.PI / 2;
+  for (let i = 0; i < 3; i++) C(g, 1.8, 1.8, 1.5, w * 0.37, h * (0.25 + i * 0.25), d / 2 + 0.7, M, 16).rotation.x = Math.PI / 2;
+  return g;
+}
+function buildDishwasher(it) {
+  const g = new THREE.Group(), { w, d, h } = it, Bd = surfMat('metal', it.color), M = surfMat('metal', it.color2);
+  RB(g, w, h, d, 1, 0, h / 2, 0, Bd);
+  B(g, w - 2, 8, 0.6, 0, h - 5, d / 2 + 0.2, surfMat('lacquer', '#2b2b2b'));
+  B(g, 5, 1, 0.3, w * 0.3, h - 5, d / 2 + 0.6, glowMat('#7fd1ff'));
+  const hb = C(g, 0.9, 0.9, w * 0.7, 0, h - 14, d / 2 + 2.5, M, 10); hb.rotation.z = Math.PI / 2;
+  B(g, w - 2, 9, 0.5, 0, 4.5, d / 2 - 2, surfMat('lacquer', '#2b2b2b'));
+  return g;
+}
+const DARKGLASS = () => surfMat('glass', '#1b1f24');
+function buildMicrowave(it) {
+  const g = new THREE.Group(), { w, d, h } = it, Bd = surfMat('lacquer', it.color);
+  RB(g, w, h, d, 1.5, 0, h / 2, 0, Bd);
+  B(g, w * 0.68, h - 6, 0.5, -w * 0.13, h / 2, d / 2 + 0.1, DARKGLASS());
+  B(g, w * 0.2, h - 6, 0.5, w * 0.37, h / 2, d / 2 + 0.1, surfMat('metal', it.color2));
+  return g;
+}
+function buildRiceCooker(it) {
+  const g = new THREE.Group(), { w, d, h } = it, Bd = surfMat('lacquer', it.color), M = surfMat('metal', '#b8bcc0'), r = Math.min(w, d) / 2;
+  C(g, r, r * 0.9, h * 0.7, 0, h * 0.35, 0, Bd, 32);
+  add(g, new THREE.SphereGeometry(r * 0.95, 32, 12, 0, Math.PI * 2, 0, Math.PI / 2), M, 0, h * 0.7, 0).scale.y = (h * 0.3) / (r * 0.95);
+  for (const sd of [-1, 1]) B(g, 3, 2, 6, sd * r, h * 0.62, 0, surfMat('metal', it.color2));
+  return g;
+}
+function buildCoffeeMaker(it) {
+  const g = new THREE.Group(), { w, d, h } = it, Bd = surfMat('metal', it.color), blk = surfMat('lacquer', it.color2);
+  RB(g, w, h, d * 0.55, 2, 0, h / 2, -d * 0.22, Bd);
+  B(g, w, 4, d, 0, 2, 0, blk);
+  B(g, w, h * 0.2, d, 0, h - h * 0.1, 0, Bd);
+  C(g, 1.5, 1.5, 4, 0, h * 0.72, d * 0.15, blk, 10);
+  C(g, 3.5, 3, 7, 0, 7.5, d * 0.15, surfMat('ceramic', '#ffffff'), 20);
+  return g;
+}
 function buildDanishTable(it) {
   const g = new THREE.Group(), { w, d, h } = it;
   const T = topMat(it), L = surfMat('wood', it.color2), pad = mat('#3b3632', 0.8);
@@ -1537,6 +1829,26 @@ function buildDornTable(it) {
   C(g, r, r, h - tc - tu - tm - 0.1, 3 * sx, (h - tc - tu - tm - 0.1) / 2, 2 * sz, Mt, 64);
   return g;
 }
+const BODYMAT_OPT = { key: 'bodymat', label: '櫃體材質', list: [opt('wood', '木頭'), opt('lacquer', '烤漆'), opt('glass', '玻璃')] };
+const FABRIC_OPT = { key: 'fabric', label: '面料', list: [opt('fabric', '布料'), opt('leather', '皮革'), opt('velvet', '絨布')] };
+const FRAMEMAT_OPT = { key: 'framemat', label: '床架材質', list: [opt('wood', '木頭'), opt('lacquer', '烤漆'), opt('fabric', '布料'), opt('leather', '皮革')] };
+const LEGMAT_OPT = { key: 'legmat', label: '腳材質', list: LEGMATS };
+const POT_OPT = { key: 'potmat', label: '盆器材質', list: [opt('ceramic', '陶瓷'), opt('cement', '水泥'), opt('rattan', '藤編')] };
+const CAB_TOP = { key: 'topmat', label: '檯面材質', list: TOPMAT_LIST, c3: '檯面顏色' };
+const EXTRA_OPTS = {
+  ownRecliner: [FABRIC_OPT], ownDanSofa: [FABRIC_OPT], ownLetItBe: [FABRIC_OPT], ownRoundChaise: [FABRIC_OPT], own171: [FABRIC_OPT], ownAthena: [FABRIC_OPT], own120: [FABRIC_OPT], own120Ott: [FABRIC_OPT], ownFloatL: [FABRIC_OPT], ownAmis: [FABRIC_OPT], ownMila: [FABRIC_OPT], ownEmma: [FABRIC_OPT], ownVChair: [FABRIC_OPT], ownMiyazaki: [FABRIC_OPT], ownDoll: [FABRIC_OPT], ownCY127: [FABRIC_OPT], ownDanishBench: [FABRIC_OPT], armchair: [FABRIC_OPT], sofa2: [FABRIC_OPT], sofa: [FABRIC_OPT], lsofa: [FABRIC_OPT], baysofa: [FABRIC_OPT],
+  lounge: [FABRIC_OPT], shellchair: [FABRIC_OPT], wingchair: [FABRIC_OPT], woodchair: [FABRIC_OPT], pouf: [FABRIC_OPT], bench: [FABRIC_OPT],
+  chair: [FABRIC_OPT, LEGMAT_OPT], barstool: [FABRIC_OPT], barstoolBack: [FABRIC_OPT], barstoolWood: [FABRIC_OPT], barstoolSwivel: [FABRIC_OPT], barisland: [BODYMAT_OPT, CAB_TOP], vstool: [FABRIC_OPT], ownPuff: [FABRIC_OPT], office: [FABRIC_OPT], desk: [LEGMAT_OPT], plant: [POT_OPT],
+  bed: [FRAMEMAT_OPT], queen: [FRAMEMAT_OPT], single: [FRAMEMAT_OPT],
+  tvcab: [BODYMAT_OPT, CAB_TOP], cabinet: [BODYMAT_OPT, CAB_TOP], night: [BODYMAT_OPT, CAB_TOP],
+  wardrobe: [BODYMAT_OPT], slidewardrobe: [BODYMAT_OPT], bookshelf: [BODYMAT_OPT], kitchen: [BODYMAT_OPT], sideboard: [BODYMAT_OPT], vanity: [BODYMAT_OPT],
+};
+const EXTRA_DEF = { // 白色系櫃體預設烤漆，木色系預設木頭；檯面顏色預設同櫃體
+  own171: { fabric: 'leather' }, ownAthena: { fabric: 'leather' }, barstool: { fabric: 'leather' }, barstoolBack: { fabric: 'fabric' }, barstoolWood: { fabric: 'leather' }, barstoolSwivel: { fabric: 'leather' }, barisland: { bodymat: 'lacquer', topmat: 'slate' },
+  ownVChair: { fabric: 'leather' }, ownMiyazaki: { fabric: 'leather' }, ownDoll: { fabric: 'leather' }, ownCY127: { fabric: 'leather' }, ownDanishBench: { fabric: 'leather' },
+  tvcab: { bodymat: 'lacquer' }, cabinet: { bodymat: 'lacquer' }, wardrobe: { bodymat: 'lacquer' }, slidewardrobe: { bodymat: 'lacquer' },
+  kitchen: { bodymat: 'lacquer' }, vanity: { bodymat: 'lacquer' },
+};
 function hslOf(hex) { const h = {}; new THREE.Color(hex || '#ffffff').getHSL(h, THREE.SRGBColorSpace); return h; }
 function puffPanelGeo(len, hgt, t, o = {}) {
   const geo = new THREE.BoxGeometry(1, 1, 1, 22, 18, 4), P = geo.attributes.position;
@@ -1832,13 +2144,39 @@ TYPES = {
   ownDorn: { sub: '茶几', name: '多恩茶几', w: 100, d: 96, h: 35, color: '#cbc2b6', color2: '#2f2b28', c1: '陶板顏色', c2: '金屬顏色', build: buildDornTable, opts: [TOPMAT_OPT], def: { topmat: 'slate' }, own: true },
   ownAshBig: { sub: '茶几', name: 'Ash陶板大茶几', w: 90, d: 90, h: 36, color: '#d6b98a', color2: '#eeece8', c1: '木頭顏色（桌框與桌腳）', c2: '陶板顏色', build: buildAshTable, own: true },
   ownAshSmall: { sub: '茶几', name: 'Ash陶板小茶几', w: 52, d: 52, h: 52, color: '#2e2724', color2: '#3b3b3d', c1: '木頭顏色（桌框與桌腳）', c2: '陶板顏色', build: buildAshTable, own: true },
+  kitchen: { sub: '廚具', generic: true, name: '廚具流理台', w: 240, d: 60,  h: 86,  color: '#f4f2ee', color2: '#4a4d52', c1: '門板',     c2: '檯面',     build: it => buildCabinet(it, { counter: true, doorW: 45 }), opts: KITCHEN_OPTS, def: { topmat: 'slate' }, wall: true },
+  barisland: { sub: '中島', generic: true, name: '中島吧檯',   w: 180, d: 75,  h: 95,  color: '#f2f0ec', color2: '#4a4d52', color3: '#3a3c40', c1: '櫃體', c2: null, build: it => buildBarTable(it, 'island') },
+  fridge: { sub: '廚房家電', generic: true, name: '冰箱',       w: 70,  d: 70,  h: 180, color: '#d9dcdf', color2: '#8a8f98', c1: '機身',     c2: '把手',     build: buildFridge, wall: true },
+  dishwasher: { sub: '廚房家電', generic: true, name: '洗碗機',    w: 60,  d: 60,  h: 85,  color: '#c9cdd1', color2: '#8e9099', c1: '門板', c2: '把手', build: buildDishwasher, wall: true },
+  microwave: { sub: '小家電', generic: true, name: '微波爐',     w: 50,  d: 40,  h: 30,  color: '#f4f4f2', color2: '#4a4d52', c1: '機身', c2: '面板', build: buildMicrowave, noHit: true },
+  ricecooker: { sub: '小家電', generic: true, name: '電鍋',      w: 32,  d: 32,  h: 30,  color: '#9fb3c8', color2: '#2b2b2b', c1: '鍋身', c2: '把手', build: buildRiceCooker, noHit: true },
+  coffeemaker: { sub: '小家電', generic: true, name: '咖啡機',   w: 25,  d: 40,  h: 36,  color: '#b8bcc0', color2: '#2b2b2b', c1: '機身', c2: '底座', build: buildCoffeeMaker, noHit: true },
+  oven: { sub: '小家電', generic: true, name: '烤箱',       w: 50,  d: 40,  h: 32,  color: '#2b2b2b', color2: '#b8bcc0', c1: '機身', c2: '把手旋鈕', build: buildOven, noHit: true, on: ['kitchen', 'sideboard', 'cabinet'] },
+  sideboard: { sub: '餐櫃', generic: true, name: '餐櫃',       w: 160, d: 45,  h: 85,  color: '#f2f0ec', color2: '#5a3a28', c1: '檯面', c2: '櫃體', build: buildSideboard, opts: SIDEBOARD_OPTS, def: { topmat: 'marble' }, wall: true },
+  bartable: { sub: '吧檯桌', generic: true, name: '長型吧檯桌', w: 140, d: 50,  h: 105, color: '#c49a6c', color2: '#222222', c1: '桌面', c2: '桌腳', build: it => buildBarTable(it, 'long'), opts: [BAR_BASES, BAR_LEGMAT, TOPMAT_OPT] },
+  barwall: { sub: '吧檯桌', generic: true, name: '靠牆吧檯',   w: 120, d: 38,  h: 105, color: '#c49a6c', color2: '#222222', c1: '檯面', c2: '支架', build: it => buildBarTable(it, 'wall'), opts: [TOPMAT_OPT], wall: true },
+  barround: { sub: '吧檯桌', generic: true, name: '圓形高腳桌', w: 60,  d: 60,  h: 105, color: '#f1ebe1', color2: '#222222', c1: '桌面', c2: '桌腳', build: it => buildBarTable(it, 'round'), opts: [BARROUND_BASES, BAR_LEGMAT, TOPMAT_OPT], def: { topmat: 'marble' } },
+  barstool: { sub: '吧檯椅', generic: true, name: '圓凳吧檯椅', w: 36,  d: 36,  h: 75,  color: '#8b5a3c', color2: '#222222', c1: '椅面', c2: '椅腳', build: it => buildBarStool(it, 'round'), opts: [BAR_LEGMAT] },
+  barstoolBack: { sub: '吧檯椅', generic: true, name: '低背吧檯椅', w: 42, d: 46, h: 95, color: '#b9b4ad', color2: '#222222', c1: '椅面', c2: '椅腳', build: it => buildBarStool(it, 'back'), opts: [BAR_LEGMAT] },
+  barstoolWood: { sub: '吧檯椅', generic: true, name: '實木吧檯椅', w: 42, d: 44, h: 102, color: '#3d3a38', color2: '#c49a6c', c1: '椅面', c2: '椅架', build: it => buildBarStool(it, 'wood'), opts: [BAR_LEGMAT], def: { legmat: 'wood' } },
+  barstoolSwivel: { sub: '吧檯椅', generic: true, name: '升降旋轉吧椅', w: 42, d: 42, h: 95, color: '#2f2f31', color2: '#c9cdd1', c1: '椅面', c2: '金屬', build: it => buildBarStool(it, 'swivel') },
   ownDambo: { sub: '沙發', name: '花瓣沙發', w: 360, d: 156, h: 83.5, color: '#b8a797', color2: '#c4b6a7', color3: '#232b45', c1: '靠背／底座布料', c2: '座墊布料', c3: '抱枕顏色', build: buildDamboSofa, opts: [DAMBO_SIDE_OPT, DAMBO_BEND_OPT, DAMBO_PIL_OPT], def: { side: 'left', bk: 'open', rp: 'on' }, wall: true, own: true },
   ownGetBack: { sub: '沙發', name: 'GET BACK 沙發', w: 381, d: 163, h: 87, color: '#a5623c', color2: '#cfcbc4', color3: '#9a4a2a', c1: '皮革外殼', c2: '座墊／靠背布料', c3: '抱枕顏色', build: buildGetBackSofa, opts: [GETBACK_SIDE_OPT, GETBACK_PIL_OPT], def: { side: 'right', rp: 'on' }, wall: true, own: true },
   ownGermain: { sub: '沙發', name: '聖日耳曼沙發', w: 320, d: 153.5, h: 65, color: '#d9cdb8', color2: '#232325', color3: '#9a9790', c1: '沙發布料', c2: '抱枕顏色', c3: '點綴抱枕', build: buildGermainSofa, opts: [GERMAIN_SIDE_OPT, GERMAIN_PIL_OPT], def: { side: 'left', rp: 'on' }, wall: true, own: true }
 };
+// 原版的額外選項（面料、櫃體材質、檯面材質）
+for (const [k, list] of Object.entries(EXTRA_OPTS)) {
+  const T = TYPES[k]; if (!T) continue;
+  T.opts = [...(T.opts || []), ...list];
+  T.def = { ...(T.def || {}), ...(EXTRA_DEF[k] || {}) };
+  if (list.includes(CAB_TOP)) { T.c3 = T.c3 || '檯面顏色'; if (!T.color3) T.color3 = T.color; }
+}
+// 小家電可以放在這些家具的檯面上
+export const ON_TOP = ['kitchen', 'sideboard', 'barisland', 'barwall', 'bartable'];
+for (const k of ['microwave', 'ricecooker', 'coffeemaker', 'oven']) if (TYPES[k]) TYPES[k].on = ON_TOP;
 const triSize = it => Math.max(18, Math.min(90, Math.round(Math.max(it.w || 0, it.d || 0, it.h || 0) * 0.3 / 6) * 6));
 export const PRODUCTS = TYPES;
-export const SUBS = ['沙發', '床台', '床頭櫃', '化妝桌椅', '書桌', '餐桌', '餐椅', '長凳', '茶几', '邊几'];
+export const SUBS = ['沙發', '茶几', '邊几', '餐桌', '餐椅', '長凳', '餐櫃', '廚具', '中島', '吧檯桌', '吧檯椅', '廚房家電', '小家電', '床台', '床頭櫃', '化妝桌椅', '書桌'];
 export function optsOf(T) { return T.opts || []; }
 export function withDefaults(it) {
   const T = TYPES[it.type];

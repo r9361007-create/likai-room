@@ -17,7 +17,7 @@ button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 .app{display:grid;grid-template-columns:320px 1fr;height:100dvh}
 /* ---------- 左側面板 ---------- */
-aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
 .brand{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
 .brand .logo{width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700}
 .brand b{font-size:16px}.brand small{display:block;color:var(--muted);font-size:12px}
@@ -96,9 +96,36 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
 .op-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .setup-foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end}
 .setup-foot .btn{box-shadow:none;padding:11px 26px;font-size:15px}
+/* ---------- 空間頁籤 ---------- */
+.spaces-wrap{position:relative;border-bottom:1px solid var(--line)}
+.spaces{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;scrollbar-width:none}
+.sp{flex:none;border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px;font-size:13px;display:flex;align-items:center;gap:5px}
+.sp span{background:#f0e9e0;color:var(--muted);border-radius:10px;padding:0 6px;font-size:11px}
+.sp.on{background:var(--ink);border-color:var(--ink);color:#fff}.sp.on span{background:rgba(255,255,255,.2);color:#fff}
+.sp.add{color:var(--accent);font-weight:700;padding:6px 12px}
+.sp-menu{position:absolute;left:12px;right:12px;top:100%;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:10px;display:none;flex-direction:column;gap:6px}
+.sp-menu.on{display:flex}
+.sp-menu button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px;text-align:left}
+.libbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.libbar b{font-size:13px}
+.link{border:0;background:none;color:var(--accent);font-size:13px;padding:4px 0}
+.tag{font-style:normal;background:#ece6dd;color:var(--muted);border-radius:4px;padding:0 4px;margin-right:4px;font-size:10px}
+.field input[type=text]{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff}
+/* 快速開始 */
+.quick-box{width:min(760px,100%)}
+.quick-body{grid-template-columns:1fr 1fr}
+#q-ping{font-size:22px;padding:8px 12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{flex:1;min-width:64px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 6px;font-size:15px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.chips button small{font-size:11px;color:var(--muted)}
+.chips button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.est{list-style:none;margin:0;padding:0}
+.est li{display:flex;justify-content:space-between;align-items:baseline;padding:9px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:6px;background:#fff}
+.est li span{color:var(--muted);font-size:12px}
+.quick-foot{justify-content:space-between;gap:10px}
 /* ---------- 手機 ---------- */
 @media (max-width:760px){
-  .app{grid-template-columns:1fr;grid-template-rows:56dvh 1fr}
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:56dvh minmax(0,1fr)}
   main{grid-row:1}
   aside{grid-row:2;border-right:0;border-top:1px solid var(--line)}
   .brand{display:none}
@@ -113,6 +140,8 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
   .setup-plan svg{max-height:32dvh}
   .addrow{grid-template-columns:repeat(2,1fr)}
   .setup-foot .btn{width:100%;padding:13px 0}
+  .quick-body{grid-template-columns:1fr}
+  .quick-foot{flex-direction:column-reverse}
 }
 </style>
 <script type="importmap">
@@ -126,16 +155,25 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
 <div class="app">
   <aside>
     <div class="brand"><div class="logo">莉</div><div><b>莉凱家俱・空間配置</b><small>量好房間，把家具擺進去看看</small></div></div>
+    <div class="spaces-wrap"><div class="spaces" id="spaces"></div>
+      <div class="sp-menu" id="sp-menu"><b>新增哪一種空間？</b>
+        <button data-type="living">客廳</button><button data-type="dining">餐廳（含廚房）</button><button data-type="bedroom">臥室</button><button data-type="ld">客餐廳（開放式）</button>
+      </div>
+    </div>
     <div class="tabs">
       <button data-tab="lib" class="on">商品</button>
       <button data-tab="room">房間</button>
       <button data-tab="placed">已擺放 <span id="cnt">0</span></button>
     </div>
-    <div class="pane on" id="pane-lib"><div id="lib"></div></div>
+    <div class="pane on" id="pane-lib"><div class="libbar"><b id="lib-for"></b><button class="link" id="lib-all">看全部</button></div><div id="lib"></div></div>
     <div class="pane" id="pane-room">
-      <h3>房間</h3>
+      <h3>這個空間</h3>
+      <div class="field"><label>名稱</label><input type="text" id="sp-name" maxlength="12"></div>
       <p class="hint" id="room-sum"></p>
       <button class="btn pri" id="edit-room" style="box-shadow:none;width:100%">編輯房間尺寸與門窗</button>
+      <button class="btn" id="sp-del" style="box-shadow:none;width:100%;margin-top:8px;color:var(--danger)">刪除這個空間</button>
+      <h3>整間房子</h3>
+      <button class="btn" id="restart" style="box-shadow:none;width:100%">重新輸入坪數、幾房幾廳</button>
       <h3>操作方式</h3>
       <p class="hint">・點商品就會放進房間<br>・拖曳家具移動，靠近牆面會自動貼齊<br>・拖曳空白處旋轉視角，兩指或滾輪縮放<br>・紅框代表家具重疊或超出房間<br>・電腦鍵盤：R 旋轉、Delete 刪除、Ctrl+Z 復原</p>
       <h3>清空</h3>
@@ -173,9 +211,34 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
       </div>
     </div>
     <div class="toast" id="toast"></div>
+    <div class="setup" id="quick">
+      <div class="setup-box quick-box">
+        <div class="setup-head"><div><b>歡迎！先大概說說你的房子</b><div class="hint">輸入坪數和格局，我們幫你粗估每個空間的大小</div></div></div>
+        <div class="setup-body quick-body">
+          <div>
+            <h3>室內坪數</h3>
+            <div class="field"><input type="number" inputmode="decimal" id="q-ping" value="25" min="8" max="150" step="0.5"><span style="white-space:nowrap">坪</span></div>
+            <p class="hint">權狀坪數扣掉公設、陽台、車位，大約就是室內坪數。</p>
+            <h3>幾房</h3>
+            <div class="chips" id="q-rooms"><button data-v="1">1 房</button><button data-v="2">2 房</button><button data-v="3" class="on">3 房</button><button data-v="4">4 房</button></div>
+            <h3>幾廳</h3>
+            <div class="chips" id="q-halls"><button data-v="1">1 廳<small>客餐廳在一起</small></button><button data-v="2" class="on">2 廳<small>客廳、餐廳分開</small></button></div>
+          </div>
+          <div>
+            <h3>粗估結果</h3>
+            <ul class="est" id="q-est"></ul>
+            <p class="hint">只是依一般住宅比例估算，廚房算在餐廳裡；之後每個空間都可以再改尺寸、加門窗。</p>
+          </div>
+        </div>
+        <div class="setup-foot quick-foot">
+          <button class="btn" id="q-manual">不知道，我自己輸入</button>
+          <button class="btn pri" id="q-go">用這個開始</button>
+        </div>
+      </div>
+    </div>
     <div class="setup" id="setup">
       <div class="setup-box">
-        <div class="setup-head"><div><b>設定房間</b><div class="hint">先把房間尺寸和門窗位置設好，擺家具才看得準</div></div><button class="x" id="setup-x" aria-label="關閉">×</button></div>
+        <div class="setup-head"><div><b id="setup-title">設定房間</b><div class="hint">先把房間尺寸和門窗位置設好，擺家具才看得準</div></div><button class="x" id="setup-x" aria-label="關閉">×</button></div>
         <div class="setup-body">
           <div class="setup-plan"><svg id="plan"></svg><p class="hint">上方是後牆、下方是前牆（站在門口往裡看的方向）</p></div>
           <div class="setup-form">
@@ -209,44 +272,69 @@ import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js';
 
 const $ = s => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const deg = Math.PI / 180;
 const STORE = 'likai-room-v1';
 const WALL_T = 10, SNAP = 15;
 
 /* ================= 狀態 ================= */
-let state = { room: { w: 450, d: 400, h: 280 }, items: [] };
+// 一個專案有好幾個空間（客廳、餐廳、臥室…），state 永遠指向目前這個空間
+const SPACE_TYPES = {
+  living:  { name: '客廳',   room: { w: 450, d: 400, h: 280 }, subs: ['沙發', '茶几', '邊几'] },
+  dining:  { name: '餐廳',   room: { w: 350, d: 300, h: 280 }, subs: ['餐桌', '餐椅', '長凳', '廚具', '中島', '廚房家電', '小家電', '餐櫃', '吧檯桌', '吧檯椅'] },
+  bedroom: { name: '臥室',   room: { w: 350, d: 330, h: 280 }, subs: ['床台', '床頭櫃', '化妝桌椅', '書桌'] },
+  ld:      { name: '客餐廳', room: { w: 700, d: 420, h: 280 }, subs: ['沙發', '茶几', '邊几', '餐桌', '餐椅', '長凳', '廚具', '中島', '廚房家電', '小家電', '餐櫃', '吧檯桌', '吧檯椅'] },
+};
+const newSpace = (type, name) => ({ name: name || SPACE_TYPES[type].name, type, room: { ...SPACE_TYPES[type].room, openings: [] }, items: [] });
+const defaultProject = () => ({ cur: 0, spaces: ['living', 'dining', 'bedroom'].map(t => newSpace(t)) });
+let project = defaultProject();
+let state = project.spaces[0];
 let nextId = 1, selId = null, undoStack = [];
 const objs = new Map();                        // id → THREE.Group
 
+// 舊版只有一個房間：{ room, items } → 放進客廳，再補上餐廳、臥室
+function migrate(o) {
+  if (o && Array.isArray(o.spaces)) { o.started = true; o.spaces = o.spaces.filter(s => s && s.room && SPACE_TYPES[s.type]); if (!o.spaces.length) return defaultProject(); o.cur = clamp(o.cur | 0, 0, o.spaces.length - 1); return o; }
+  if (o && o.room) { const p = defaultProject(); p.started = true; Object.assign(p.spaces[0], { room: o.room, items: o.items || [] }); return p; }
+  return defaultProject();
+}
 function load() {
   const h = location.hash.match(/^#p=(.+)$/);
-  if (h) try { state = decode(h[1]); history.replaceState(null, '', location.pathname + location.search); toast('已載入分享的配置'); return; } catch (e) { }
-  try { const s = localStorage.getItem(STORE); if (s) state = JSON.parse(s); } catch (e) { }
+  if (h) try { project = migrate(decode(h[1])); history.replaceState(null, '', location.pathname + location.search); toast('已載入分享的配置'); state = project.spaces[project.cur]; return; } catch (e) { }
+  try { const s = localStorage.getItem(STORE); if (s) project = migrate(JSON.parse(s)); } catch (e) { }
+  state = project.spaces[project.cur];
 }
-function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { } }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(project)); } catch (e) { } }
+function setState(s) { project.spaces[project.cur] = state = s; }
 function snapshot() { undoStack.push(JSON.stringify(state)); if (undoStack.length > 50) undoStack.shift(); $('#undo').disabled = false; }
 function undo() {
   if (!undoStack.length) return;
-  state = JSON.parse(undoStack.pop()); $('#undo').disabled = !undoStack.length;
+  setState(JSON.parse(undoStack.pop())); $('#undo').disabled = !undoStack.length;
   if (!state.items.some(i => i.id === selId)) selId = null;
-  rebuildAll(); save();
+  rebuildAll(); buildSelPanel(); roomSummary(); save();
 }
-// 分享連結：只存和預設不同的欄位，盡量短
+// 分享連結：整個專案（所有空間），家具只存和預設不同的欄位，盡量短
 const KEEP = ['type', 'x', 'z', 'rot'];
 function encode() {
-  const items = state.items.map(it => {
-    const T = PRODUCTS[it.type], o = {};
-    for (const k of Object.keys(it)) if (k !== 'id' && (KEEP.includes(k) || it[k] !== (T[k] ?? (T.def && T.def[k])))) o[k] = it[k];
-    return o;
-  });
-  const json = JSON.stringify({ room: state.room, items });
+  const slim = it => { const T = PRODUCTS[it.type], o = {}; for (const k of Object.keys(it)) if (k !== 'id' && (KEEP.includes(k) || it[k] !== (T[k] ?? (T.def && T.def[k])))) o[k] = it[k]; return o; };
+  const json = JSON.stringify({ cur: project.cur, spaces: project.spaces.map(s => ({ name: s.name, type: s.type, room: s.room, items: s.items.map(slim) })) });
   return btoa(String.fromCharCode(...new TextEncoder().encode(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 function decode(s) {
   const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
   const o = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
-  o.items = o.items.filter(it => PRODUCTS[it.type]);
+  for (const sp of o.spaces || [o]) sp.items = (sp.items || []).filter(it => PRODUCTS[it.type]);
   return o;
+}
+// 切換空間
+function switchSpace(i) {
+  project.cur = i; state = project.spaces[i]; selId = null; undoStack = []; $('#undo').disabled = true;
+  rebuildAll(); buildSelPanel(); renderSpaces(); filterLib(); roomSummary(); setView(view === 'top' ? 'top' : view === 'eye' ? 'eye' : 'orbit'); save();
+  if (!state.room.setup) openSetup();
+}
+function renderSpaces() {
+  $('#spaces').innerHTML = project.spaces.map((s, i) => `<button class="sp ${i === project.cur ? 'on' : ''}" data-i="${i}">${esc(s.name)}<span>${s.items.length}</span></button>`).join('')
+    + `<button class="sp add" id="sp-add" aria-label="新增空間">＋</button>`;
 }
 
 /* ================= 3D 場景 ================= */
@@ -461,12 +549,12 @@ function makeObj(it) {
   const old = objs.get(it.id); if (old) { furnGroup.remove(old); dispose(old); }
   const g = buildModel(it);
   g.traverse(o => { o.userData.id = it.id; if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  g.position.set(it.x, 0, it.z); g.rotation.y = -it.rot * deg;
+  g.position.set(it.x, it.elev || 0, it.z); g.rotation.y = -it.rot * deg;
   furnGroup.add(g); objs.set(it.id, g);
   return g;
 }
 function dispose(g) { g.traverse(o => { if (o.isMesh && o.geometry) o.geometry.dispose(); }); }
-function boxOf(it) { const g = objs.get(it.id); g.position.set(it.x, 0, it.z); g.rotation.y = -it.rot * deg; g.updateMatrixWorld(true); return new THREE.Box3().setFromObject(g); }
+function boxOf(it) { const g = objs.get(it.id); g.position.set(it.x, it.elev || 0, it.z); g.rotation.y = -it.rot * deg; g.updateMatrixWorld(true); return new THREE.Box3().setFromObject(g); }
 // 放進房間內，靠牆 SNAP 公分內自動貼齊
 function fit(it, snap) {
   const W = state.room.w / 2, D = state.room.d / 2, b = boxOf(it);
@@ -478,7 +566,27 @@ function fit(it, snap) {
   if (b.max.x - b.min.x <= 2 * W) { if (b.min.x + dx < -W) dx = -W - b.min.x; if (b.max.x + dx > W) dx = W - b.max.x; }
   if (b.max.z - b.min.z <= 2 * D) { if (b.min.z + dz < -D) dz = -D - b.min.z; if (b.max.z + dz > D) dz = D - b.max.z; }
   it.x = Math.round((it.x + dx) * 10) / 10; it.z = Math.round((it.z + dz) * 10) / 10;
-  objs.get(it.id).position.set(it.x, 0, it.z);
+  it.elev = hostTop(it);
+  objs.get(it.id).position.set(it.x, it.elev, it.z);
+}
+// 微波爐、電鍋這類小家電：底下是流理台、餐櫃、中島就放在檯面上
+function hostTop(it) {
+  const T = PRODUCTS[it.type]; if (!T.on) return 0;
+  for (const o of state.items) {
+    if (o === it || !T.on.includes(o.type)) continue;
+    const b = boxOf(o);
+    if (it.x > b.min.x && it.x < b.max.x && it.z > b.min.z && it.z < b.max.z) return (o.elev || 0) + o.h;   // 用檯面高度（模型上的水龍頭會比檯面高）
+  }
+  return 0;
+}
+// 這些組合本來就會疊在一起，不算重疊：椅子收進桌子底下、小家電放在檯面上
+const CHAIR = T => ['餐椅', '吧檯椅'].includes(T.sub) || T.name.includes('化妝椅');
+const TABLE = T => ['餐桌', '吧檯桌', '中島', '書桌'].includes(T.sub) || T.name.includes('化妝台');
+function canOverlap(a, b) {
+  const A = PRODUCTS[a.type], B = PRODUCTS[b.type];
+  if ((CHAIR(A) && TABLE(B)) || (CHAIR(B) && TABLE(A))) return true;
+  if ((A.on && a.elev > 0 && A.on.includes(b.type)) || (B.on && b.elev > 0 && B.on.includes(a.type))) return true;
+  return false;
 }
 function problems() {                         // 有問題的家具：id → 原因
   const bad = new Map(), W = state.room.w / 2 + 0.5, D = state.room.d / 2 + 0.5;
@@ -486,7 +594,7 @@ function problems() {                         // 有問題的家具：id → 原
   for (const [it, b] of boxes) if (b.min.x < -W || b.max.x > W || b.min.z < -D || b.max.z > D) bad.set(it.id, "超出房間");
   for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
     const a = boxes[i][1].clone().expandByScalar(-1), b = boxes[j][1].clone().expandByScalar(-1);
-    if (a.intersectsBox(b)) for (const k of [i, j]) if (!bad.has(boxes[k][0].id)) bad.set(boxes[k][0].id, "和其他家具重疊");
+    if (a.intersectsBox(b) && !canOverlap(boxes[i][0], boxes[j][0])) for (const k of [i, j]) if (!bad.has(boxes[k][0].id)) bad.set(boxes[k][0].id, "和其他家具重疊");
   }
   for (const [it, b] of boxes) if (!bad.has(it.id)) { const z = zb.find(z => z.b.intersectsBox(b.clone().expandByScalar(-1))); if (z) bad.set(it.id, z.why); }
   return bad;
@@ -497,6 +605,8 @@ function addItem(type) {
   state.items.push(it); makeObj(it);
   // 靠牆家具先放到後牆，其他放中間；撞到就往旁邊找空位
   const D = state.room.d / 2, W = state.room.w / 2;
+  const host = T.on && state.items.find(o => T.on.includes(o.type) && o !== it);
+  if (host) { it.x = host.x; it.z = host.z; fit(it, false); select(it.id); refresh(); save(); toast(`已把 ${T.name} 放在 ${PRODUCTS[host.type].name} 上`); return; }
   const z0 = T.wall ? -D + it.d / 2 : 0, tries = [[0, z0]];
   for (let r = 40; r < Math.max(W, D) * 2; r += 40) for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) tries.push([dx * r, z0 + dz * r]);
   for (const [x, z] of tries) {
@@ -504,7 +614,7 @@ function addItem(type) {
     if (!problems().has(it.id)) break;
   }
   select(it.id); refresh(); save();
-  toast(`已放入 ${T.name}`);
+  toast(T.on ? `已放入 ${T.name}，可以拖到流理台或餐櫃上` : `已放入 ${T.name}`);
 }
 function rebuildAll() {
   buildRoom();
@@ -518,7 +628,7 @@ function rebuildAll() {
 
 /* ================= 標示（選取框、紅框） ================= */
 function refresh() {
-  markGroup.clear();
+  markGroup.clear(); renderSpaces();
   const bad = problems();
   for (const it of state.items) {
     const isSel = it.id === selId; if (!isSel && !bad.has(it.id)) continue;
@@ -609,10 +719,17 @@ function renderLib() {
   let h = '';
   for (const s of SUBS) {
     const keys = Object.keys(PRODUCTS).filter(k => PRODUCTS[k].sub === s); if (!keys.length) continue;
-    h += `<h3>${s}</h3><div class="grid">` + keys.map(k => { const T = PRODUCTS[k];
-      return `<button class="card" data-type="${k}"><div class="th" id="th-${k}"></div><b>${T.name}</b><span>${T.w}×${T.d}×${T.h}</span></button>`; }).join('') + '</div>';
+    h += `<section data-sub="${s}"><h3>${s}</h3><div class="grid">` + keys.map(k => { const T = PRODUCTS[k];
+      return `<button class="card" data-type="${k}"><div class="th" id="th-${k}"></div><b>${T.name}</b><span>${T.generic ? '<i class="tag">一般款</i>' : ''}${T.w}×${T.d}×${T.h}</span></button>`; }).join('') + '</div></section>';
   }
   $('#lib').innerHTML = h;
+}
+let libAll = false;
+function filterLib() {                          // 只列出適合目前空間的分類；按「看全部」列出所有
+  const subs = SPACE_TYPES[state.type].subs;
+  document.querySelectorAll('#lib section').forEach(sec => { sec.style.display = libAll || subs.includes(sec.dataset.sub) ? '' : 'none'; });
+  $('#lib-for').textContent = libAll ? '全部商品' : `適合${SPACE_TYPES[state.type].name}的家具`;
+  $('#lib-all').textContent = libAll ? `只看${SPACE_TYPES[state.type].name}` : '看全部';
 }
 async function makeThumbs() {
   const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
@@ -635,6 +752,70 @@ async function makeThumbs() {
 }
 $('#lib').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) addItem(c.dataset.type); });
 
+/* ================= 快速開始：坪數＋幾房幾廳 → 粗估每個空間 ================= */
+const PING = 33058;                              // 1 坪 = 3.3058 m² = 33058 cm²
+const SHAPE = { living: 1.25, dining: 1.1, bedroom: 1.1, ld: 1.75 };   // 寬：深 的比例
+function estimate(ping, rooms, halls) {
+  const baths = rooms >= 2 ? 2 : 1;
+  const rest = ping - baths * 1.3 - ping * 0.12;                         // 扣掉衛浴（每間約 1.3 坪）和走道、牆壁、收納（約 12%）
+  let beds = Array.from({ length: rooms }, (_, i) => i === 0 ? clamp(ping * 0.16, 3.5, 6) : clamp(ping * 0.11, 2.5, 4));
+  const minPub = halls === 2 ? 7 : 6, sum = a => a.reduce((x, y) => x + y, 0);
+  if (rest - sum(beds) < minPub) { const k = Math.max(0.5, (rest - minPub) / sum(beds)); beds = beds.map(b => b * k); }   // 坪數太小：臥室一起縮
+  const pub = Math.max(minPub * 0.6, rest - sum(beds));
+  const list = halls === 2 ? [['客廳', 'living', pub * 0.56], ['餐廳', 'dining', pub * 0.44]] : [['客餐廳', 'ld', pub]];
+  beds.forEach((b, i) => list.push([rooms === 1 ? '臥室' : i === 0 ? '主臥室' : `臥室 ${i + 1}`, 'bedroom', b]));
+  return list.map(([name, type, p]) => {
+    const A = p * PING, w = Math.round(Math.sqrt(A * SHAPE[type]) / 10) * 10, d = Math.round(A / w / 10) * 10;
+    return { name, type, ping: Math.round(p * 10) / 10, w, d };
+  });
+}
+const qVal = id => +document.querySelector(`#${id} .on`).dataset.v;
+function renderEstimate() {
+  const ping = clamp(+$('#q-ping').value || 0, 8, 150);
+  $('#q-est').innerHTML = estimate(ping, qVal('q-rooms'), qVal('q-halls'))
+    .map(e => `<li><b>${e.name}</b><span>約 ${e.ping} 坪・寬 ${e.w} × 深 ${e.d}</span></li>`).join('');
+}
+function openQuick() { renderEstimate(); $('#quick').classList.add('on'); }
+function startProject(spaces) {
+  project = { cur: 0, started: true, spaces };
+  $('#quick').classList.remove('on'); switchSpace(0);
+}
+for (const id of ['q-rooms', 'q-halls']) $('#' + id).addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('#' + id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderEstimate();
+});
+$('#q-ping').addEventListener('input', renderEstimate);
+$('#q-go').onclick = () => {
+  const ping = clamp(+$('#q-ping').value || 0, 8, 150);
+  startProject(estimate(ping, qVal('q-rooms'), qVal('q-halls')).map(e => ({ name: e.name, type: e.type, room: { w: e.w, d: e.d, h: 280, openings: [] }, items: [] })));
+};
+$('#q-manual').onclick = () => startProject(defaultProject().spaces);
+$('#restart').onclick = openQuick;
+
+/* ================= 空間頁籤 ================= */
+$('#spaces').addEventListener('click', e => {
+  const b = e.target.closest('.sp'); if (!b) return;
+  if (b.id === 'sp-add') { $('#sp-menu').classList.toggle('on'); return; }
+  $('#sp-menu').classList.remove('on'); if (+b.dataset.i !== project.cur) switchSpace(+b.dataset.i);
+});
+$('#sp-menu').addEventListener('click', e => {
+  const b = e.target.closest('[data-type]'); if (!b) return;
+  const base = SPACE_TYPES[b.dataset.type].name, names = project.spaces.map(s => s.name);
+  let name = base; for (let n = 2; names.includes(name); n++) name = `${base} ${n}`;
+  project.spaces.push(newSpace(b.dataset.type, name)); $('#sp-menu').classList.remove('on');
+  switchSpace(project.spaces.length - 1);
+});
+document.addEventListener('pointerdown', e => { if (!e.target.closest('.spaces-wrap')) $('#sp-menu').classList.remove('on'); });
+$('#sp-name').addEventListener('change', e => { state.name = e.target.value.trim() || SPACE_TYPES[state.type].name; e.target.value = state.name; renderSpaces(); save(); });
+let delArmed = 0;
+$('#sp-del').onclick = () => {                   // 按兩次才刪，避免誤刪
+  if (project.spaces.length === 1) { toast('至少要留一個空間'); return; }
+  if (Date.now() - delArmed > 3000) { delArmed = Date.now(); $('#sp-del').textContent = `再按一次，刪除「${state.name}」`; setTimeout(() => { $('#sp-del').textContent = '刪除這個空間'; }, 3000); return; }
+  const name = state.name; project.spaces.splice(project.cur, 1); delArmed = 0; $('#sp-del').textContent = '刪除這個空間';
+  switchSpace(Math.max(0, project.cur - 1)); toast(`已刪除「${name}」`);
+};
+$('#lib-all').onclick = () => { libAll = !libAll; filterLib(); };
+
 /* ================= 介面 ================= */
 let toastT;
 function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
@@ -645,13 +826,14 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
 $('#placed').addEventListener('click', e => { const li = e.target.closest('li'); if (li) select(+li.dataset.id); });
 /* ================= 設定房間（尺寸＋門窗） ================= */
 const OP_COLOR = { window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#b8683a' };
-function openSetup() { snapshot(); renderOps(); drawPlan(); $('#setup').classList.add('on'); }
+function openSetup() { $('#setup-title').textContent = `設定${state.name}`; snapshot(); renderOps(); drawPlan(); $('#setup').classList.add('on'); }
 function closeSetup() {
   $('#setup').classList.remove('on'); state.room.setup = true; save(); roomSummary();
   setView(view === 'top' ? 'top' : 'orbit');
 }
 function applyRoom() { buildRoom(); for (const it of state.items) fit(it, false); refresh(); drawPlan(); roomSummary(); save(); }
 function roomSummary() {
+  $('#sp-name').value = state.name;
   const r = state.room, ops = r.openings || [], n = k => ops.filter(o => o.kind === k).length;
   const parts = Object.keys(OPEN_KINDS).filter(k => n(k)).map(k => `${OPEN_KINDS[k].name} ${n(k)}`);
   $('#room-sum').textContent = `寬 ${r.w} × 深 ${r.d}，天花板高 ${r.h} 公分。` + (parts.length ? parts.join('、') : '還沒設定門窗');
@@ -745,6 +927,7 @@ $('#share').onclick = async () => {
 };
 addEventListener('keydown', e => {
   if (e.target.matches('input,select')) return;
+  if ($('#quick').classList.contains('on')) return;
   if ($('#setup').classList.contains('on')) { if (e.key === 'Escape') closeSetup(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
   else if (e.key === 'r' || e.key === 'R') rotate();
@@ -770,9 +953,10 @@ function resize() {
 new ResizeObserver(resize).observe(canvas);
 renderer.setAnimationLoop(() => { if (!topView) controls.update(); render(); });
 
-load(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary();
+load(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary(); renderSpaces(); filterLib();
 { const v = new URLSearchParams(location.search).get('view'); if (v === 'eye' || v === 'top') setView(v); }   // 網址加 ?view=eye 直接用人視角打開
-if (!state.room.setup) { openSetup(); undoStack = []; $('#undo').disabled = true; }
+if (!project.started) openQuick();               // 第一次來：先問坪數、幾房幾廳
+else if (!state.room.setup) { openSetup(); undoStack = []; $('#undo').disabled = true; }
 $('#loading').remove();
 makeThumbs();
 </script>
