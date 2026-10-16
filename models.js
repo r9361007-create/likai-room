@@ -1076,6 +1076,68 @@ function buildFridge(it) {
   B(g, 2, Math.min(40, h * 0.25), 2.5, -w / 2 + 6, h - top - 30, d / 2 + 1, HD);
   return g;
 }
+function buildRug(it) {
+  const g = new THREE.Group(), { w, d } = it, hh = Math.max(0.6, it.h);
+  const b = Math.min(10, w * 0.06, d * 0.06);
+  B(g, w, hh, d, 0, hh / 2, 0, mat(it.color2, 1));
+  B(g, w - 2 * b, hh + 0.15, d - 2 * b, 0, (hh + 0.15) / 2, 0, mat(it.color, 1));
+  g.traverse(o => { o.castShadow = false; });
+  return g;
+}
+const PLANT_OPTS = [{ key: 'style', label: '款式', list: [opt('tall', '大型綠植'), opt('ball', '圓球盆栽'), opt('snake', '虎尾蘭')] }];
+function buildPlant(it) {
+  const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'tall';
+  const P = surfMat(it.potmat || 'ceramic', it.color), Lf = mat(it.color2, 0.85);
+  const r = Math.min(w, d) / 2, potH = Math.min(h * 0.3, 40), pr = r * 0.6;
+  C(g, pr, pr * 0.78, potH, 0, potH / 2, 0, P, 24);
+  const fh = h - potH;
+  if (style === 'ball') {
+    const R = Math.min(r * 0.95, fh / 2 - 2);
+    C(g, 1.2, 1.5, fh - 2 * R + 2, 0, potH + (fh - 2 * R + 2) / 2, 0, mat('#6b4f3a', 0.9), 8);
+    add(g, new THREE.IcosahedronGeometry(R, 2), Lf, 0, h - R, 0);
+    return g;
+  }
+  if (style === 'snake') {
+    const n = 11;
+    for (let i = 0; i < n; i++) {
+      const a = i * 2.4, rr = pr * 0.5 * ((i % 3) / 2), bh = fh * (0.55 + ((i * 37) % 45) / 100);
+      const m = B(g, 3.5, bh, 0.8, Math.cos(a) * rr, potH + bh / 2, Math.sin(a) * rr, Lf);
+      m.rotation.y = a; m.rotation.z = Math.cos(a) * 0.12; m.rotation.x = Math.sin(a) * 0.12;
+    }
+    return g;
+  }
+  C(g, 1.2, 1.5, h * 0.35, 0, potH + h * 0.15, 0, mat('#6b4f3a', 0.9), 8);
+  const fr = Math.min(r * 0.62, fh * 0.28);
+  const pts = [[0, .72, 0, 1], [.45, .5, .2, .8], [-.4, .55, -.25, .8], [.1, .5, -.45, .75], [-.2, .42, .42, .72], [0, .92, 0, .6]];
+  for (const [px, py, pz, s] of pts) add(g, new THREE.IcosahedronGeometry(fr * s, 1), Lf, px * (r - fr * s), potH + fh * py - fr * s * 0.3, pz * (r - fr * s));
+  return g;
+}
+const LAMP_OPTS = [{ key: 'style', label: '款式', list: [opt('drum', '直筒燈罩'), opt('tripod', '三腳燈'), opt('arc', '弧形釣魚燈', { size: { w: 120, d: 40, h: 190 } })] }];
+function buildLamp(it) {
+  const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'drum';
+  const L = mat(it.color2, 0.4, 0.5), r = Math.min(w, d) / 2;
+  const shade = new THREE.MeshStandardMaterial({ color: it.color, emissive: it.color, emissiveIntensity: 0.35, roughness: 0.9, side: THREE.DoubleSide });
+  shade.userData.own = true;
+  if (style === 'tripod') {
+    const sh = Math.min(45, h * 0.3), top = h - sh * 0.75;
+    for (let k = 0; k < 3; k++) { const a = k * Math.PI * 2 / 3 + 0.5; rod(g, new V3(0, top, 0), new V3(Math.cos(a) * r * 0.85, 0, Math.sin(a) * r * 0.85), 0.9, L); }
+    add(g, new THREE.CylinderGeometry(r * 0.5, r * 0.95, sh, 24, 1, true), shade, 0, h - sh / 2, 0).castShadow = false;
+    return g;
+  }
+  if (style === 'arc') {
+    const R = Math.min(20, w * 0.16), bx = -w / 2 + 12, sx = w / 2 - R - 2;
+    B(g, 22, 5, Math.min(30, d), bx, 2.5, 0, mat('#e9e4da', 0.4));
+    const curve = new THREE.QuadraticBezierCurve3(new V3(bx, 5, 0), new V3(bx, h + 40, 0), new V3(sx, h - 2, 0));
+    add(g, new THREE.TubeGeometry(curve, 40, 1.1, 8, false), L, 0, 0, 0);
+    add(g, new THREE.SphereGeometry(R, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), shade, sx, h - R - 2, 0).castShadow = false;
+    return g;
+  }
+  C(g, r * 0.6, r * 0.65, 2.5, 0, 1.25, 0, L, 28);
+  const sh = Math.min(30, h * 0.2);
+  C(g, 1.2, 1.2, h - sh - 2, 0, 2 + (h - sh - 2) / 2, 0, L, 10);
+  add(g, new THREE.CylinderGeometry(r * 0.65, r, sh, 32, 1, true), shade, 0, h - sh / 2, 0).castShadow = false;
+  return g;
+}
 const TOPMAT_LIST = [opt('wood', '木頭'), opt('marble', '大理石'), opt('slate', '陶板(岩板)'), opt('glass', '玻璃')];
 const TOPMAT_OPT = { key: 'topmat', label: '桌面材質', list: TOPMAT_LIST };
 const COUNTER_OPT = { key: 'topmat', label: '檯面材質', list: TOPMAT_LIST };
@@ -1166,6 +1228,15 @@ const topMat = (it, key = 'color') => surfMat(it.topmat || 'wood', it[key]);
 const bodyMat = (it, key = 'color') => surfMat(it.bodymat || ((TYPES[it.type] || {}).def || {}).bodymat || 'wood', it[key]);
 const fabMat = (it, key = 'color') => surfMat(it.fabric || 'fabric', it[key]);
 const MIRROR = new THREE.MeshStandardMaterial({ color: '#dfe7ea', roughness: 0.04, metalness: 0.95 });
+const RUG_OPTS = [{ key: 'shape', label: '形狀', list: [opt('rect', '長方形', { size: { w: 200, d: 140, h: 1 } }), opt('round', '圓形', { size: { w: 160, d: 160, h: 1 } })] }];
+function buildRugShaped(it) {
+  if ((it.shape || 'rect') === 'rect') return buildRug(it);
+  const g = new THREE.Group(), { w, d } = it, hh = Math.max(0.6, it.h), b = Math.min(10, w * 0.06);
+  C(g, .5, .5, hh, 0, hh / 2, 0, mat(it.color2, 1), 64).scale.set(w, 1, d);
+  C(g, .5, .5, hh + 0.15, 0, (hh + 0.15) / 2, 0, mat(it.color, 1), 64).scale.set(w - 2 * b, 1, d - 2 * b);
+  g.traverse(o => { o.castShadow = false; });
+  return g;
+}
 const SIDEBOARD_OPTS = [{ key: 'style', label: '款式', list: [opt('low', '矮櫃'), opt('slat', '格柵門矮櫃'), opt('tall', '高餐櫃（上玻璃櫃）', { size: { w: 120, d: 45, h: 200 } })] }, COUNTER_OPT];
 function buildSideboard(it) {
   const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'low';
@@ -1199,10 +1270,196 @@ function buildSideboard(it) {
   }
   return g;
 }
+function curtMat(kind, col) {
+  const k = 'curt|' + kind + '|' + col;
+  if (MATS.has(k)) return MATS.get(k);
+  let m;
+  if (kind === 'sheer') m = new THREE.MeshStandardMaterial({ color: col, transparent: true, opacity: 0.45, roughness: 0.9, side: THREE.DoubleSide, depthWrite: false });
+  else if (kind === 'velvet') m = new THREE.MeshPhysicalMaterial({ color: col, roughness: 0.8, sheen: 1, sheenRoughness: 0.35, sheenColor: new THREE.Color(col).lerp(new THREE.Color('#ffffff'), 0.4), side: THREE.DoubleSide });
+  else if (kind === 'linen') m = new THREE.MeshStandardMaterial({ color: col, map: surfTex('fabric'), roughness: 0.95, side: THREE.DoubleSide });
+  else m = new THREE.MeshStandardMaterial({ color: col, roughness: 0.95, side: THREE.DoubleSide });
+  MATS.set(k, m);
+  return m;
+}
+function wavePanel(g, w, h, folds, amp, x, y, z, m) { // 波浪褶的布片
+  const geo = new THREE.PlaneGeometry(w, h, Math.max(8, folds * 10), 1), pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setZ(i, Math.sin((pos.getX(i) / w + 0.5) * folds * Math.PI * 2) * amp);
+  geo.computeVertexNormals();
+  const mesh = add(g, geo, m, x, y, z);
+  if (m.transparent) mesh.castShadow = false;
+  return mesh;
+}
+const DRAPE_OPTS = [
+  { key: 'style', label: '款式', list: [opt('drape', '單層布簾'), opt('layered', '布加紗', { c3: '紗簾顏色' }), opt('sheer', '紗簾')] },
+  { key: 'open', label: '開合', list: [opt('closed', '全關'), opt('half', '半開'), opt('open', '兩側收合')] },
+  { key: 'cmat', label: '布料材質', list: [opt('blackout', '遮光布'), opt('linen', '棉麻'), opt('velvet', '絨布')] },
+];
+function buildDrape(it) {
+  const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'drape', open = it.open || 'half';
+  const Rod = surfMat('metal', it.color2), ph = h - 5;
+  const rod = z => {
+    const r = C(g, 1.2, 1.2, w, 0, h - 2, z, Rod, 12); r.rotation.z = Math.PI / 2;
+    for (const sd of [-1, 1]) add(g, new THREE.SphereGeometry(2.2, 12, 8), Rod, sd * w / 2, h - 2, z);
+  };
+  const cover = open === 'closed' ? 1 : open === 'half' ? 0.62 : 0.3;
+  const layer = (m, cov, z, k) => {
+    const pw = w * cov / 2, folds = Math.max(3, Math.round(pw / 11)), amp = Math.min(d * 0.3, (1.6 + (1 - cov) * 5) * k);
+    for (const sd of [-1, 1]) wavePanel(g, pw, ph, folds, amp, sd * (w / 2 - pw / 2), ph / 2, z, m);
+  };
+  const zf = d / 2 - 5;
+  rod(zf);
+  if (style === 'sheer') layer(curtMat('sheer', it.color), cover, zf, 1);
+  else {
+    layer(curtMat(it.cmat || 'blackout', it.color), cover, zf, 1);
+    if (style === 'layered') { const zb = -d / 2 + 4; rod(zb); layer(curtMat('sheer', it.color3 || '#f5f3ee'), 1, zb, 0.6); }
+  }
+  return g;
+}
+const ROLLER_OPTS = [
+  { key: 'style', label: '款式', list: [opt('zebra', '調光捲簾（斑馬簾）'), opt('roller', '一般捲簾'), opt('roman', '羅馬簾')] },
+  { key: 'cmat', label: '簾布材質', list: [opt('blackout', '遮光'), opt('linen', '棉麻'), opt('sheer', '半透光')] },
+];
+function buildRoller(it) {
+  const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'zebra', box = Math.min(9, d);
+  const Cas = surfMat('lacquer', it.color2), F = curtMat(it.cmat || 'blackout', it.color);
+  const fh = h - box, fw = w - 2;
+  B(g, w, box, box, 0, h - box / 2, 0, Cas);
+  if (style === 'roman') { // 羅馬簾：上段平整、下段層層折起
+    const bottom = fh * 0.45;
+    B(g, fw, fh - bottom - 20, 0.4, 0, fh - (fh - bottom - 20) / 2, 0, F);
+    for (let i = 0; i < 4; i++) RB(g, fw, 6.5, 4, 2.4, 0, bottom + 3 + i * 5, 1 + (i % 2) * 0.8, F);
+    B(g, fw, 1.5, 1.5, 0, bottom, 1.5, Cas);
+    return g;
+  }
+  if (style === 'zebra') { // 斑馬簾：遮光與透光橫條交錯
+    const S = curtMat('sheer', it.color), band = 7;
+    for (let y = 3, k = 0; y < fh; y += band, k++) { const bh = Math.min(band, fh - y); B(g, fw, bh, 0.3, 0, y + bh / 2, k % 2 ? 0.4 : 0, k % 2 ? S : F); }
+  } else B(g, fw, fh - 3, 0.3, 0, 3 + (fh - 3) / 2, 0, F);
+  B(g, fw, 3, 1.6, 0, 1.5, 0, Cas);
+  return g;
+}
+const BLIND_OPTS = [
+  { key: 'style', label: '款式', list: [opt('wood', '木百葉'), opt('alu', '鋁百葉')] },
+  { key: 'tilt', label: '葉片角度', list: [opt('open', '全開'), opt('half', '半開'), opt('closed', '全關')] },
+];
+function buildBlinds(it) {
+  const g = new THREE.Group(), { w, d, h } = it, wood = (it.style || 'wood') === 'wood';
+  const M = surfMat(wood ? 'wood' : 'lacquer', it.color), cord = mat('#dcd6cc', 0.9);
+  const sw = wood ? 5 : 2.5, step = sw * 0.85, tilt = { open: 0, half: 0.7, closed: 1.35 }[it.tilt || 'half'];
+  B(g, w, 5, Math.min(7, d), 0, h - 2.5, 0, M);
+  for (let y = h - 8; y > 4; y -= step) { const sl = B(g, w - 2, 0.35, sw, 0, y, 0, M); sl.rotation.x = tilt; sl.castShadow = false; }
+  B(g, w - 2, 1.5, sw, 0, 1.5, 0, M);
+  for (const x of [-w * 0.3, w * 0.3]) B(g, 0.4, h - 5, 0.4, x, (h - 5) / 2, 0, cord);
+  return g;
+}
 function glowMat(col) {
   const k = 'glow|' + col;
   if (!MATS.has(k)) MATS.set(k, new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.45, roughness: 0.8, side: THREE.DoubleSide }));
   return MATS.get(k);
+}
+const BULB = () => glowMat('#fff4d6');
+function canopy(g, h, M) { C(g, 6, 6, 2, 0, h - 1, 0, M, 20); }
+const PENDANT_OPTS = [{ key: 'style', label: '款式', list: [opt('dome', '金屬圓罩'), opt('globe', '玻璃球'), opt('cone', '錐形罩'), opt('linear', '長型吊燈', { size: { w: 120, d: 20, h: 90 } }), opt('chandelier', '多頭吊燈', { size: { w: 70, d: 70, h: 90 } })] }];
+function buildPendant(it) {
+  const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'dome';
+  const S = surfMat('metal', it.color), M = surfMat('metal', it.color2), r = Math.min(w, d) / 2;
+  canopy(g, h, M);
+  if (style === 'linear') {
+    B(g, w, 5, Math.min(d, 8), 0, 2.5, 0, S);
+    B(g, w - 4, 0.6, Math.min(d, 8) - 2, 0, -0.1, 0, BULB());
+    for (const sd of [-1, 1]) B(g, 0.3, h - 5, 0.3, sd * w * 0.35, 5 + (h - 5) / 2, 0, M);
+    return g;
+  }
+  if (style === 'chandelier') {
+    add(g, new THREE.SphereGeometry(4, 16, 12), M, 0, 14, 0);
+    B(g, 0.6, h - 16, 0.6, 0, 16 + (h - 16) / 2, 0, M);
+    for (let k = 0; k < 6; k++) {
+      const a = k * Math.PI / 3, ex = Math.cos(a) * (r - 4), ez = Math.sin(a) * (r - 4);
+      rod(g, new V3(0, 14, 0), new V3(ex, 8, ez), 0.6, M);
+      C(g, 1.6, 1.6, 4, ex, 10, ez, M, 12);
+      add(g, new THREE.SphereGeometry(2.4, 12, 10), BULB(), ex, 14, ez);
+    }
+    return g;
+  }
+  let top;
+  if (style === 'globe') { add(g, new THREE.SphereGeometry(r, 32, 20), glowMat(it.color), 0, r, 0); top = 2 * r; }
+  else if (style === 'cone') { const sh = r * 1.2; add(g, new THREE.CylinderGeometry(r * 0.2, r, sh, 32, 1, true), S, 0, sh / 2, 0); top = sh; }
+  else { add(g, new THREE.SphereGeometry(r, 32, 12, 0, Math.PI * 2, 0, Math.PI / 2), S, 0, 0, 0); top = r; }
+  add(g, new THREE.SphereGeometry(Math.min(4, r * 0.3), 12, 10), BULB(), 0, style === 'globe' ? r : top * 0.3, 0);
+  B(g, 0.4, h - top, 0.4, 0, top + (h - top) / 2, 0, M);
+  return g;
+}
+const CEIL_OPTS = [{ key: 'style', label: '款式', list: [opt('disk', '圓形'), opt('square', '方形'), opt('ring', '環形')] }];
+function buildCeilLight(it) {
+  const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'disk', F = surfMat('lacquer', it.color2);
+  if (style === 'ring') {
+    C(g, 5, 5, 2, 0, h - 1, 0, F, 20);
+    for (let k = 0; k < 3; k++) rod(g, new V3(0, h - 1, 0), new V3(Math.cos(k * 2.1) * w * 0.4, h * 0.3, Math.sin(k * 2.1) * d * 0.4), 0.3, F);
+    const t = add(g, new THREE.TorusGeometry(Math.min(w, d) * 0.4, 2.5, 12, 64), glowMat(it.color), 0, h * 0.3, 0); t.rotation.x = Math.PI / 2;
+    return g;
+  }
+  if (style === 'square') { RB(g, w, h - 2, d, 2, 0, 1 + (h - 2) / 2, 0, F); B(g, w - 2, 0.5, d - 2, 0, 0.8, 0, glowMat(it.color)); }
+  else { C(g, .5, .5, h - 2, 0, 1 + (h - 2) / 2, 0, F, 48).scale.set(w, 1, d); C(g, .5, .5, 0.5, 0, 0.8, 0, glowMat(it.color), 48).scale.set(w - 2, 1, d - 2); }
+  return g;
+}
+const CHROME = () => surfMat('metal', '#d6d9dc');
+const dsMat = col => { const m = new THREE.MeshPhysicalMaterial({ color: col, roughness: 0.25, clearcoat: 0.8, side: THREE.DoubleSide }); m.userData.own = true; return m; };
+const TOILET_OPTS = [{ key: 'style', label: '款式', list: [opt('floor', '單體式', { size: { w: 40, d: 70, h: 78 } }), opt('wall', '壁掛式（隱藏水箱）', { size: { w: 40, d: 75, h: 100 } })] }];
+function buildToilet(it) {
+  const g = new THREE.Group(), { w, d, h } = it, wall = it.style === 'wall', Cm = surfMat('ceramic', it.color), S = surfMat('ceramic', it.color2);
+  const seatY = wall ? 42 : Math.min(42, h * 0.54), bd = d * (wall ? 0.7 : 0.62), bz = d / 2 - bd / 2, base0 = wall ? 20 : 0;
+  if (!wall) { const p = C(g, 1, 0.8, seatY - 8, 0, (seatY - 8) / 2, bz - 2, Cm, 32); p.scale.set(w * 0.28, 1, bd * 0.32); }   // 底座
+  const bowl = add(g, new THREE.SphereGeometry(1, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), Cm, 0, seatY - 1, bz); bowl.scale.set(w / 2, seatY - 1 - base0, bd / 2);   // 馬桶本體（下半球）
+  const seat = add(g, new THREE.TorusGeometry(1, 0.1, 12, 40), S, 0, seatY + 0.6, bz); seat.rotation.x = Math.PI / 2; seat.scale.set(w / 2 * 0.9, bd / 2 * 0.9, 1.2);
+  const lid = C(g, 1, 1, 1.4, 0, seatY + 2.4, bz, S, 40); lid.scale.set(w / 2 * 0.98, 1, bd / 2 * 0.98);
+  if (wall) {                                                           // 隱藏水箱的矮牆與沖水面板
+    const td = d - bd; RB(g, w, h, td, 1, 0, h / 2, -d / 2 + td / 2, surfMat('lacquer', '#ece8e1'));
+    B(g, 22, 15, 1, 0, h * 0.78, -d / 2 + td + 0.5, CHROME());
+  } else {
+    const td = d * 0.3, th = h - seatY + 6; RB(g, w * 0.9, th, td, 3, 0, seatY - 6 + th / 2, -d / 2 + td / 2, Cm);
+    RB(g, w * 0.55, seatY - 6, d - bd - td + 8, 3, 0, (seatY - 6) / 2, -d / 2 + td + (d - bd - td) / 2, Cm);
+    C(g, 2.2, 2.2, 1, 0, h + 0.4, -d / 2 + td / 2, CHROME(), 20);
+  }
+  return g;
+}
+const SHOWER_OPTS = [{ key: 'style', label: '款式', list: [opt('corner', 'L 型轉角'), opt('line', '一字型'), opt('walkin', '半截玻璃（無門）')] }];
+function buildShower(it) {
+  const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'corner', M = surfMat('metal', it.color2);
+  B(g, w, 4, d, 0, 2, 0, surfMat('ceramic', it.color));                 // 止水底盤
+  C(g, 3, 3, 0.4, 0, 4.2, 0, M, 20);
+  const gh = h - 6, y = 4 + gh / 2;
+  const panel = (pw, x, z, along) => { glassPane(g, along ? pw : 1, gh, along ? 1 : pw, x, y, z); B(g, along ? pw : 1.6, 1.6, along ? 1.6 : pw, x, h - 1, z, M); B(g, along ? 1.6 : 1.6, gh, 1.6, along ? x + pw / 2 : x, y, along ? z : z + pw / 2, M); };
+  if (style === 'walkin') panel(w * 0.6, -w * 0.2, d / 2 - 1, true);
+  else {
+    panel(w * 0.45, -w * 0.275, d / 2 - 1, true); panel(w * 0.55, w * 0.225, d / 2 + 0.5, true);   // 固定片＋拉門
+    B(g, 1.2, 20, 2, w * 0.02, 100, d / 2 + 2.5, M);                      // 把手
+    if (style === 'corner') panel(d, w / 2 - 1, 0, false);
+  }
+  const px = -w / 2 + 6, pz = -d / 2 + 5;                               // 淋浴柱＋頂噴
+  rod(g, new V3(px, 90, pz), new V3(px, h - 12, pz), 1.1, M);
+  rod(g, new V3(px, h - 12, pz), new V3(px + 25, h - 12, pz + 20), 0.9, M);
+  C(g, 12, 12, 1.2, px + 25, h - 13, pz + 20, M, 32);
+  B(g, 14, 6, 4, px + 4, 105, pz + 1, M);
+  return g;
+}
+const BASIN_OPTS = [
+  { key: 'style', label: '款式', list: [opt('float', '懸吊式'), opt('floor', '落地式')] },
+  { key: 'sink', label: '臉盆', list: [opt('vessel', '檯上盆'), opt('under', '檯下盆')] },
+];
+function buildBasin(it) {
+  const g = new THREE.Group(), { w, d, h } = it, body = surfMat('wood', it.color), top = surfMat('marble', it.color2), M = CHROME();
+  const y0 = it.style === 'floor' ? 0 : Math.max(0, h - 50), ch = h - 3 - y0;
+  if (it.style === 'floor') B(g, w - 4, 6, d - 6, 0, 3, -1, surfMat('lacquer', '#2b2b2b'));
+  RB(g, w, ch - (it.style === 'floor' ? 6 : 0), d - 2, 1, 0, y0 + (it.style === 'floor' ? 6 : 0) + (ch - (it.style === 'floor' ? 6 : 0)) / 2, -1, body);
+  B(g, 0.6, ch - 10, 0.5, 0, y0 + ch / 2, d / 2 - 1.8, surfMat('lacquer', '#2b2b2b'));   // 兩扇門的分縫
+  B(g, w, 3, d, 0, h - 1.5, 0, top);                                    // 檯面
+  const r = Math.min(w * 0.22, d * 0.4);
+  if ((it.sink || 'vessel') === 'vessel') {
+    const bowl = add(g, new THREE.SphereGeometry(1, 32, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), dsMat('#ffffff'), 0, h + 13, 3); bowl.scale.set(r, 13, r * 0.8);
+  } else { const s2 = C(g, 1, 1, 0.3, 0, h + 0.05, 3, surfMat('ceramic', '#dfe3e6'), 32); s2.scale.set(r, 1, r * 0.75); }
+  rod(g, new V3(0, h, -d / 2 + 6), new V3(0, h + 26, -d / 2 + 6), 1.2, M);   // 龍頭
+  rod(g, new V3(0, h + 26, -d / 2 + 6), new V3(0, h + 24, -d / 2 + 16), 1, M);
+  return g;
 }
 function buildOven(it) {
   const g = new THREE.Group(), { w, d, h } = it, Bd = surfMat('lacquer', it.color), M = surfMat('metal', it.color2);
@@ -1243,6 +1500,28 @@ function buildCoffeeMaker(it) {
   B(g, w, h * 0.2, d, 0, h - h * 0.1, 0, Bd);
   C(g, 1.5, 1.5, 4, 0, h * 0.72, d * 0.15, blk, 10);
   C(g, 3.5, 3, 7, 0, 7.5, d * 0.15, surfMat('ceramic', '#ffffff'), 20);
+  return g;
+}
+function artTex(style, c1, c2) {
+  const key = 'art|' + style + '|' + c1 + '|' + c2;
+  if (TEX[key]) return TEX[key];
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+  const x = c.getContext('2d');
+  x.fillStyle = '#f3efe8'; x.fillRect(0, 0, 256, 256);
+  x.fillStyle = c1; x.beginPath(); x.arc(96, 150, 70, 0, Math.PI * 2); x.fill();
+  x.fillStyle = c2; x.fillRect(140, 40, 70, 150);
+  x.strokeStyle = '#2b2b2b'; x.lineWidth = 3; x.beginPath(); x.moveTo(20, 220); x.bezierCurveTo(90, 160, 160, 250, 236, 190); x.stroke();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  return TEX[key] = t;
+}
+const ART_OPTS = [{ key: 'style', label: '款式', list: [opt('single', '單幅'), opt('triptych', '三聯幅', { size: { w: 150, d: 3, h: 60 } }), opt('round', '圓形', { size: { w: 60, d: 3, h: 60 } })] }];
+function buildWallArt(it) {
+  const g = new THREE.Group(), { w, d, h } = it, style = it.style || 'single', F = surfMat('wood', it.color3 || '#2b2b2b');
+  const canvasMat = new THREE.MeshStandardMaterial({ map: artTex(style, it.color, it.color2), roughness: 0.9 }); canvasMat.userData.own = true;
+  const panel = (x, pw) => { B(g, pw, h, d, x, h / 2, 0, F); add(g, new THREE.PlaneGeometry(pw - 4, h - 4), canvasMat, x, h / 2, d / 2 + 0.05); };
+  if (style === 'round') { const f = C(g, w / 2, w / 2, d, 0, h / 2, 0, F, 48); f.rotation.x = Math.PI / 2; const cv = add(g, new THREE.CircleGeometry(w / 2 - 2, 48), canvasMat, 0, h / 2, d / 2 + 0.05); }
+  else if (style === 'triptych') { const pw = (w - 8) / 3; for (let i = 0; i < 3; i++) panel(-w / 2 + pw / 2 + i * (pw + 4), pw); }
+  else panel(0, w);
   return g;
 }
 function buildDanishTable(it) {
@@ -2160,6 +2439,24 @@ TYPES = {
   barstoolBack: { sub: '吧檯椅', generic: true, name: '低背吧檯椅', w: 42, d: 46, h: 95, color: '#b9b4ad', color2: '#222222', c1: '椅面', c2: '椅腳', build: it => buildBarStool(it, 'back'), opts: [BAR_LEGMAT] },
   barstoolWood: { sub: '吧檯椅', generic: true, name: '實木吧檯椅', w: 42, d: 44, h: 102, color: '#3d3a38', color2: '#c49a6c', c1: '椅面', c2: '椅架', build: it => buildBarStool(it, 'wood'), opts: [BAR_LEGMAT], def: { legmat: 'wood' } },
   barstoolSwivel: { sub: '吧檯椅', generic: true, name: '升降旋轉吧椅', w: 42, d: 42, h: 95, color: '#2f2f31', color2: '#c9cdd1', c1: '椅面', c2: '金屬', build: it => buildBarStool(it, 'swivel') },
+  rug: { sub: '地毯', generic: true, name: '長方形地毯', w: 200, d: 140, h: 1,   color: '#d8cfc0', color2: '#8a8f98', c1: '主色',     c2: '邊框',     build: buildRugShaped, opts: RUG_OPTS, flat: true },
+  rugRound: { sub: '地毯', generic: true, name: '圓形地毯',   w: 160, d: 160, h: 1,   color: '#e9e4da', color2: '#b9b4ad', c1: '主色',     c2: '邊框',     build: buildRugShaped, opts: RUG_OPTS, def: { shape: 'round' }, flat: true },
+  plant: { sub: '植栽', generic: true, name: '植栽',       w: 45,  d: 45,  h: 120, color: '#e9e4da', color2: '#5f7d63', c1: '盆器',     c2: '葉色',     build: buildPlant, opts: PLANT_OPTS },
+  lamp: { sub: '燈具', generic: true, name: '落地燈',     w: 40,  d: 40,  h: 160, color: '#f3ead8', color2: '#2b2b2b', c1: '燈罩',     c2: '燈架',     build: buildLamp, opts: LAMP_OPTS },
+  pendant: { sub: '燈具', generic: true, name: '吊燈',       w: 45,  d: 45,  h: 100, color: '#2b2b2b', color2: '#2b2b2b', c1: '燈罩顏色', c2: '吊線與燈座', build: buildPendant, opts: PENDANT_OPTS, ceil: true, noHit: true },
+  ceillight: { sub: '燈具', generic: true, name: '吸頂燈',     w: 50,  d: 50,  h: 10,  color: '#fff8ea', color2: '#ffffff', c1: '發光面', c2: '燈座', build: buildCeilLight, opts: CEIL_OPTS, ceil: true, noHit: true },
+  wallart: { sub: '掛畫', generic: true, name: '掛畫',       w: 90,  d: 3,   h: 60,  elev: 140, color: '#c98b8b', color2: '#3d5a80', color3: '#2b2b2b', c1: '畫作主色', c2: '畫作輔色', c3: '畫框顏色', build: buildWallArt, opts: ART_OPTS, noHit: true },
+  drape: { sub: '窗簾', generic: true, name: '布簾',       w: 220, d: 20, h: 250, elev: 5,  color: '#d8cfc0', color2: '#8a8f98', color3: '#f5f3ee', c1: '布料顏色', c2: '窗簾桿顏色', build: buildDrape, opts: DRAPE_OPTS, def: { style: 'drape', open: 'half', cmat: 'blackout' }, noHit: true },
+  sheer: { sub: '窗簾', generic: true, name: '紗簾',       w: 220, d: 16, h: 250, elev: 5,  color: '#f5f3ee', color2: '#b8bcc0', color3: '#f5f3ee', c1: '紗簾顏色', c2: '窗簾桿顏色', build: buildDrape, opts: DRAPE_OPTS, def: { style: 'sheer', open: 'closed' }, noHit: true },
+  toilet: { sub: '衛浴', generic: true, name: '馬桶',       w: 40,  d: 70,  h: 78,  color: '#ffffff', color2: '#ffffff', c1: '陶瓷', c2: '馬桶蓋', build: buildToilet, opts: TOILET_OPTS, def: { style: 'floor' }, wall: true },
+  basin: { sub: '衛浴', generic: true, name: '浴櫃洗手台', w: 80,  d: 48,  h: 85,  color: '#c49a6c', color2: '#f2f0ec', c1: '櫃體', c2: '檯面', build: buildBasin, opts: BASIN_OPTS, def: { style: 'float', sink: 'vessel' }, wall: true },
+  shower: { sub: '衛浴', generic: true, name: '淋浴間',     w: 90,  d: 90,  h: 200, color: '#ffffff', color2: '#2b2b2b', c1: '底盤', c2: '五金框', build: buildShower, opts: SHOWER_OPTS, def: { style: 'corner' }, wall: true },
+  layered: { sub: '窗簾', generic: true, name: '布加紗',     w: 220, d: 24, h: 250, elev: 5,  color: '#8e9099', color2: '#4a4d52', color3: '#f5f3ee', c1: '布料顏色', c2: '窗簾桿顏色', build: buildDrape, opts: DRAPE_OPTS, def: { style: 'layered', open: 'half', cmat: 'linen' }, noHit: true },
+  zebra: { sub: '窗簾', generic: true, name: '調光捲簾',   w: 160, d: 9,  h: 170, elev: 70, color: '#e9e4da', color2: '#f1ebe1', c1: '簾布顏色', c2: '捲盒顏色', build: buildRoller, opts: ROLLER_OPTS, def: { style: 'zebra' }, noHit: true },
+  roller: { sub: '窗簾', generic: true, name: '一般捲簾',   w: 160, d: 9,  h: 170, elev: 70, color: '#b9b4ad', color2: '#f1ebe1', c1: '簾布顏色', c2: '捲盒顏色', build: buildRoller, opts: ROLLER_OPTS, def: { style: 'roller' }, noHit: true },
+  roman: { sub: '窗簾', generic: true, name: '羅馬簾',     w: 160, d: 9,  h: 170, elev: 70, color: '#c9bfae', color2: '#f1ebe1', c1: '簾布顏色', c2: '上軌顏色', build: buildRoller, opts: ROLLER_OPTS, def: { style: 'roman', cmat: 'linen' }, noHit: true },
+  woodblind: { sub: '窗簾', generic: true, name: '木百葉簾',   w: 150, d: 7,  h: 150, elev: 80, color: '#c49a6c', color2: '#c49a6c', c1: '葉片顏色', c2: null, build: buildBlinds, opts: BLIND_OPTS, def: { style: 'wood' }, noHit: true },
+  alublind: { sub: '窗簾', generic: true, name: '鋁百葉簾',   w: 150, d: 7,  h: 150, elev: 80, color: '#d9dcdf', color2: '#d9dcdf', c1: '葉片顏色', c2: null, build: buildBlinds, opts: BLIND_OPTS, def: { style: 'alu' }, noHit: true },
   ownDambo: { sub: '沙發', name: '花瓣沙發', w: 360, d: 156, h: 83.5, color: '#b8a797', color2: '#c4b6a7', color3: '#232b45', c1: '靠背／底座布料', c2: '座墊布料', c3: '抱枕顏色', build: buildDamboSofa, opts: [DAMBO_SIDE_OPT, DAMBO_BEND_OPT, DAMBO_PIL_OPT], def: { side: 'left', bk: 'open', rp: 'on' }, wall: true, own: true },
   ownGetBack: { sub: '沙發', name: 'GET BACK 沙發', w: 381, d: 163, h: 87, color: '#a5623c', color2: '#cfcbc4', color3: '#9a4a2a', c1: '皮革外殼', c2: '座墊／靠背布料', c3: '抱枕顏色', build: buildGetBackSofa, opts: [GETBACK_SIDE_OPT, GETBACK_PIL_OPT], def: { side: 'right', rp: 'on' }, wall: true, own: true },
   ownGermain: { sub: '沙發', name: '聖日耳曼沙發', w: 320, d: 153.5, h: 65, color: '#d9cdb8', color2: '#232325', color3: '#9a9790', c1: '沙發布料', c2: '抱枕顏色', c3: '點綴抱枕', build: buildGermainSofa, opts: [GERMAIN_SIDE_OPT, GERMAIN_PIL_OPT], def: { side: 'left', rp: 'on' }, wall: true, own: true }
@@ -2176,13 +2473,13 @@ export const ON_TOP = ['kitchen', 'sideboard', 'barisland', 'barwall', 'bartable
 for (const k of ['microwave', 'ricecooker', 'coffeemaker', 'oven']) if (TYPES[k]) TYPES[k].on = ON_TOP;
 const triSize = it => Math.max(18, Math.min(90, Math.round(Math.max(it.w || 0, it.d || 0, it.h || 0) * 0.3 / 6) * 6));
 export const PRODUCTS = TYPES;
-export const SUBS = ['沙發', '茶几', '邊几', '餐桌', '餐椅', '長凳', '餐櫃', '廚具', '中島', '吧檯桌', '吧檯椅', '廚房家電', '小家電', '床台', '床頭櫃', '化妝桌椅', '書桌'];
+export const SUBS = ['沙發', '茶几', '邊几', '餐桌', '餐椅', '長凳', '餐櫃', '廚具', '中島', '吧檯桌', '吧檯椅', '廚房家電', '小家電', '床台', '床頭櫃', '化妝桌椅', '書桌', '地毯', '窗簾', '燈具', '植栽', '掛畫', '衛浴'];
 export function optsOf(T) { return T.opts || []; }
 export function withDefaults(it) {
   const T = TYPES[it.type];
   for (const g of optsOf(T)) if (!it[g.key] || !g.list.some(x => x.id === it[g.key])) it[g.key] = (T.def && T.def[g.key]) || g.list[0].id;
   if (T.def) for (const [k, v] of Object.entries(T.def)) if (it[k] == null) it[k] = v;
-  for (const k of ['w', 'd', 'h', 'color', 'color2', 'color3']) if (it[k] == null && T[k] != null) it[k] = T[k];
+  for (const k of ['w', 'd', 'h', 'color', 'color2', 'color3', 'elev']) if (it[k] == null && T[k] != null) it[k] = T[k];
   return it;
 }
 export function buildModel(it) {

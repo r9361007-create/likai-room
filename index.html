@@ -83,10 +83,16 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .toolbar .btn{box-shadow:var(--shadow);border-color:transparent}
 .help{position:absolute;left:14px;bottom:14px;font-size:12px;color:var(--muted);background:rgba(255,255,255,.8);border-radius:999px;padding:5px 12px}
 /* 選取家具的面板 */
-.sel-card{position:absolute;left:14px;bottom:14px;width:310px;max-height:calc(100% - 80px);overflow:auto;background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;display:none;border-top:4px solid var(--accent)}
+.sel-card{position:absolute;left:14px;bottom:14px;width:300px;max-height:calc(100% - 80px);overflow:auto;background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);padding:10px 14px 6px;display:none;border-top:4px solid var(--accent)}
+.sel-card .top span{margin-left:8px}
+.more{width:100%;border:0;border-top:1px solid var(--line);background:none;margin-top:8px;padding:8px 0 4px;color:var(--accent);font-size:13px;font-weight:600;display:flex;justify-content:space-between}
+.more span{transition:transform .2s}
+.sel-card.open .more span{transform:rotate(180deg)}
+.more-body{display:none;padding-bottom:6px}
+.sel-card.open .more-body{display:block}
 .sel-card.on{display:block}
 .sel-card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.sel-card .top b{font-size:16px}
+.sel-card .top b{font-size:15px}
 .x{border:0;background:none;font-size:22px;line-height:1;color:var(--muted);padding:0 2px}
 .dims{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
 .dims label{font-size:11px;color:var(--muted)}
@@ -95,9 +101,16 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .opt label{flex:1;font-size:12px;color:var(--muted)}
 .opt select{padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;max-width:150px}
 .opt input[type=color]{width:44px;height:28px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff}
-.gaps{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0;text-align:center}
-.gaps div{background:var(--surface);border-radius:8px;padding:4px 0;font-size:11px;color:var(--muted)}
-.gaps b{display:block;font-size:14px;color:var(--ink)}
+.movebox{display:flex;gap:10px;align-items:flex-end;margin:8px 0}
+.movebox>div:first-child{flex:1;min-width:0}
+.gaps{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:4px;text-align:center}
+.gaps label{background:var(--surface);border-radius:8px;padding:3px 0 4px;font-size:11px;color:var(--muted);display:flex;flex-direction:column;align-items:center}
+.gaps input{width:100%;border:0;background:none;text-align:center;font-size:15px;font-weight:600;color:var(--ink);padding:0}
+.gaps input:focus{outline:2px solid var(--accent);border-radius:6px;background:#fff}
+.pad{display:grid;grid-template-columns:repeat(3,30px);grid-template-rows:repeat(2,30px);gap:3px;flex:none}
+.pad button{border:0;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px;font-weight:700;padding:0;touch-action:none;user-select:none}
+.pad button:active{background:var(--accent);color:#fff}
+.pad [data-mv="0,-1"]{grid-column:2;grid-row:1}.pad [data-mv="-1,0"]{grid-column:1;grid-row:2}.pad [data-mv="1,0"]{grid-column:3;grid-row:2}.pad [data-mv="0,1"]{grid-column:2;grid-row:2}
 .warn{color:var(--danger);font-size:12px;margin:6px 0;display:none}
 .warn.on{display:block}
 .acts{display:flex;gap:6px;margin-top:10px}
@@ -146,6 +159,38 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .est button b{flex:none}
 .est button span{flex:1;text-align:right;color:var(--muted);font-size:12px}
 .est button i{font-style:normal;color:var(--accent);font-weight:700;font-size:16px}
+/* ---------- 步驟列 ---------- */
+.steps{list-style:none;margin:0 0 12px;padding:0;display:flex;gap:4px;counter-reset:st}
+.steps li{flex:1;font-size:11px;color:#9fbcd1;border-top:3px solid rgba(255,255,255,.2);padding-top:5px;counter-increment:st;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.steps li::before{content:counter(st) " "}
+.steps li.done{color:#dbe8f1;border-top-color:#8fb3cc;cursor:pointer}
+.steps li.done:hover{color:#fff}
+.steps li.on{color:var(--yellow);border-top-color:var(--yellow);font-weight:600}
+.setup-head{flex-wrap:wrap}.setup-head .steps{flex-basis:100%}
+.ss-head .steps li{color:var(--muted);border-top-color:var(--line)}
+.ss-head .steps li.done{color:var(--accent);border-top-color:#8fb3cc}
+.ss-head .steps li.on{color:var(--accent);border-top-color:var(--accent)}
+/* ---------- 裝潢風格（下方面板） ---------- */
+.stylesheet{position:fixed;left:0;right:0;bottom:0;z-index:35;background:var(--panel);box-shadow:0 -10px 30px rgba(0,67,106,.18);border-top:4px solid var(--yellow);display:none;flex-direction:column;max-height:50dvh}
+.stylesheet.on{display:flex}
+.ss-head{padding:12px 20px 4px}
+.ss-head b{font-size:17px;margin-right:10px}
+.ss-cards{display:flex;gap:10px;overflow-x:auto;padding:8px 20px 12px;scrollbar-width:thin}
+.sc{flex:none;width:210px;border:2px solid var(--line);background:#fff;border-radius:14px;padding:10px 12px;text-align:left;display:flex;flex-direction:column;gap:6px;transition:border-color .15s}
+.sc:hover{border-color:#8fb3cc}
+.sc.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.sc .sw{display:flex;height:26px;border-radius:7px;overflow:hidden}
+.sc .sw i{flex:1}
+.sc b{font-size:15px}
+.sc p{margin:0;font-size:12px;color:var(--muted);line-height:1.6}
+.sc .tg{display:flex;flex-wrap:wrap;gap:3px}
+.sc .tg span{font-size:10px;background:var(--surface);color:var(--accent);border-radius:4px;padding:1px 5px}
+.ss-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 20px;border-top:1px solid var(--line)}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink)}
+.chk input{width:18px;height:18px;accent-color:var(--accent)}
+.ss-btns{display:flex;gap:8px}
+.ss-btns .btn{padding:10px 22px;font-size:15px}
+.addrow{grid-template-columns:repeat(auto-fit,minmax(96px,1fr))}
 /* ---------- 手機 ---------- */
 @media (max-width:760px){
   .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 52dvh minmax(0,1fr);grid-template-areas:"top" "main" "side"}
@@ -172,6 +217,14 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
   .quick-body{grid-template-columns:1fr}
   .quick-foot,.back-foot{flex-direction:column-reverse}
   .quick-foot #q-manual{margin-left:0}
+  .steps li{font-size:10px}
+  .stylesheet{max-height:52dvh}
+  .ss-head{padding:10px 14px 2px}.ss-head .hint{display:block}
+  .ss-cards{padding:6px 14px 10px}
+  .sc{width:180px}
+  .ss-foot{flex-direction:column;align-items:stretch;padding:8px 14px}
+  .ss-btns{flex-direction:column-reverse}.ss-btns .btn{width:100%}
+  .toolbar .lbl{display:none}
 }
 </style>
 <script type="importmap">
@@ -196,31 +249,43 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
     <div class="seg"><button class="on" id="v3d">3D</button><button id="vtop">平面</button><button id="veye">人視角</button></div>
     <div class="help">拖曳家具移動・拖曳空白處轉視角・滾輪縮放</div>
     <div class="toolbar">
+      <button class="btn" id="step-back" aria-label="上一步：裝潢風格">←<span class="lbl"> 上一步</span></button>
       <button class="btn" id="undo" disabled>復原</button>
       <button class="btn" id="shot">存圖</button>
       <button class="btn pri" id="share">分享</button>
     </div>
     <div class="sel-card" id="sel">
-      <div class="top"><div><b id="s-name"></b><div class="hint" id="s-sub"></div></div><button class="x" id="s-close" aria-label="關閉">×</button></div>
-      <div class="dims">
-        <div><label>寬</label><input type="text" inputmode="decimal" autocomplete="off" id="s-w"></div>
-        <div><label>深</label><input type="text" inputmode="decimal" autocomplete="off" id="s-d"></div>
-        <div><label>高</label><input type="text" inputmode="decimal" autocomplete="off" id="s-h"></div>
+      <div class="top"><div><b id="s-name"></b><span class="hint" id="s-sub"></span></div><button class="x" id="s-close" aria-label="關閉">×</button></div>
+      <div class="movebox">
+        <div><div class="hint">離牆距離（公分，可直接打字）</div>
+          <div class="gaps" id="s-gaps">
+            <label>左<input type="text" inputmode="decimal" data-g="L"></label><label>右<input type="text" inputmode="decimal" data-g="R"></label>
+            <label>後<input type="text" inputmode="decimal" data-g="B"></label><label>前<input type="text" inputmode="decimal" data-g="F"></label>
+          </div></div>
+        <div class="pad" id="s-pad" aria-label="移動">
+          <button data-mv="0,-1" aria-label="往後">↑</button><button data-mv="-1,0" aria-label="往左">←</button><button data-mv="1,0" aria-label="往右">→</button><button data-mv="0,1" aria-label="往前">↓</button>
+        </div>
       </div>
-      <div id="s-opts"></div>
-      <div class="hint" style="margin-top:8px">離牆距離（公分）</div>
-      <div class="gaps" id="s-gaps"></div>
-      <div class="warn" id="s-warn">和其他家具重疊，或超出房間</div>
+      <div class="warn" id="s-warn"></div>
       <div class="acts">
         <button class="btn" id="s-rot">旋轉 90°</button>
         <button class="btn" id="s-dup">複製</button>
         <button class="btn del" id="s-del">刪除</button>
       </div>
+      <button class="more" id="s-more">更多設定（尺寸、款式、顏色）<span>▾</span></button>
+      <div class="more-body" id="s-more-body">
+        <div class="dims">
+          <div><label>寬</label><input type="text" inputmode="decimal" autocomplete="off" id="s-w"></div>
+          <div><label>深</label><input type="text" inputmode="decimal" autocomplete="off" id="s-d"></div>
+          <div><label>高</label><input type="text" inputmode="decimal" autocomplete="off" id="s-h"></div>
+        </div>
+        <div id="s-opts"></div>
+      </div>
     </div>
     <div class="toast" id="toast"></div>
     <div class="setup" id="quick">
       <div class="setup-box quick-box">
-        <div class="setup-head"><div><b>歡迎！先大概說說你的房子</b><div class="hint">輸入坪數和格局，我們幫你粗估每個空間的大小</div></div></div>
+        <div class="setup-head"><ol class="steps"></ol><div><b>歡迎！先大概說說你的房子</b><div class="hint">輸入坪數和格局，我們幫你粗估每個空間的大小</div></div></div>
         <div class="setup-body quick-body">
           <div>
             <h3>室內坪數</h3>
@@ -244,9 +309,17 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
         </div>
       </div>
     </div>
+    <div class="stylesheet" id="style">
+      <div class="ss-head"><ol class="steps"></ol><div><b>選裝潢風格</b><span class="hint">點一下就會套用，可以轉動上面的畫面看看</span></div></div>
+      <div class="ss-cards" id="style-cards"></div>
+      <div class="ss-foot">
+        <label class="chk"><input type="checkbox" id="style-decor" checked> 自動加入風格軟裝（地毯、燈、植栽、掛畫；窗簾到商品手動加）</label>
+        <div class="ss-btns"><button class="btn" id="style-back">← 上一頁</button><button class="btn pri" id="style-done">確定，開始擺家具</button></div>
+      </div>
+    </div>
     <div class="setup" id="setup">
       <div class="setup-box">
-        <div class="setup-head"><div><b id="setup-title">設定房間</b><div class="hint">先把房間尺寸和門窗位置設好，擺家具才看得準</div></div><button class="x" id="setup-x" aria-label="關閉">×</button></div>
+        <div class="setup-head"><ol class="steps"></ol><div><b id="setup-title">設定房間</b><div class="hint">先把房間尺寸和門窗位置設好，擺家具才看得準</div></div><button class="x" id="setup-x" aria-label="關閉">×</button></div>
         <div class="setup-body">
           <div class="setup-plan"><svg id="plan"></svg><p class="hint">上方是後牆、下方是前牆（站在門口往裡看的方向）</p></div>
           <div class="setup-form">
@@ -256,10 +329,10 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
               <label>深（前後）<input type="text" inputmode="decimal" autocomplete="off" id="rd"></label>
               <label>天花板高<input type="text" inputmode="decimal" autocomplete="off" id="rh"></label>
             </div>
-            <h3>2. 窗戶、落地窗、陽台、房門在哪裡？</h3>
+            <h3>2. 窗戶、落地窗、陽台、房門、衛浴在哪裡？</h3>
             <div class="addrow">
               <button class="btn" data-kind="window">＋ 窗戶</button><button class="btn" data-kind="floor">＋ 落地窗</button>
-              <button class="btn" data-kind="balcony">＋ 陽台</button><button class="btn" data-kind="door">＋ 房門</button>
+              <button class="btn" data-kind="balcony">＋ 陽台</button><button class="btn" data-kind="door">＋ 房門</button><button class="btn" data-kind="bath">＋ 衛浴</button>
             </div>
             <div id="ops"></div>
             <p class="hint">位置怎麼量：站在房間裡面對那面牆，從<b>左邊牆角</b>量到門窗邊框。沒有的項目不用加。</p>
@@ -283,6 +356,9 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
       <p class="hint" id="room-sum"></p>
       <button class="btn pri wide" id="edit-room">編輯房間尺寸與門窗</button>
       <button class="btn wide danger" id="sp-del">刪除這個空間</button>
+      <h3>裝潢風格</h3>
+      <p class="hint" id="style-sum"></p>
+      <button class="btn wide" id="change-style">更換裝潢風格</button>
       <h3>整間房子</h3>
       <button class="btn wide" id="restart">重新輸入坪數、幾房幾廳</button>
       <h3>操作方式</h3>
@@ -302,6 +378,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js';
+import { EXTRA_PRODUCTS } from './extra-models.js';
+Object.assign(PRODUCTS, EXTRA_PRODUCTS);                 // 蜂巢簾、穿越簾
 
 const $ = s => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -314,10 +393,10 @@ const WALL_T = 10, SNAP = 15;
 /* ================= 狀態 ================= */
 // 一個專案有好幾個空間（客廳、餐廳、臥室…），state 永遠指向目前這個空間
 const SPACE_TYPES = {
-  living:  { name: '客廳',   room: { w: 450, d: 400, h: 280 }, subs: ['沙發', '茶几', '邊几'] },
-  dining:  { name: '餐廳',   room: { w: 350, d: 300, h: 280 }, subs: ['餐桌', '餐椅', '長凳', '廚具', '中島', '廚房家電', '小家電', '餐櫃', '吧檯桌', '吧檯椅'] },
-  bedroom: { name: '臥室',   room: { w: 350, d: 330, h: 280 }, subs: ['床台', '床頭櫃', '化妝桌椅', '書桌'] },
-  ld:      { name: '客餐廳', room: { w: 700, d: 420, h: 280 }, subs: ['沙發', '茶几', '邊几', '餐桌', '餐椅', '長凳', '廚具', '中島', '廚房家電', '小家電', '餐櫃', '吧檯桌', '吧檯椅'] },
+  living:  { name: '客廳',   room: { w: 450, d: 400, h: 280 }, subs: ['沙發', '茶几', '邊几', '窗簾', '燈具', '地毯', '植栽', '掛畫'] },
+  dining:  { name: '餐廳',   room: { w: 350, d: 300, h: 280 }, subs: ['餐桌', '餐椅', '長凳', '廚具', '中島', '廚房家電', '小家電', '餐櫃', '吧檯桌', '吧檯椅', '窗簾', '燈具', '地毯', '植栽', '掛畫'] },
+  bedroom: { name: '臥室',   room: { w: 350, d: 330, h: 280 }, subs: ['床台', '床頭櫃', '化妝桌椅', '書桌', '窗簾', '燈具', '地毯', '植栽', '掛畫'] },
+  ld:      { name: '客餐廳', room: { w: 700, d: 420, h: 280 }, subs: ['沙發', '茶几', '邊几', '餐桌', '餐椅', '長凳', '廚具', '中島', '廚房家電', '小家電', '餐櫃', '吧檯桌', '吧檯椅', '窗簾', '燈具', '地毯', '植栽', '掛畫'] },
 };
 const newSpace = (type, name) => ({ name: name || SPACE_TYPES[type].name, type, room: { ...SPACE_TYPES[type].room, openings: [] }, items: [] });
 const defaultProject = () => ({ cur: 0, spaces: ['living', 'dining', 'bedroom'].map(t => newSpace(t)) });
@@ -366,6 +445,7 @@ function switchSpace(i, origin) {
   project.cur = i; state = project.spaces[i]; selId = null; undoStack = []; $('#undo').disabled = true;
   rebuildAll(); buildSelPanel(); renderSpaces(); filterLib(); roomSummary(); setView(view === 'top' ? 'top' : view === 'eye' ? 'eye' : 'orbit'); save();
   if (!state.room.setup) openSetup(origin || { space: from });
+  else if (project.style && state.decorStyle !== project.style && project.decor !== false) { styleDecor(); refresh(); save(); }
 }
 function renderSpaces() {
   $('#spaces').innerHTML = project.spaces.map((s, i) => `<button class="sp ${i === project.cur ? 'on' : ''}" data-i="${i}">${esc(s.name)}<span>${s.items.length}</span></button>`).join('')
@@ -403,8 +483,10 @@ const OPEN_KINDS = {
   floor:   { name: '落地窗', w: 240, h: 220, sill: 0 },
   balcony: { name: '陽台',   w: 240, h: 220, sill: 0, depth: 150 },
   door:    { name: '房門',   w: 90,  h: 210, sill: 0, hinge: 'left', swing: 'in' },
+  bath:    { name: '衛浴',   w: 80,  h: 210, sill: 0, hinge: 'left', swing: 'out', depth: 220, bw: 180 },   // 衛浴門，門外畫出衛浴
 };
-const OP_MAT = Object.fromEntries(Object.entries({ window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#c9a227' }).map(([k, c]) => [k, new THREE.MeshBasicMaterial({ color: c })]));
+const isDoor = k => k === 'door' || k === 'bath';
+const OP_MAT = Object.fromEntries(Object.entries({ window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#c9a227', bath: '#7d6bb0' }).map(([k, c]) => [k, new THREE.MeshBasicMaterial({ color: c })]));
 const WALL_NAMES = { N: '後牆', W: '左牆', E: '右牆', S: '前牆' };
 // 每面牆的座標：o 是「站在房內面對這面牆」時左邊的牆角，u 往右，n 朝房內
 function wallFrame(k) {
@@ -420,19 +502,22 @@ function clampOpening(op) {
   const L = wallFrame(op.wall).L, H = state.room.h;
   op.w = clamp(Math.round(+op.w || 0), 30, L); op.h = clamp(Math.round(+op.h || 0), 30, H);
   op.sill = clamp(Math.round(+op.sill || 0), 0, H - op.h); op.off = clamp(Math.round(+op.off || 0), 0, L - op.w);
+  if (op.kind === 'bath') { op.depth = clamp(Math.round(+op.depth || 220), 120, 400); op.bw = clamp(Math.round(+op.bw || 180), op.w, 500); }
 }
 
-function floorTexture() {                     // 木地板：淺色長條＋細縫
-  const c = document.createElement('canvas'); c.width = 512; c.height = 512; const x = c.getContext('2d');
-  for (let i = 0; i < 8; i++) {
-    const l = 214 + Math.random() * 14; x.fillStyle = `rgb(${l},${l - 22},${l - 48})`; x.fillRect(0, i * 64, 512, 64);
-    x.fillStyle = 'rgba(90,60,30,.18)'; x.fillRect(0, i * 64, 512, 1.5);
-    const cut = (i * 197) % 512; x.fillRect(cut, i * 64, 1.5, 64);
-  }
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
-  return t;
+const curStyle = () => STYLES[project.style] || STYLES.base;
+// 依目前風格設定房間材質（牆、主牆、踢腳板、窗框、門）
+function styleMaterials() {
+  const S = curStyle();
+  M.wall = S.wallTex ? new THREE.MeshStandardMaterial({ map: wallTexture(S.wallTex, S.wall), roughness: 0.95 }) : new THREE.MeshStandardMaterial({ color: S.wall, roughness: 0.95 });
+  const A = S.accent;
+  M.accent = A.kind === 'plaster' || A.kind === 'marble'
+    ? new THREE.MeshStandardMaterial({ map: wallTexture(A.kind, A.color, A.vein), roughness: A.kind === 'marble' ? 0.35 : 0.95 })
+    : new THREE.MeshStandardMaterial({ color: A.color, roughness: 0.9 });
+  M.molding = new THREE.MeshStandardMaterial({ color: A.color, roughness: 0.8 });
+  M.metal = new THREE.MeshStandardMaterial({ color: A.metal || '#c5a35a', roughness: 0.3, metalness: 0.9 });
+  M.skirt.color.set(S.skirt); M.alu.color.set(S.frame); M.wood.color.set(S.door); M.frame.color.set(S.doorFrame);
 }
-const FLOOR_TEX = floorTexture();
 const M = {
   wall:  new THREE.MeshStandardMaterial({ color: '#f1f4f6', roughness: 0.95 }),
   skirt: new THREE.MeshStandardMaterial({ color: '#d5dee6', roughness: 0.8 }),
@@ -450,15 +535,29 @@ const M = {
 // 在牆的區域座標放一個方塊：x 沿著牆、y 高度、z 往房內為正（牆本身在 z = -T..0）
 function lbox(g, x0, x1, y0, y1, z0, z1, mat, shadow = true) {
   if (x1 - x0 < 0.1 || y1 - y0 < 0.1 || Math.abs(z1 - z0) < 0.05) return;
-  const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, Math.abs(z1 - z0)), mat);
+  const geo = new THREE.BoxGeometry(x1 - x0, y1 - y0, Math.abs(z1 - z0));
+  if (mat.map) scaleBoxUV(geo, x1 - x0, y1 - y0, Math.abs(z1 - z0), 100);
+  const m = new THREE.Mesh(geo, mat);
   m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); m.castShadow = shadow; m.receiveShadow = true; g.add(m); return m;
+}
+// 衛浴：門外的地坪、矮邊框、馬桶、浴櫃洗手台（牆外看得到，不做高牆以免擋住視線）
+const BATH = { tile: new THREE.MeshStandardMaterial({ color: '#dfe3e6', roughness: 0.4 }), curb: new THREE.MeshStandardMaterial({ color: '#b9c3cc', roughness: 0.6 }) };
+function bathArea(g, op) {
+  const T = WALL_T, cx = op.off + op.w / 2, x0 = cx - op.bw / 2, x1 = cx + op.bw / 2, z0 = -T, z1 = -T - op.depth;
+  lbox(g, x0, x1, -2, -0.4, z0, z1, BATH.tile);
+  for (const [a, b, c, d] of [[x0, x0 + 4, z0, z1], [x1 - 4, x1, z0, z1], [x0, x1, z1 + 4, z1]]) lbox(g, a, b, -0.4, 8, c, d, BATH.curb);
+  for (const [type, x, z] of [['toilet', x0 + 32, z1 + 40], ['basin', x1 - 46, z1 + 30]]) {
+    const it = withDefaults({ type }), m = buildModel(it);
+    m.position.set(x, 0, z); m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); g.add(m);
+  }
 }
 function buildOpening(g, op) {
   const T = WALL_T, x0 = op.off, x1 = op.off + op.w, y0 = op.sill, y1 = op.sill + op.h, cx = (x0 + x1) / 2, F = 5;
-  const fm = op.kind === 'door' ? M.frame : M.alu, zf0 = -T * 0.75, zf1 = -T * 0.25;
+  const fm = isDoor(op.kind) ? M.frame : M.alu, zf0 = -T * 0.75, zf1 = -T * 0.25;
   lbox(g, x0, x1, y1 - F, y1, zf0, zf1, fm); lbox(g, x0, x0 + F, y0, y1, zf0, zf1, fm); lbox(g, x1 - F, x1, y0, y1, zf0, zf1, fm);
   if (y0 > 0) lbox(g, x0, x1, y0, y0 + F, zf0, zf1, fm);
-  if (op.kind === 'door') {
+  if (isDoor(op.kind)) {
+    if (op.kind === 'bath') bathArea(g, op);
     const leaf = new THREE.Group(), lw = op.w - 2 * F, hingeL = op.hinge !== 'right';
     lbox(leaf, 0, lw, 0.5, op.h - F - 0.5, -2, 2, M.wood);
     const hx = hingeL ? lw - 8 : 8; lbox(leaf, hx - 1.5, hx + 1.5, 95, 110, 2, 6, M.alu); lbox(leaf, hx - 1.5, hx + 1.5, 95, 110, -6, -2, M.alu);
@@ -491,19 +590,38 @@ function buildOpening(g, op) {
     const strip = new THREE.Mesh(new THREE.PlaneGeometry(op.w, 60), M.zone); strip.rotation.x = -Math.PI / 2; strip.position.set(cx, 0.3, 30); g.add(strip);
   }
 }
+// 主牆的裝飾：奶油風的線板、輕奢風的金屬條
+function accentDeco(g, a, b, h) {
+  const A = curStyle().accent, len = b - a; if (len < 40) return;
+  if (A.kind === 'panel') {
+    const n = Math.max(1, Math.round(len / 90)), pw = len / n, F = 3;
+    lbox(g, a, b, 88, 93, 0, 1.6, M.molding);                                        // 腰線
+    for (let i = 0; i < n; i++) {
+      const x0 = a + i * pw + 10, x1 = a + (i + 1) * pw - 10;
+      for (const [y0, y1] of [[18, 78], [105, h - 28]]) {
+        if (y1 - y0 < 30) continue;
+        lbox(g, x0, x1, y0, y0 + F, 0, 1.2, M.molding); lbox(g, x0, x1, y1 - F, y1, 0, 1.2, M.molding);
+        lbox(g, x0, x0 + F, y0, y1, 0, 1.2, M.molding); lbox(g, x1 - F, x1, y0, y1, 0, 1.2, M.molding);
+      }
+    }
+  } else if (A.kind === 'marble') {
+    for (const t of [1 / 3, 2 / 3]) { const x = a + len * t; lbox(g, x - 0.8, x + 0.8, 0, h, 0, 0.5, M.metal, false); }
+  }
+}
 function buildWall(key) {
   const { h } = state.room, f = wallFrame(key), T = WALL_T, g = new THREE.Group();
   g.position.copy(f.o); g.rotation.y = Math.atan2(-f.u.z, f.u.x);
   const ops = (state.room.openings || []).filter(o => o.wall === key).sort((a, b) => a.off - b.off);
   const ext = key === 'N' || key === 'S' ? T : 0;                  // 前後牆兩端多延伸一個牆厚，把牆角補滿
   let cur = -ext;
-  const solid = (a, b) => { lbox(g, a, b, 0, h, -T, 0, M.wall); lbox(g, a, b, h, h + 0.3, -T, 0, M.cap, false); lbox(g, Math.max(a, 0), Math.min(b, f.L), 0, 8, 0, 1.2, M.skirt); };
+  const WM = key === 'N' ? M.accent : M.wall;
+  const solid = (a, b) => { lbox(g, a, b, 0, h, -T, 0, WM); if (key === 'N') accentDeco(g, Math.max(a, 0), Math.min(b, f.L), h); lbox(g, a, b, h, h + 0.3, -T, 0, M.cap, false); lbox(g, Math.max(a, 0), Math.min(b, f.L), 0, 8, 0, 1.2, M.skirt); };
   for (const op of ops) {
     if (op.off > cur) solid(cur, op.off);
     const a = Math.max(cur, op.off), b = op.off + op.w;
     if (b > a) {
-      if (op.sill > 0) lbox(g, a, b, 0, op.sill, -T, 0, M.wall);
-      if (op.sill + op.h < h) { lbox(g, a, b, op.sill + op.h, h, -T, 0, M.wall); lbox(g, a, b, h, h + 0.3, -T, 0, M.cap, false); }
+      if (op.sill > 0) lbox(g, a, b, 0, op.sill, -T, 0, WM);
+      if (op.sill + op.h < h) { lbox(g, a, b, op.sill + op.h, h, -T, 0, WM); lbox(g, a, b, h, h + 0.3, -T, 0, M.cap, false); }
       const mk = lbox(g, a, b, h + 0.5, h + 0.8, -T, 0, OP_MAT[op.kind], false); if (mk) { mk.userData.planOnly = true; mk.visible = topView; }   // 平面圖上用顏色標出門窗
     }
     buildOpening(g, op); cur = Math.max(cur, b);
@@ -517,8 +635,9 @@ function buildRoom() {
   roomGroup.clear(); walls = []; zones = [];
   const { w, d, h } = state.room;
   (state.room.openings || []).forEach(clampOpening);
-  const tex = FLOOR_TEX.clone(); tex.repeat.set(w / 120, d / 120); tex.needsUpdate = true;
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.75 }));
+  styleMaterials();
+  const SF = curStyle().floor, tex = floorTexture(SF).clone(); tex.repeat.set(w / 120, d / 120); tex.needsUpdate = true;
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: tex, roughness: SF.kind === 'marble' ? 0.25 : SF.kind === 'tile' ? 0.5 : 0.75 }));
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; floor.name = 'floor'; roomGroup.add(floor);
   for (const k of ['N', 'S', 'W', 'E']) buildWall(k);
   // 地面的 50cm 格線，讓客人有尺寸感
@@ -529,7 +648,7 @@ function buildRoom() {
   roomGroup.add(new THREE.LineSegments(gg, new THREE.LineBasicMaterial({ color: '#6b4a2a', transparent: true, opacity: 0.1 })));
   // 陽光：從窗戶最多的那面牆照進來；沒有窗就從正上方偏一點打光
   const S = Math.max(w, d), glass = { N: 0, S: 0, W: 0, E: 0 };
-  for (const o of state.room.openings || []) if (o.kind !== 'door') glass[o.wall] += o.w * o.h;
+  for (const o of state.room.openings || []) if (!isDoor(o.kind)) glass[o.wall] += o.w * o.h;
   const best = Object.keys(glass).sort((a, b) => glass[b] - glass[a])[0];
   if (glass[best] > 0) {
     const f = wallFrame(best), mid = f.o.clone().addScaledVector(f.u, f.L / 2);
@@ -568,7 +687,8 @@ function eyeCamera() {                          // 站在前牆邊、眼睛高�
 }
 function sizeOrtho() {
   const { w, d } = state.room, a = canvas.clientWidth / Math.max(1, canvas.clientHeight);
-  let hh = (d + 80) / 2; if ((w + 80) / 2 > hh * a) hh = (w + 80) / 2 / a;
+  const out = 80 + 2 * Math.max(0, ...(state.room.openings || []).filter(o => o.kind === 'balcony' || o.kind === 'bath').map(o => (o.depth || 150) + WALL_T));   // 牆外的陽台、衛浴也要看得到
+  let hh = (d + out) / 2; if ((w + out) / 2 > hh * a) hh = (w + out) / 2 / a;
   Object.assign(ortho, { left: -hh * a, right: hh * a, top: hh, bottom: -hh });
   ortho.position.set(0, 1500, 0); ortho.up.set(0, 0, -1); ortho.lookAt(0, 0, 0); ortho.updateProjectionMatrix();
 }
@@ -601,7 +721,8 @@ function fit(it, snap) {
   if (b.max.x - b.min.x <= 2 * W) { if (b.min.x + dx < -W) dx = -W - b.min.x; if (b.max.x + dx > W) dx = W - b.max.x; }
   if (b.max.z - b.min.z <= 2 * D) { if (b.min.z + dz < -D) dz = -D - b.min.z; if (b.max.z + dz > D) dz = D - b.max.z; }
   it.x = Math.round((it.x + dx) * 10) / 10; it.z = Math.round((it.z + dz) * 10) / 10;
-  it.elev = hostTop(it);
+  const T = PRODUCTS[it.type];
+  it.elev = T.on ? hostTop(it) : T.ceil ? Math.max(0, state.room.h - it.h) : (it.elev || 0);
   objs.get(it.id).position.set(it.x, it.elev, it.z);
 }
 // 微波爐、電鍋這類小家電：底下是流理台、餐櫃、中島就放在檯面上
@@ -625,7 +746,8 @@ function canOverlap(a, b) {
 }
 function problems() {                         // 有問題的家具：id → 原因
   const bad = new Map(), W = state.room.w / 2 + 0.5, D = state.room.d / 2 + 0.5;
-  const boxes = state.items.map(it => [it, boxOf(it)]), zb = zoneBoxes();
+  const free = it => { const T = PRODUCTS[it.type]; return T.flat || T.noHit || T.ceil || T.sub === '窗簾' || T.sub === '掛畫'; };
+  const boxes = state.items.filter(it => !free(it)).map(it => [it, boxOf(it)]), zb = zoneBoxes();
   for (const [it, b] of boxes) if (b.min.x < -W || b.max.x > W || b.min.z < -D || b.max.z > D) bad.set(it.id, "超出房間");
   for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
     const a = boxes[i][1].clone().expandByScalar(-1), b = boxes[j][1].clone().expandByScalar(-1);
@@ -634,8 +756,31 @@ function problems() {                         // 有問題的家具：id → 原
   for (const [it, b] of boxes) if (!bad.has(it.id)) { const z = zb.find(z => z.b.intersectsBox(b.clone().expandByScalar(-1))); if (z) bad.set(it.id, z.why); }
   return bad;
 }
+// 窗簾掛在哪：落地的布簾類從天花板垂到地上、比窗寬一點；捲簾百葉類剛好包住窗框
+const LONG_CURTAIN = ['drape', 'sheer', 'layered', 'passage'];
+function curtainFor(type, op) {
+  const f = wallFrame(op.wall), r = state.room, long = LONG_CURTAIN.includes(type), T = PRODUCTS[type];
+  const pad = long ? 20 : 5, a = Math.max(0, op.off - pad), b = Math.min(f.L, op.off + op.w + pad), dep = T.d || 10;
+  const c = f.o.clone().addScaledVector(f.u, (a + b) / 2).addScaledVector(f.n, dep / 2 + 1);
+  const g = long ? { h: r.h - 6, elev: 2 } : { h: Math.min(r.h - Math.max(0, op.sill - 5), op.h + 15), elev: Math.max(0, op.sill - 5) };
+  return { w: Math.round(b - a), ...g, x: c.x, z: c.z, rot: Math.round(-Math.atan2(f.n.x, f.n.z) / deg) || 0, c };
+}
+function addCurtain(type) {
+  const wins = (state.room.openings || []).filter(o => !isDoor(o.kind));
+  if (!wins.length) return false;
+  const hung = o => state.items.some(it => PRODUCTS[it.type].sub === '窗簾' && !it.auto && curtainFor(it.type, o).c.distanceTo(new THREE.Vector3(it.x, 0, it.z)) < 40);
+  const op = wins.find(o => !hung(o)) || wins[0], pos = curtainFor(type, op);
+  // 換掉這扇窗原本自動掛的風格窗簾
+  for (const it of state.items.filter(it => it.auto === 'curtain' && pos.c.distanceTo(new THREE.Vector3(it.x, 0, it.z)) < 40)) { const g = objs.get(it.id); furnGroup.remove(g); dispose(g); objs.delete(it.id); }
+  state.items = state.items.filter(it => !(it.auto === 'curtain' && pos.c.distanceTo(new THREE.Vector3(it.x, 0, it.z)) < 40));
+  const { c, ...props } = pos, it = withDefaults({ id: nextId++, type, ...props });
+  state.items.push(it); makeObj(it); fit(it, false); select(it.id); refresh(); save();
+  toast(`已把 ${PRODUCTS[type].name} 掛在${WALL_NAMES[op.wall]}的${OPEN_KINDS[op.kind].name}上`);
+  return true;
+}
 function addItem(type) {
   snapshot();
+  if (PRODUCTS[type].sub === '窗簾' && addCurtain(type)) return;
   const T = PRODUCTS[type], it = withDefaults({ id: nextId++, type, x: 0, z: 0, rot: 0 });
   state.items.push(it); makeObj(it);
   // 靠牆家具先放到後牆，其他放中間；撞到就往旁邊找空位
@@ -684,7 +829,7 @@ function select(id) { selId = id; buildSelPanel(); refresh(); }
 function buildSelPanel() {
   const it = cur(); $('#sel').classList.toggle('on', !!it); if (!it) return;
   const T = PRODUCTS[it.type];
-  $('#s-name').textContent = T.name; $('#s-sub').textContent = `${T.sub}・原尺寸 ${T.w}×${T.d}×${T.h}`;
+  $('#s-name').textContent = T.name; $('#s-sub').textContent = `${it.w}×${it.d}×${it.h}`;
   $('#s-w').value = it.w; $('#s-d').value = it.d; $('#s-h').value = it.h;
   let h = '';
   for (const g of optsOf(T)) h += `<div class="opt"><label>${g.label}</label><select data-k="${g.key}">${g.list.map(o => `<option value="${o.id}" ${o.id === it[g.key] ? 'selected' : ''}>${o.name}</option>`).join('')}</select></div>`;
@@ -694,7 +839,9 @@ function buildSelPanel() {
 function renderSel(bad) {
   const it = cur(); if (!it) return;
   const b = boxOf(it), W = state.room.w / 2, D = state.room.d / 2, r = v => Math.round(v);
-  $('#s-gaps').innerHTML = [['左', b.min.x + W], ['右', W - b.max.x], ['後', b.min.z + D], ['前', D - b.max.z]].map(([n, v]) => `<div>${n}<b>${r(v)}</b></div>`).join('');
+  $('#s-sub').textContent = `${it.w}×${it.d}×${it.h}`;
+  const g = { L: b.min.x + W, R: W - b.max.x, B: b.min.z + D, F: D - b.max.z };
+  document.querySelectorAll('#s-gaps input').forEach(inp => { if (document.activeElement !== inp) inp.value = r(g[inp.dataset.g]); });
   $('#s-warn').classList.toggle('on', bad.has(it.id)); $('#s-warn').textContent = bad.get(it.id) || '';
 }
 function editSel(fn) { const it = cur(); if (!it) return; snapshot(); fn(it); makeObj(it); fit(it, false); refresh(); save(); }
@@ -715,20 +862,52 @@ function duplicate() {
   const it = cur(); if (!it) return; snapshot();
   const n = { ...it, id: nextId++, x: it.x + 30, z: it.z + 30 }; state.items.push(n); makeObj(n); fit(n, false); select(n.id); save();
 }
+// 更多設定：展開或收起（記住上次的選擇）
+let moreOpen = false; try { moreOpen = localStorage.getItem('likai-room-more') === '1'; } catch (e) { }
+function syncMore() { $('#sel').classList.toggle('open', moreOpen); }
+$('#s-more').onclick = () => { moreOpen = !moreOpen; syncMore(); try { localStorage.setItem('likai-room-more', moreOpen ? '1' : '0'); } catch (e) { } };
+syncMore();
 $('#s-rot').onclick = rotate; $('#s-del').onclick = remove; $('#s-dup').onclick = duplicate; $('#s-close').onclick = () => select(null);
+
+/* ================= 手動移動：離牆距離打字、方向鍵 ================= */
+function moveSel(dx, dz, snap) {
+  const it = cur(); if (!it) return;
+  it.x += dx; it.z += dz; fit(it, snap); refresh(); save();
+}
+$('#s-gaps').addEventListener('change', e => {        // 打「後 0」就貼後牆、「左 30」就離左牆 30 公分
+  const k = e.target.dataset.g, it = cur(); if (!k || !it) return;
+  const v = toNum(e.target.value), b = boxOf(it), W = state.room.w / 2, D = state.room.d / 2;
+  snapshot();
+  if (k === 'L') moveSel(v - (b.min.x + W), 0); else if (k === 'R') moveSel((W - b.max.x) - v, 0);
+  else if (k === 'B') moveSel(0, v - (b.min.z + D)); else moveSel(0, (D - b.max.z) - v);
+  e.target.blur();
+});
+$('#s-gaps').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.dispatchEvent(new Event('change', { bubbles: true })); });
+let padT = null;
+$('#s-pad').addEventListener('pointerdown', e => {    // 按一下移 5 公分，按住會一直移
+  const b = e.target.closest('[data-mv]'); if (!b) return; e.preventDefault();
+  const [mx, mz] = b.dataset.mv.split(',').map(Number); snapshot();
+  const step = () => moveSel(mx * 5, mz * 5); step();
+  clearInterval(padT); let n = 0; padT = setInterval(() => { if (++n > 3) step(); }, 90);
+});
+for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) $('#s-pad').addEventListener(ev, () => clearInterval(padT));
 
 /* ================= 拖曳 ================= */
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 let drag = null, down = null;
 function setNdc(e) { const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(ndc, camera); }
 function floorPt(e) { setNdc(e); const p = new THREE.Vector3(); return ray.ray.intersectPlane(floorPlane, p) ? p : null; }
+// 拖曳時，水平面放在手指抓到的那一點的高度：抓沙發靠背也不會對到後面的地板
+const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+function dragPt(e) { setNdc(e); const p = new THREE.Vector3(); return ray.ray.intersectPlane(dragPlane, p) ? p : null; }
 canvas.addEventListener('pointerdown', e => {           // 要比 OrbitControls 先註冊，按到家具時才能擋住視角旋轉
   down = { x: e.clientX, y: e.clientY };
   setNdc(e);
-  const hit = ray.intersectObjects(furnGroup.children, true)[0];
+  const shown = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };   // 被藏起來的窗簾不能點
+  const hit = ray.intersectObjects(furnGroup.children, true).find(h => shown(h.object));
   if (!hit) return;
   const it = state.items.find(i => i.id === hit.object.userData.id); if (!it) return;
-  const p = floorPt(e); if (!p) return;
+  dragPlane.constant = -hit.point.y; const p = dragPt(e); if (!p) return;
   controls.enabled = false;
   drag = { it, dx: it.x - p.x, dz: it.z - p.z, moved: false, before: JSON.stringify(state) };
   canvas.setPointerCapture(e.pointerId);
@@ -736,7 +915,7 @@ canvas.addEventListener('pointerdown', e => {           // 要比 OrbitControls 
 }, { capture: true });
 canvas.addEventListener('pointermove', e => {
   if (!drag) return;
-  const p = floorPt(e); if (!p) return;
+  const p = dragPt(e); if (!p) return;
   if (!drag.moved && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) return;
   drag.moved = true;
   drag.it.x = p.x + drag.dx; drag.it.z = p.z + drag.dz; fit(drag.it, true); refresh();
@@ -813,7 +992,7 @@ function renderEstimate() {
 }
 $('#q-est').addEventListener('click', e => { const b = e.target.closest('button'); if (b) startProject(qSpaces(), +b.dataset.i); });   // 直接進那個空間
 function openQuick() {
-  renderEstimate(); $('#quick').classList.add('on');
+  renderEstimate(); $('#quick').classList.add('on'); renderSteps(1);
   $('#q-back').style.display = project.started ? '' : 'none';             // 第一次來沒有上一頁
   if (project.started) pushPage('quick');
 }
@@ -864,7 +1043,7 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
 });
 $('#placed').addEventListener('click', e => { const li = e.target.closest('li'); if (li) select(+li.dataset.id); });
 /* ================= 設定房間（尺寸＋門窗） ================= */
-const OP_COLOR = { window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#c9a227' };
+const OP_COLOR = { window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#c9a227', bath: '#7d6bb0' };
 /* ---------- 上一頁：設定視窗、坪數視窗也能用手機的返回鍵關掉 ---------- */
 // setupFrom：'quick' 從坪數頁來、{ space: i } 從另一個空間切過來、'edit' 從「房間」分頁打開
 let setupFrom = 'edit', ignorePop = false;
@@ -873,15 +1052,21 @@ function pushPage(m) { if (history.state && history.state.m) history.replaceStat
 function dropPage() { if (history.state && history.state.m) { ignorePop = true; history.back(); } }
 addEventListener('popstate', () => {
   if (ignorePop) { ignorePop = false; return; }
-  if ($('#setup').classList.contains('on')) setupBack(true);
+  if ($('#style').classList.contains('on')) { $('#style').classList.remove('on'); openSetup(setupFrom); }
+  else if ($('#setup').classList.contains('on')) setupBack(true);
   else if ($('#quick').classList.contains('on') && project.started) closeQuick(true);
 });
 function openSetup(from = 'edit') {
   setupFrom = typeof from === 'string' || from.space !== project.cur ? from : 'edit';
   $('#setup-title').textContent = `設定${state.name}`; snapshot(); renderOps(); drawPlan(); $('#setup').classList.add('on'); pushPage('setup');
+  $('#setup-done').textContent = project.style ? '完成，開始擺家具' : '下一步：選裝潢風格'; renderSteps(2);
 }
 function closeSetup() {
-  $('#setup').classList.remove('on'); state.room.setup = true; save(); roomSummary(); dropPage();
+  const first = !state.room.setup;
+  $('#setup').classList.remove('on'); state.room.setup = true;
+  if (!project.style) { save(); openStyle(); return; }                  // 第一次：接著選裝潢風格
+  if (first || state.decorStyle !== project.style) { styleDecor(); refresh(); }   // 新空間：放上風格軟裝
+  save(); roomSummary(); dropPage();
   setView(view === 'top' ? 'top' : 'orbit');
 }
 function setupBack(byPop) {
@@ -891,9 +1076,95 @@ function setupBack(byPop) {
   if (setupFrom.space != null && project.spaces[setupFrom.space]) { switchSpace(setupFrom.space); return; }   // 回到原本的空間（這個空間下次進來還會問）
   state.room.setup = true; save(); roomSummary();
 }
+/* ---------- 步驟列：① 坪數格局 ② 房間門窗 ③ 裝潢風格 ④ 擺家具，做過的步驟都能點回去 ---------- */
+const STEP_NAMES = ['坪數格局', '房間門窗', '裝潢風格', '擺家具'];
+function renderSteps(on) {
+  const reach = n => n === 1 || (project.started && (n === 2 || (n === 3 && state.room.setup) || (n === 4 && project.style && state.room.setup)));
+  document.querySelectorAll('.steps').forEach(ol => {
+    ol.innerHTML = STEP_NAMES.map((t, i) => `<li data-step="${i + 1}" class="${i + 1 === on ? 'on' : reach(i + 1) ? 'done' : ''}">${t}</li>`).join('');
+  });
+}
+document.addEventListener('click', e => {
+  const li = e.target.closest('.steps li.done'); if (li) goStep(+li.dataset.step);
+});
+function hideFlow() { for (const id of ['#quick', '#setup', '#style']) $(id).classList.remove('on'); }
+function goStep(n) {
+  hideFlow();
+  if (n === 1) openQuick();
+  else if (n === 2) openSetup(setupFrom);
+  else if (n === 3) openStyle();
+  else finishFlow();
+}
+function finishFlow() {                         // 回到擺家具
+  hideFlow(); state.room.setup = true; save(); roomSummary(); dropPage();
+  setView(view === 'top' ? 'top' : 'orbit');
+}
+
+/* ---------- 裝潢風格 ---------- */
+function openStyle() {
+  renderStyleCards(); renderSteps(3); $('#style-decor').checked = project.decor !== false;
+  $('#style').classList.add('on'); pushPage('style');
+}
+function renderStyleCards() {
+  $('#style-cards').innerHTML = STYLE_KEYS.map(k => {
+    const S = STYLES[k], sw = [S.floor.color, S.wall, S.accent.color, S.decor.curtain.color, S.decor.rug.color].map(c => `<i style="background:${c}"></i>`).join('');
+    return `<button class="sc ${project.style === k ? 'on' : ''}" data-k="${k}"><div class="sw">${sw}</div><b>${S.name}</b><p>${S.desc}</p><div class="tg">${S.tags.map(t => `<span>${t}</span>`).join('')}</div></button>`;
+  }).join('');
+}
+function applyStyle(k) {
+  project.style = k; buildRoom(); styleDecor(); refresh(); renderStyleCards(); roomSummary(); save();
+}
+$('#style-cards').addEventListener('click', e => { const b = e.target.closest('.sc'); if (b) applyStyle(b.dataset.k); });
+$('#style-decor').addEventListener('change', e => { project.decor = e.target.checked; styleDecor(); refresh(); save(); });
+$('#style-back').onclick = () => { $('#style').classList.remove('on'); openSetup(setupFrom); };
+$('#style-done').onclick = () => { if (!project.style) { toast('先點一個喜歡的風格'); return; } finishFlow(); };
+$('#step-back').onclick = openStyle;
+$('#change-style').onclick = openStyle;
+
+/* ---------- 風格軟裝：窗簾掛在每扇窗前、地毯、燈、植栽、掛畫（變成一般家具，可以移動或刪除） ---------- */
+function freeSpot(x, z, r) {
+  const b = new THREE.Box3(new THREE.Vector3(x - r, 0, z - r), new THREE.Vector3(x + r, 100, z + r));
+  return !state.items.some(it => { const T = PRODUCTS[it.type]; return !(T.flat || T.noHit || T.ceil || T.sub === '窗簾' || T.sub === '掛畫') && boxOf(it).intersectsBox(b); })
+    && !zoneBoxes().some(z => z.b.intersectsBox(b));
+}
+function styleDecor(only) {
+  const S = STYLES[project.style], on = project.decor !== false && S && S.decor;
+  const drop = it => it.auto && (!only || it.auto === only);
+  for (const it of state.items.filter(drop)) { const g = objs.get(it.id); if (g) { furnGroup.remove(g); dispose(g); objs.delete(it.id); } }
+  state.items = state.items.filter(it => !drop(it));
+  if (selId && !state.items.some(i => i.id === selId)) { selId = null; buildSelPanel(); }
+  if (!on) { state.decorStyle = null; return; }
+  const D = S.decor, r = state.room, t = state.type, W = r.w / 2, Dp = r.d / 2;
+  const put = (auto, type, props) => { const it = withDefaults({ id: nextId++, type, x: 0, z: 0, rot: 0, auto, ...props }); state.items.push(it); makeObj(it); fit(it, false); return it; };
+  const sized = o => ({ ...o, ...(DECOR_SIZE[o.style] || {}) });
+  // 窗簾不自動加（使用者 2026-10-16：到商品手動加）；以前自動掛的會在上面一起清掉
+  const living = t === 'living' || t === 'ld', lx = t === 'ld' ? -W / 2 : 0;
+  // 地毯
+  if (living || t === 'bedroom') {
+    const rw = t === 'bedroom' ? Math.min(240, r.w * 0.7) : Math.min(t === 'ld' ? 220 : 240, r.w * (t === 'ld' ? 0.35 : 0.55));
+    const rd = t === 'bedroom' ? Math.min(180, r.d * 0.5) : Math.min(170, r.d * 0.42), round = D.rug.shape === 'round';
+    const z = t === 'bedroom' ? -Dp + 150 : clamp(-Dp + 165, -Dp + rd / 2, Dp - rd / 2);
+    put('rug', 'rug', { shape: D.rug.shape, color: D.rug.color, color2: D.rug.color2, w: Math.round(round ? Math.min(rw, rd + 30) : rw), d: Math.round(round ? Math.min(rw, rd + 30) : rd), x: lx, z });
+  }
+  // 燈：客廳、臥室用風格的主燈；餐廳在餐桌上方吊燈
+  if (living || t === 'bedroom') put('light', D.light.type, { ...sized(D.light), x: lx, z: 0 });
+  if (t === 'dining' || t === 'ld') put('light', 'pendant', { ...sized(D.dining), x: t === 'ld' ? W / 2 : 0, z: 0 });
+  // 植栽、落地燈：找沒有家具、不擋門的牆角
+  const corners = [[-W + 30, -Dp + 30], [W - 30, -Dp + 30], [-W + 30, Dp - 30], [W - 30, Dp - 30]].filter(([x, z]) => freeSpot(x, z, 28));
+  const c1 = corners.shift(); if (c1) put('plant', 'plant', { ...D.plant, x: c1[0], z: c1[1] });
+  if (living) { const c2 = corners.shift(); if (c2) put('lamp', 'lamp', { ...sized(D.lamp), x: c2[0], z: c2[1] }); }
+  // 掛畫：後牆中間（沙發、床頭上方），那裡有窗就不掛
+  if (D.art && (living || t === 'bedroom')) {
+    const A = sized(D.art), ax = lx, ok = !(r.openings || []).some(o => o.wall === 'N' && o.off - W < ax + A.w / 2 + 10 && o.off + o.w - W > ax - A.w / 2 - 10);
+    if (ok) put('art', 'wallart', { ...A, x: ax, z: -Dp + 2, elev: 135 });
+  }
+  state.decorStyle = project.style;
+}
+
 function applyRoom() { buildRoom(); for (const it of state.items) fit(it, false); refresh(); drawPlan(); roomSummary(); save(); }
 function roomSummary() {
   $('#sp-name').value = state.name;
+  $('#style-sum').textContent = project.style ? `目前：${STYLES[project.style].name}（${STYLES[project.style].tags.slice(0, 3).join('、')}）` : '還沒選裝潢風格';
   const r = state.room, ops = r.openings || [], n = k => ops.filter(o => o.kind === k).length;
   const parts = Object.keys(OPEN_KINDS).filter(k => n(k)).map(k => `${OPEN_KINDS[k].name} ${n(k)}`);
   $('#room-sum').textContent = `寬 ${r.w} × 深 ${r.d}，天花板高 ${r.h} 公分。` + (parts.length ? parts.join('、') : '還沒設定門窗');
@@ -907,15 +1178,16 @@ function renderOps() {
       + num('off', '距左邊牆角', o.off) + num('w', '寬', o.w) + num('h', '高', o.h);
     if (o.kind === 'window') h += num('sill', '離地高', o.sill);
     if (o.kind === 'balcony') h += num('depth', '陽台深', o.depth);
-    if (o.kind === 'door') h += `<label>門軸在<select data-k="hinge"><option value="left" ${o.hinge !== 'right' ? 'selected' : ''}>左邊</option><option value="right" ${o.hinge === 'right' ? 'selected' : ''}>右邊</option></select></label>`
-      + `<label>開門方向<select data-k="swing"><option value="in" ${o.swing !== 'out' ? 'selected' : ''}>往房內開</option><option value="out" ${o.swing === 'out' ? 'selected' : ''}>往外開</option></select></label>`;
+    if (o.kind === 'bath') h += num('bw', '衛浴寬', o.bw) + num('depth', '衛浴深', o.depth);
+    if (isDoor(o.kind)) h += `<label>門軸在<select data-k="hinge"><option value="left" ${o.hinge !== 'right' ? 'selected' : ''}>左邊</option><option value="right" ${o.hinge === 'right' ? 'selected' : ''}>右邊</option></select></label>`
+      + `<label>開門方向<select data-k="swing"><option value="in" ${o.swing !== 'out' ? 'selected' : ''}>往房內開</option><option value="out" ${o.swing === 'out' ? 'selected' : ''}>${o.kind === 'bath' ? '往衛浴裡開' : '往外開'}</option></select></label>`;
     return `<div class="op" data-i="${i}" style="--c:${OP_COLOR[o.kind]}"><div class="op-top"><b>${OPEN_KINDS[o.kind].name} ${cnt[o.kind]}</b><button class="x" data-del aria-label="刪除">×</button></div><div class="op-grid">${h}</div></div>`;
   }).join('');
 }
 function addOpening(kind) {
-  const K = OPEN_KINDS[kind], wall = kind === 'door' ? 'S' : 'N', L = wallFrame(wall).L;
+  const K = OPEN_KINDS[kind], wall = kind === 'door' ? 'S' : kind === 'bath' ? 'W' : 'N', L = wallFrame(wall).L;
   const op = { kind, wall, w: Math.min(K.w, L), h: K.h, sill: K.sill, off: Math.round((L - Math.min(K.w, L)) / 2) };
-  if (K.depth) op.depth = K.depth; if (K.hinge) { op.hinge = K.hinge; op.swing = K.swing; }
+  if (K.depth) op.depth = K.depth; if (K.bw) op.bw = K.bw; if (K.hinge) { op.hinge = K.hinge; op.swing = K.swing; }
   (state.room.openings ||= []).push(op); clampOpening(op); renderOps(); applyRoom();
   $('#ops').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -945,7 +1217,7 @@ $('#edit-room').onclick = () => openSetup('edit');
 // 設定視窗裡的平面示意圖：上方後牆、下方前牆
 function drawPlan() {
   const { w, d } = state.room, T = WALL_T, ops = state.room.openings || [];
-  const bal = Math.max(0, ...ops.filter(o => o.kind === 'balcony').map(o => o.depth || 150));
+  const bal = Math.max(0, ...ops.filter(o => o.kind === 'balcony' || o.kind === 'bath').map(o => o.depth || 150));
   const pad = Math.max(60, Math.max(w, d) * 0.12) + bal, fs = Math.max(w, d) / 15;
   const el = $('#plan'); el.setAttribute('viewBox', `${-w / 2 - pad} ${-d / 2 - pad} ${w + 2 * pad} ${d + 2 * pad}`); el.style.aspectRatio = `${w + 2 * pad} / ${d + 2 * pad}`;
   let h = `<rect x="${-w / 2 - T}" y="${-d / 2 - T}" width="${w + 2 * T}" height="${d + 2 * T}" fill="#1d4763"/>`
@@ -959,10 +1231,16 @@ function drawPlan() {
       const m = P(f, o.off + o.w / 2, T + (o.depth || 150) / 2);
       h += `<text x="${m.x}" y="${m.z}" font-size="${fs * 0.8}" fill="${c}" text-anchor="middle" dominant-baseline="middle">陽台</text>`;
     }
+    if (o.kind === 'bath') {
+      const cx = o.off + o.w / 2, a = P(f, cx - o.bw / 2, T), b = P(f, cx + o.bw / 2, T + o.depth);
+      h += `<rect x="${Math.min(a.x, b.x)}" y="${Math.min(a.z, b.z)}" width="${Math.abs(a.x - b.x)}" height="${Math.abs(a.z - b.z)}" fill="#ece8f5" stroke="${c}" stroke-dasharray="6 5" stroke-width="2"/>`;
+      const m = P(f, cx, T + o.depth / 2);
+      h += `<text x="${m.x}" y="${m.z}" font-size="${fs * 0.8}" fill="${c}" text-anchor="middle" dominant-baseline="middle">衛浴</text>`;
+    }
     const a = P(f, o.off, T / 2), b = P(f, o.off + o.w, T / 2);
     h += `<line x1="${a.x}" y1="${a.z}" x2="${b.x}" y2="${b.z}" stroke="#f4f8fb" stroke-width="${T + 1}"/>`
-      + `<line x1="${a.x}" y1="${a.z}" x2="${b.x}" y2="${b.z}" stroke="${c}" stroke-width="${o.kind === 'door' ? 3 : 5}"/>`;
-    if (o.kind === 'door' && o.swing !== 'out') {
+      + `<line x1="${a.x}" y1="${a.z}" x2="${b.x}" y2="${b.z}" stroke="${c}" stroke-width="${isDoor(o.kind) ? 3 : 5}"/>`;
+    if (isDoor(o.kind) && o.swing !== 'out') {
       const left = o.hinge !== 'right', hp = P(f, left ? o.off : o.off + o.w), r = o.w;
       let pts = `${hp.x},${hp.z}`;                  // 開門範圍：從門軸畫四分之一圓
       for (let i = 0; i <= 16; i++) { const t = i / 16 * Math.PI / 2, p = hp.clone().addScaledVector(f.n, r * Math.cos(t)).addScaledVector(f.u, (left ? 1 : -1) * r * Math.sin(t)); pts += ` ${p.x},${p.z}`; }
@@ -989,12 +1267,16 @@ $('#share').onclick = async () => {
 };
 addEventListener('keydown', e => {
   if (e.target.matches('input,select')) return;
-  if ($('#quick').classList.contains('on')) return;
+  if ($('#quick').classList.contains('on') || $('#style').classList.contains('on')) return;
   if ($('#setup').classList.contains('on')) { if (e.key === 'Escape') closeSetup(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
   else if (e.key === 'r' || e.key === 'R') rotate();
   else if (e.key === 'Delete' || e.key === 'Backspace') remove();
   else if (e.key === 'Escape') select(null);
+  else if (e.key.startsWith('Arrow') && cur()) {          // 方向鍵移動 5 公分，加 Shift 移 20 公分
+    e.preventDefault(); const st = e.shiftKey ? 20 : 5; snapshot();
+    moveSel(e.key === 'ArrowLeft' ? -st : e.key === 'ArrowRight' ? st : 0, e.key === 'ArrowUp' ? -st : e.key === 'ArrowDown' ? st : 0);
+  }
 });
 
 /* ================= 繪製 ================= */
@@ -1005,6 +1287,14 @@ function render() {
     const n = g.userData.n; tmp.copy(camera.position).sub(g.position);
     const hide = !topView && tmp.x * n.x + tmp.z * n.y < 0;
     if (wallHidden.get(g) !== hide) { wallHidden.set(g, hide); g.traverse(o => { if (o.isMesh) o.material = hide ? M.hidden : o.userData.mat; }); }
+  }
+  // 掛在被藏起來的牆上的窗簾、掛畫也一起藏（不然會飄在鏡頭前擋住）
+  const hidN = walls.filter(g => wallHidden.get(g)).map(g => g.userData.n);
+  for (const it of state.items) {
+    const T = PRODUCTS[it.type]; if (T.sub !== '窗簾' && T.sub !== '掛畫') continue;
+    const o = objs.get(it.id); if (!o) continue;
+    const th = -it.rot * deg, nx = Math.sin(th), nz = Math.cos(th);
+    o.visible = !hidN.some(n => n.x * nx + n.y * nz > 0.9);
   }
   renderer.render(scene, camera);
 }
@@ -1017,6 +1307,7 @@ renderer.setAnimationLoop(() => { if (!topView) controls.update(); render(); });
 
 load(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary(); renderSpaces(); filterLib();
 { const v = new URLSearchParams(location.search).get('view'); if (v === 'eye' || v === 'top') setView(v); }   // 網址加 ?view=eye 直接用人視角打開
+if (project.started && state.room.setup && project.style && project.decor !== false && state.decorStyle !== project.style) { styleDecor(); refresh(); }   // 分享連結：補上風格軟裝
 if (!project.started) openQuick();               // 第一次來：先問坪數、幾房幾廳
 else if (!state.room.setup) { openSetup(); undoStack = []; $('#undo').disabled = true; }
 $('#loading').remove();
