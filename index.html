@@ -80,6 +80,8 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .seg button{border:0;background:none;color:#cfe0ec;border-radius:999px;padding:6px 14px;font-size:13px}
 .seg button.on{background:var(--yellow);color:var(--yellow-ink);font-weight:600}
 .wallbtn{position:absolute;top:62px;left:14px;display:flex;align-items:center;gap:7px;border:0;border-radius:999px;padding:6px 13px 6px 9px;background:rgba(255,255,255,.92);color:var(--ink);font-size:13px;box-shadow:var(--shadow)}
+.gyrobtn{position:absolute;top:106px;left:14px;border:0;border-radius:999px;padding:7px 14px;background:var(--brand);color:#fff;font-size:13px;font-weight:600;box-shadow:var(--shadow)}
+.gyrobtn.on{background:var(--yellow);color:var(--yellow-ink)}
 .wallbtn i{width:30px;height:17px;border-radius:999px;background:#c9d4de;position:relative;transition:background .15s}
 .wallbtn i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;transition:left .15s}
 .wallbtn[aria-pressed="true"] i{background:var(--accent)}
@@ -220,6 +222,7 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
   .help{display:none}
   .seg{top:10px;left:10px}.seg button{padding:5px 10px}
   .wallbtn{top:54px;left:10px;padding:5px 11px 5px 8px;font-size:12px}
+  .gyrobtn{top:92px;left:10px;padding:6px 12px;font-size:12px}
   .toolbar{top:10px;right:10px}
   .toolbar #undo{display:none}
   .btn{padding:6px 12px;font-size:13px}
@@ -263,6 +266,7 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
   <main>
     <canvas id="cv"></canvas>
     <button class="wallbtn" id="wall-mode" aria-pressed="false"><i></i><span>透明牆</span></button>
+    <button class="gyrobtn" id="gyro" hidden><span>手機環視</span></button>
     <div class="seg"><button class="on" id="v3d">3D</button><button id="vtop">平面</button><button id="veye">人視角</button></div>
     <div class="help">拖曳家具移動・拖曳空白處轉視角・滾輪縮放</div>
     <div class="toolbar">
@@ -712,6 +716,7 @@ function sizeOrtho() {
   ortho.position.set(0, 1500, 0); ortho.up.set(0, 0, -1); ortho.lookAt(0, 0, 0); ortho.updateProjectionMatrix();
 }
 function setView(v) {
+  if (v !== 'eye' && typeof gyro !== 'undefined' && gyro.on) { gyro.on = false; removeEventListener('deviceorientation', onOrient); $('#gyro').classList.remove('on'); $('#gyro span').textContent = '手機環視'; }
   view = v; topView = v === 'top'; camera = topView ? ortho : persp; controls.enabled = !topView;
   for (const [id, k] of [['#v3d', 'orbit'], ['#vtop', 'top'], ['#veye', 'eye']]) $(id).classList.toggle('on', v === k);
   roomGroup.traverse(o => { if (o.userData.planOnly) o.visible = topView; });
@@ -938,6 +943,54 @@ $('#s-pad').addEventListener('pointerdown', e => {    // 按一下移 5 公分�
 });
 for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) $('#s-pad').addEventListener(ev, () => clearInterval(padT));
 
+/* ================= 手機環視 ================= */
+const gyro = { on: false, data: null, offset: 0, lastX: null, walk: null };
+const GQ = { euler: new THREE.Euler(), q0: new THREE.Quaternion(), q1: new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)), zee: new THREE.Vector3(0, 0, 1) };
+function onOrient(e) { if (e.alpha != null) gyro.data = e; }
+function gyroFrame() {
+  const e = gyro.data;
+  if (gyro.walk) {                                 // 走路動畫
+    const t = Math.min(1, (performance.now() - gyro.walk.t0) / 450), k = t * (2 - t);
+    persp.position.lerpVectors(gyro.walk.from, gyro.walk.to, k); if (t >= 1) gyro.walk = null;
+  }
+  if (!e) return;
+  // 手機方向 → 鏡頭方向（和 three.js 的 DeviceOrientationControls 同一套算法）
+  const a = THREE.MathUtils.degToRad(e.alpha) + gyro.offset, b = THREE.MathUtils.degToRad(e.beta), g = THREE.MathUtils.degToRad(e.gamma);
+  const orient = THREE.MathUtils.degToRad((screen.orientation && screen.orientation.angle) || window.orientation || 0);
+  GQ.euler.set(b, a, -g, 'YXZ'); persp.quaternion.setFromEuler(GQ.euler); persp.quaternion.multiply(GQ.q1); persp.quaternion.multiply(GQ.q0.setFromAxisAngle(GQ.zee, -orient));
+}
+function walkTo(p) {
+  if (!p) return;
+  const W = state.room.w / 2 - 25, D = state.room.d / 2 - 25;
+  gyro.walk = { from: persp.position.clone(), to: new THREE.Vector3(clamp(p.x, -W, W), 155, clamp(p.z, -D, D)), t0: performance.now() };
+}
+async function startGyro() {
+  try {                                            // iPhone 要先問「允許取用動作與方向」
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      if (await DeviceOrientationEvent.requestPermission() !== 'granted') { toast('需要允許「動作與方向」才能環視；Claude 預覽版不支援，請用正式網址'); return; }
+    }
+  } catch (e) { toast('這個瀏覽器不允許取用手機方向；Claude 預覽版不支援，請用正式網址'); return; }
+  setView('eye'); select(null);
+  gyro.on = true; gyro.data = null; gyro.offset = 0; controls.enabled = false;
+  addEventListener('deviceorientation', onOrient);
+  $('#gyro').classList.add('on'); $('#gyro span').textContent = '結束環視';
+  toast('轉動手機看四周，點地板走過去');
+  let first = true;
+  const t = setTimeout(() => { if (gyro.on && !gyro.data) { stopGyro(); toast('收不到手機方向。Claude 預覽版不支援，請用正式網址打開'); } }, 1500);
+  // 第一次收到方向時，讓鏡頭先面向房間裡面（不管手機原本朝哪）
+  const calib = e => { if (!first || e.alpha == null) return; first = false; clearTimeout(t); gyro.offset = -THREE.MathUtils.degToRad(e.alpha); removeEventListener('deviceorientation', calib); };
+  addEventListener('deviceorientation', calib);
+}
+function stopGyro() {
+  if (!gyro.on) return;
+  gyro.on = false; gyro.walk = null; removeEventListener('deviceorientation', onOrient);
+  $('#gyro').classList.remove('on'); $('#gyro span').textContent = '手機環視';
+  setView('eye');
+}
+$('#gyro').onclick = () => gyro.on ? stopGyro() : startGyro();
+// 只有手機（觸控、有方向感應）才顯示
+$('#gyro').hidden = !(typeof DeviceOrientationEvent !== 'undefined' && matchMedia('(pointer: coarse)').matches);
+
 /* ================= 拖曳 ================= */
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 let drag = null, down = null;
@@ -948,6 +1001,7 @@ const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 function dragPt(e) { setNdc(e); const p = new THREE.Vector3(); return ray.ray.intersectPlane(dragPlane, p) ? p : null; }
 canvas.addEventListener('pointerdown', e => {           // 要比 OrbitControls 先註冊，按到家具時才能擋住視角旋轉
   down = { x: e.clientX, y: e.clientY };
+  if (gyro.on) { gyro.lastX = e.clientX; return; }          // 環視中：只走路、轉方向，不選家具
   setNdc(e);
   const shown = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };   // 被藏起來的窗簾不能點
   const hit = ray.intersectObjects(furnGroup.children, true).find(h => shown(h.object));
@@ -960,6 +1014,7 @@ canvas.addEventListener('pointerdown', e => {           // 要比 OrbitControls 
   if (selId !== it.id) select(it.id);
 }, { capture: true });
 canvas.addEventListener('pointermove', e => {
+  if (gyro.on && down && !drag) { gyro.offset += (e.clientX - (gyro.lastX ?? e.clientX)) * 0.006; gyro.lastX = e.clientX; return; }   // 手指左右滑：轉方向
   if (!drag) return;
   const p = dragPt(e); if (!p) return;
   if (!drag.moved && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) return;
@@ -977,7 +1032,8 @@ canvas.addEventListener('pointerup', e => {
     }
     drag = null; controls.enabled = !topView; return;
   }
-  if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) select(null);   // 點空白處取消選取
+  gyro.lastX = null;
+  if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) { if (gyro.on) walkTo(floorPt(e)); else select(null); }   // 點空白處：環視中走過去，平常取消選取
 });
 
 /* ================= 商品庫（縮圖自動產生） ================= */
@@ -1376,7 +1432,7 @@ function resize() {
   renderer.setSize(w, h, false); persp.aspect = w / h; persp.updateProjectionMatrix(); sizeOrtho();
 }
 new ResizeObserver(resize).observe(canvas);
-renderer.setAnimationLoop(() => { if (!topView) controls.update(); render(); });
+renderer.setAnimationLoop(() => { if (gyro.on) gyroFrame(); else if (!topView) controls.update(); render(); });
 
 load(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary(); renderSpaces(); filterLib();
 { const v = new URLSearchParams(location.search).get('view'); if (v === 'eye' || v === 'top') setView(v); }   // 網址加 ?view=eye 直接用人視角打開
