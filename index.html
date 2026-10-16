@@ -7,138 +7,163 @@
 <meta name="description" content="量好房間，把莉凱家俱擺進去看看：3D 空間配置">
 <style>
 :root{
-  --bg:#f6f2ec; --panel:#fffdf9; --line:#e6ddd1; --ink:#2f2a25; --muted:#8a8076;
-  --accent:#b8683a; --accent-soft:#f3e3d6; --danger:#c0392b; --ok:#3f7d4e;
-  --radius:12px; --shadow:0 6px 24px rgba(60,40,20,.12);
+  --bg:#eceee9; --panel:#ffffff; --surface:#f4f5f1; --line:#dfe3dc; --ink:#1c2824; --muted:#6c7772;
+  --accent:#2d5a4a; --accent-hover:#244a3d; --accent-soft:#e1ebe5; --brass:#b08a4e; --brass-soft:#f3ebdd;
+  --danger:#c0392b; --radius:14px; --shadow:0 10px 30px rgba(18,38,30,.14);
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
-.app{display:grid;grid-template-columns:320px 1fr;height:100dvh}
-/* ---------- 左側面板 ---------- */
-aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
-.brand{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
-.brand .logo{width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700}
-.brand b{font-size:16px}.brand small{display:block;color:var(--muted);font-size:12px}
-.tabs{display:flex;border-bottom:1px solid var(--line)}
-.tabs button{flex:1;border:0;background:none;padding:10px 0;color:var(--muted);border-bottom:2px solid transparent}
-.tabs button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
-.pane{flex:1;overflow:auto;padding:12px 14px 24px;display:none}
+/* 數字欄位一律用打字，不顯示上下箭頭 */
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top" "main side";height:100dvh}
+/* ---------- 上方深色橫條：品牌＋空間 ---------- */
+.topbar{grid-area:top;display:flex;align-items:center;gap:18px;background:var(--ink);color:#fff;padding:0 16px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;flex:none;padding:10px 0}
+.brand .logo{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--brass);color:var(--brass);display:grid;place-items:center;font-size:12px;font-weight:700;letter-spacing:.05em}
+.brand b{font-size:16px;letter-spacing:.08em}.brand small{display:block;color:#9fb0a8;font-size:11px;letter-spacing:.2em}
+.spaces-wrap{position:relative;flex:1;min-width:0}
+.spaces{display:flex;gap:6px;overflow-x:auto;padding:12px 0;scrollbar-width:none}
+.sp{flex:none;border:1px solid rgba(255,255,255,.18);background:transparent;color:#d6e0db;border-radius:999px;padding:6px 14px;font-size:13px;display:flex;align-items:center;gap:6px;transition:background .15s}
+.sp:hover{background:rgba(255,255,255,.08)}
+.sp span{color:#8fa39a;font-size:11px}
+.sp.on{background:#fff;border-color:#fff;color:var(--ink);font-weight:600}.sp.on span{color:var(--brass)}
+.sp.add{border-style:dashed;border-color:var(--brass);color:var(--brass);font-weight:700}
+.sp-menu{position:absolute;left:0;top:100%;z-index:30;width:240px;background:var(--panel);color:var(--ink);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;display:none;flex-direction:column;gap:6px}
+.sp-menu.on{display:flex}
+.sp-menu b{font-size:13px;margin-bottom:2px}
+.sp-menu button{border:0;background:var(--surface);border-radius:10px;padding:10px 12px;text-align:left}
+.sp-menu button:hover{background:var(--accent-soft)}
+/* ---------- 右側面板 ---------- */
+aside{grid-area:side;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+.tabs{display:flex;gap:4px;margin:12px 14px 4px;padding:4px;background:var(--surface);border-radius:12px}
+.tabs button{flex:1;border:0;background:none;padding:8px 0;border-radius:9px;color:var(--muted);font-size:13px}
+.tabs button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.pane{flex:1;overflow:auto;padding:8px 14px 24px;display:none}
 .pane.on{display:block}
-h3{font-size:13px;color:var(--muted);font-weight:600;margin:14px 0 8px}
-h3:first-child{margin-top:2px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.card{border:1px solid var(--line);border-radius:10px;background:#fff;padding:6px;text-align:left;display:flex;flex-direction:column;gap:2px;transition:border-color .15s,transform .15s}
-.card:hover{border-color:var(--accent);transform:translateY(-1px)}
-.card .th{aspect-ratio:4/3;border-radius:7px;background:#f3eee7 center/contain no-repeat}
-.card b{font-size:13px;font-weight:600;line-height:1.3}
+h3{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.12em;margin:18px 0 8px}
+h3:first-child{margin-top:4px}
+.libbar{display:flex;justify-content:space-between;align-items:center;margin:4px 0 2px}
+.libbar b{font-size:15px}
+.link{border:0;background:none;color:var(--accent);font-size:13px;font-weight:600;padding:4px 0}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.card{border:0;border-radius:12px;background:var(--surface);padding:8px;text-align:left;display:flex;flex-direction:column;gap:3px;outline:2px solid transparent;transition:outline-color .15s,transform .15s}
+.card:hover{outline-color:var(--accent);transform:translateY(-2px)}
+.card .th{aspect-ratio:4/3;border-radius:8px;background:#e8ebe6 center/contain no-repeat}
+.card b{font-size:13px;font-weight:600;line-height:1.3;margin-top:2px}
 .card span{font-size:11px;color:var(--muted)}
+.tag{font-style:normal;background:var(--brass-soft);color:var(--brass);border-radius:4px;padding:0 5px;margin-right:4px;font-size:10px;font-weight:600}
 .field{display:flex;align-items:center;gap:8px;margin:8px 0}
-.field label{width:64px;color:var(--muted)}
-.field input[type=number]{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff}
-.hint{color:var(--muted);font-size:12px;line-height:1.7}
+.field label{width:56px;color:var(--muted)}
+.field input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.hint{color:var(--muted);font-size:12px;line-height:1.75}
 .list{list-style:none;margin:0;padding:0}
-.list li{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:#fff;cursor:pointer}
-.list li.sel{border-color:var(--accent);background:var(--accent-soft)}
+.list li{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--surface);cursor:pointer;border-left:3px solid transparent}
+.list li.sel{border-left-color:var(--accent);background:var(--accent-soft)}
 .list li.bad span{color:var(--danger)}
 .list span{font-size:12px;color:var(--muted)}
 /* ---------- 3D 畫面 ---------- */
-main{position:relative;min-width:0;min-height:0;overflow:hidden}
+main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 #cv{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}
-.toolbar{position:absolute;top:12px;right:12px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.btn{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:7px 12px;box-shadow:var(--shadow);white-space:nowrap}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 15px;white-space:nowrap;transition:background .15s}
+.btn:hover{background:var(--surface)}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.pri:hover{background:var(--accent-hover)}
 .btn:disabled{opacity:.4;cursor:default}
-.seg{display:flex;box-shadow:var(--shadow);border-radius:9px}
-.seg .btn{box-shadow:none;border-radius:0}.seg .btn:first-child{border-radius:9px 0 0 9px}.seg .btn:last-child{border-radius:0 9px 9px 0;border-left:0}
+.btn.wide{width:100%;margin-top:8px;border-radius:10px;padding:10px}
+.btn.danger{color:var(--danger)}
+.seg{position:absolute;top:14px;left:14px;display:flex;gap:2px;padding:4px;background:var(--ink);border-radius:999px;box-shadow:var(--shadow)}
+.seg button{border:0;background:none;color:#c7d3cd;border-radius:999px;padding:6px 14px;font-size:13px}
+.seg button.on{background:var(--brass);color:#fff;font-weight:600}
+.toolbar{position:absolute;top:14px;right:14px;display:flex;gap:6px}
+.toolbar .btn{box-shadow:var(--shadow);border-color:transparent}
+.help{position:absolute;left:14px;bottom:14px;font-size:12px;color:var(--muted);background:rgba(255,255,255,.8);border-radius:999px;padding:5px 12px}
 /* 選取家具的面板 */
-.sel-card{position:absolute;left:12px;bottom:12px;width:300px;max-height:calc(100% - 70px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;display:none}
+.sel-card{position:absolute;left:14px;bottom:14px;width:310px;max-height:calc(100% - 80px);overflow:auto;background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;display:none;border-top:4px solid var(--accent)}
 .sel-card.on{display:block}
 .sel-card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.sel-card .top b{font-size:15px}
-.x{border:0;background:none;font-size:20px;line-height:1;color:var(--muted);padding:0 2px}
-.dims{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
+.sel-card .top b{font-size:16px}
+.x{border:0;background:none;font-size:22px;line-height:1;color:var(--muted);padding:0 2px}
+.dims{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
 .dims label{font-size:11px;color:var(--muted)}
-.dims input{width:100%;padding:5px 7px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.dims input{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:#fff}
 .opt{display:flex;align-items:center;gap:8px;margin:6px 0}
 .opt label{flex:1;font-size:12px;color:var(--muted)}
-.opt select{padding:5px 7px;border:1px solid var(--line);border-radius:7px;background:#fff;max-width:150px}
-.opt input[type=color]{width:44px;height:28px;border:1px solid var(--line);border-radius:7px;padding:2px;background:#fff}
+.opt select{padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;max-width:150px}
+.opt input[type=color]{width:44px;height:28px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff}
 .gaps{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0;text-align:center}
-.gaps div{background:#f3eee7;border-radius:7px;padding:4px 0;font-size:11px;color:var(--muted)}
-.gaps b{display:block;font-size:13px;color:var(--ink)}
+.gaps div{background:var(--surface);border-radius:8px;padding:4px 0;font-size:11px;color:var(--muted)}
+.gaps b{display:block;font-size:14px;color:var(--ink)}
 .warn{color:var(--danger);font-size:12px;margin:6px 0;display:none}
 .warn.on{display:block}
 .acts{display:flex;gap:6px;margin-top:10px}
-.acts .btn{flex:1;box-shadow:none;padding:7px 0}
+.acts .btn{flex:1;padding:8px 0;border-radius:10px}
 .acts .del{color:var(--danger)}
-.help{position:absolute;left:12px;top:12px;font-size:12px;color:var(--muted);background:rgba(255,253,249,.85);border-radius:8px;padding:6px 10px}
-.toast{position:absolute;left:50%;top:60px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s}
-.toast.on{opacity:.92}
+.toast{position:absolute;left:50%;top:64px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 18px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:.94}
 .loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);background:var(--bg)}
-/* ---------- 設定房間視窗 ---------- */
-.setup{position:fixed;inset:0;background:rgba(40,30,20,.45);display:none;align-items:center;justify-content:center;z-index:20;padding:20px}
+/* ---------- 設定房間、快速開始視窗 ---------- */
+.setup{position:fixed;inset:0;background:rgba(20,32,28,.55);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
 .setup.on{display:flex}
-.setup-box{background:var(--panel);border-radius:16px;box-shadow:var(--shadow);width:min(920px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden}
-.setup-head{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 18px 10px;border-bottom:1px solid var(--line)}
-.setup-head b{font-size:17px}
-.setup-body{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:14px 18px;overflow:auto;min-height:0}
-.setup-plan svg{width:100%;height:auto;max-height:420px;margin:0 auto;display:block;background:#fbf8f3;border:1px solid var(--line);border-radius:10px}
+.setup-box{background:var(--panel);border-radius:18px;box-shadow:var(--shadow);width:min(920px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden}
+.setup-head{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px 14px;background:var(--ink);color:#fff}
+.setup-head b{font-size:18px;letter-spacing:.04em}
+.setup-head .hint{color:#a9bab2}
+.setup-head .x{color:#a9bab2}
+.setup-body{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 20px;overflow:auto;min-height:0}
+.setup-plan svg{width:100%;height:auto;max-height:420px;margin:0 auto;display:block;background:var(--surface);border-radius:12px}
 .dims3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .dims3 label,.op-grid label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
-.dims3 input,.op-grid input,.op-grid select{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:16px;color:var(--ink)}
+.dims3 input,.op-grid input,.op-grid select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:16px;color:var(--ink)}
 .addrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
-.addrow .btn{box-shadow:none;padding:9px 0;font-size:13px}
-.op{border:1px solid var(--line);border-radius:10px;padding:8px 10px 10px;margin-bottom:8px;background:#fff;border-left:4px solid var(--c,#999)}
+.addrow .btn{padding:9px 0;font-size:13px;border-radius:10px;background:var(--surface);border-color:transparent}
+.addrow .btn:hover{background:var(--accent-soft)}
+.op{border-radius:12px;padding:10px 12px 12px;margin-bottom:8px;background:var(--surface);border-left:4px solid var(--c,#999)}
 .op-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 .op-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.setup-foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end}
-.setup-foot .btn{box-shadow:none;padding:11px 26px;font-size:15px}
-/* ---------- 空間頁籤 ---------- */
-.spaces-wrap{position:relative;border-bottom:1px solid var(--line)}
-.spaces{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;scrollbar-width:none}
-.sp{flex:none;border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px;font-size:13px;display:flex;align-items:center;gap:5px}
-.sp span{background:#f0e9e0;color:var(--muted);border-radius:10px;padding:0 6px;font-size:11px}
-.sp.on{background:var(--ink);border-color:var(--ink);color:#fff}.sp.on span{background:rgba(255,255,255,.2);color:#fff}
-.sp.add{color:var(--accent);font-weight:700;padding:6px 12px}
-.sp-menu{position:absolute;left:12px;right:12px;top:100%;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:10px;display:none;flex-direction:column;gap:6px}
-.sp-menu.on{display:flex}
-.sp-menu button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px;text-align:left}
-.libbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
-.libbar b{font-size:13px}
-.link{border:0;background:none;color:var(--accent);font-size:13px;padding:4px 0}
-.tag{font-style:normal;background:#ece6dd;color:var(--muted);border-radius:4px;padding:0 4px;margin-right:4px;font-size:10px}
-.field input[type=text]{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff}
-/* 快速開始 */
+.setup-foot{padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end}
+.setup-foot .btn{padding:11px 26px;font-size:15px}
+.back-foot,.quick-foot{justify-content:space-between;gap:10px}
+.quick-foot #q-manual{margin-left:auto}
 .quick-box{width:min(760px,100%)}
 .quick-body{grid-template-columns:1fr 1fr}
-#q-ping{font-size:22px;padding:8px 12px}
+.ping-row{display:flex;align-items:center;gap:8px;margin:8px 0}
+#q-ping{width:100%;font-size:26px;font-weight:600;padding:8px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff}
+#q-ping:focus{outline:none;border-color:var(--accent)}
+.ping-row span{font-size:16px;color:var(--muted)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
-.chips button{flex:1;min-width:64px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 6px;font-size:15px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.chips button{flex:1;min-width:64px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 6px;font-size:15px;display:flex;flex-direction:column;align-items:center;gap:2px}
 .chips button small{font-size:11px;color:var(--muted)}
-.chips button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.chips button.on{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:600}
+.chips button.on small{color:#cfe0d8}
 .est{list-style:none;margin:0;padding:0}
-.est li{display:flex;justify-content:space-between;align-items:baseline;padding:9px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:6px;background:#fff}
-.est li span{color:var(--muted);font-size:12px}
-.quick-foot{justify-content:space-between;gap:10px}
-.quick-foot #q-manual{margin-left:auto}
-.back-foot{justify-content:space-between;gap:10px}
+.est button{width:100%;display:flex;align-items:center;gap:8px;padding:11px 12px;border:0;border-left:3px solid var(--brass);border-radius:10px;margin-bottom:6px;background:var(--surface);text-align:left;transition:background .15s}
+.est button:hover{background:var(--accent-soft)}
+.est button b{flex:none}
+.est button span{flex:1;text-align:right;color:var(--muted);font-size:12px}
+.est button i{font-style:normal;color:var(--accent);font-weight:700;font-size:16px}
 /* ---------- 手機 ---------- */
 @media (max-width:760px){
-  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:56dvh minmax(0,1fr)}
-  main{grid-row:1}
-  aside{grid-row:2;border-right:0;border-top:1px solid var(--line)}
-  .brand{display:none}
-  .grid{grid-template-columns:repeat(3,1fr)}
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 52dvh minmax(0,1fr);grid-template-areas:"top" "main" "side"}
+  .topbar{padding:0 10px;gap:10px}
+  .brand{padding:8px 0}.brand>div:last-child{display:none}
+  .brand .logo{width:32px;height:32px;font-size:10px}
+  .spaces{padding:9px 0}
+  .sp-menu{left:auto;right:0}
+  aside{border-left:0;border-top:1px solid var(--line)}
+  .tabs{margin:10px 10px 2px}
+  .grid{grid-template-columns:repeat(3,1fr);gap:8px}
   .help{display:none}
-  .toolbar{top:8px;right:8px;left:8px}
-  .btn{padding:6px 10px;font-size:13px}
-  .sel-card{left:8px;right:8px;bottom:8px;width:auto;max-height:calc(100% - 56px)}
+  .seg{top:10px;left:10px}.seg button{padding:5px 10px}
+  .toolbar{top:10px;right:10px}
+  .toolbar #undo{display:none}
+  .btn{padding:6px 12px;font-size:13px}
+  .sel-card{left:8px;right:8px;bottom:8px;width:auto;max-height:calc(100% - 60px)}
   .setup{padding:0}
   .setup-box{border-radius:0;height:100%;max-height:none}
-  .setup-body{grid-template-columns:1fr;gap:10px;padding:10px 14px}
+  .setup-body{grid-template-columns:1fr;gap:10px;padding:12px 14px}
   .setup-plan svg{max-height:32dvh}
   .addrow{grid-template-columns:repeat(2,1fr)}
   .setup-foot .btn{width:100%;padding:13px 0}
@@ -156,42 +181,19 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
 </head>
 <body>
 <div class="app">
-  <aside>
-    <div class="brand"><div class="logo">莉</div><div><b>莉凱家俱・空間配置</b><small>量好房間，把家具擺進去看看</small></div></div>
+  <header class="topbar">
+    <div class="brand"><div class="logo">莉凱</div><div><b>空間配置</b><small>莉凱家俱</small></div></div>
     <div class="spaces-wrap"><div class="spaces" id="spaces"></div>
       <div class="sp-menu" id="sp-menu"><b>新增哪一種空間？</b>
         <button data-type="living">客廳</button><button data-type="dining">餐廳（含廚房）</button><button data-type="bedroom">臥室</button><button data-type="ld">客餐廳（開放式）</button>
       </div>
     </div>
-    <div class="tabs">
-      <button data-tab="lib" class="on">商品</button>
-      <button data-tab="room">房間</button>
-      <button data-tab="placed">已擺放 <span id="cnt">0</span></button>
-    </div>
-    <div class="pane on" id="pane-lib"><div class="libbar"><b id="lib-for"></b><button class="link" id="lib-all">看全部</button></div><div id="lib"></div></div>
-    <div class="pane" id="pane-room">
-      <h3>這個空間</h3>
-      <div class="field"><label>名稱</label><input type="text" id="sp-name" maxlength="12"></div>
-      <p class="hint" id="room-sum"></p>
-      <button class="btn pri" id="edit-room" style="box-shadow:none;width:100%">編輯房間尺寸與門窗</button>
-      <button class="btn" id="sp-del" style="box-shadow:none;width:100%;margin-top:8px;color:var(--danger)">刪除這個空間</button>
-      <h3>整間房子</h3>
-      <button class="btn" id="restart" style="box-shadow:none;width:100%">重新輸入坪數、幾房幾廳</button>
-      <h3>操作方式</h3>
-      <p class="hint">・點商品就會放進房間<br>・拖曳家具移動，靠近牆面會自動貼齊<br>・拖曳空白處旋轉視角，兩指或滾輪縮放<br>・紅框代表家具重疊或超出房間<br>・電腦鍵盤：R 旋轉、Delete 刪除、Ctrl+Z 復原</p>
-      <h3>清空</h3>
-      <button class="btn" id="clear" style="box-shadow:none">清空所有家具</button>
-    </div>
-    <div class="pane" id="pane-placed">
-      <ul class="list" id="placed"></ul>
-      <p class="hint" id="placed-empty">還沒有擺放家具，到「商品」點一件放進來。</p>
-    </div>
-  </aside>
+  </header>
   <main>
     <canvas id="cv"></canvas>
+    <div class="seg"><button class="on" id="v3d">3D</button><button id="vtop">平面</button><button id="veye">人視角</button></div>
     <div class="help">拖曳家具移動・拖曳空白處轉視角・滾輪縮放</div>
     <div class="toolbar">
-      <div class="seg"><button class="btn on" id="v3d">3D</button><button class="btn" id="vtop">平面</button><button class="btn" id="veye">人視角</button></div>
       <button class="btn" id="undo" disabled>復原</button>
       <button class="btn" id="shot">存圖</button>
       <button class="btn pri" id="share">分享</button>
@@ -220,7 +222,7 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
         <div class="setup-body quick-body">
           <div>
             <h3>室內坪數</h3>
-            <div class="field"><input type="number" inputmode="decimal" id="q-ping" value="25" min="8" max="150" step="0.5"><span style="white-space:nowrap">坪</span></div>
+            <div class="ping-row"><input type="text" inputmode="decimal" id="q-ping" value="25" autocomplete="off"><span>坪</span></div>
             <p class="hint">權狀坪數扣掉公設、陽台、車位，大約就是室內坪數。</p>
             <h3>幾房</h3>
             <div class="chips" id="q-rooms"><button data-v="1">1 房</button><button data-v="2">2 房</button><button data-v="3" class="on">3 房</button><button data-v="4">4 房</button></div>
@@ -230,7 +232,7 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
           <div>
             <h3>粗估結果</h3>
             <ul class="est" id="q-est"></ul>
-            <p class="hint">只是依一般住宅比例估算，廚房算在餐廳裡；之後每個空間都可以再改尺寸、加門窗。</p>
+            <p class="hint">點任何一個空間就能直接進去。只是依一般住宅比例估算，廚房算在餐廳裡；之後每個空間都可以再改尺寸、加門窗。</p>
           </div>
         </div>
         <div class="setup-foot quick-foot">
@@ -266,6 +268,31 @@ main{position:relative;min-width:0;min-height:0;overflow:hidden}
     </div>
     <div class="loading" id="loading">載入 3D 模型中…</div>
   </main>
+  <aside>
+    <div class="tabs">
+      <button data-tab="lib" class="on">商品</button>
+      <button data-tab="room">房間</button>
+      <button data-tab="placed">已擺放 <span id="cnt">0</span></button>
+    </div>
+    <div class="pane on" id="pane-lib"><div class="libbar"><b id="lib-for"></b><button class="link" id="lib-all">看全部</button></div><div id="lib"></div></div>
+    <div class="pane" id="pane-room">
+      <h3>這個空間</h3>
+      <div class="field"><label>名稱</label><input type="text" id="sp-name" maxlength="12"></div>
+      <p class="hint" id="room-sum"></p>
+      <button class="btn pri wide" id="edit-room">編輯房間尺寸與門窗</button>
+      <button class="btn wide danger" id="sp-del">刪除這個空間</button>
+      <h3>整間房子</h3>
+      <button class="btn wide" id="restart">重新輸入坪數、幾房幾廳</button>
+      <h3>操作方式</h3>
+      <p class="hint">・點商品就會放進房間<br>・拖曳家具移動，靠近牆面會自動貼齊<br>・拖曳空白處旋轉視角，兩指或滾輪縮放<br>・紅框代表家具重疊或超出房間<br>・電腦鍵盤：R 旋轉、Delete 刪除、Ctrl+Z 復原</p>
+      <h3>清空</h3>
+      <button class="btn wide" id="clear">清空所有家具</button>
+    </div>
+    <div class="pane" id="pane-placed">
+      <ul class="list" id="placed"></ul>
+      <p class="hint" id="placed-empty">還沒有擺放家具，到「商品」點一件放進來。</p>
+    </div>
+  </aside>
 </div>
 
 <script type="module">
@@ -349,7 +376,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('#efe9e1');
+scene.background = new THREE.Color('#e6e9e4');
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 0.55;
 const hemi = new THREE.HemisphereLight('#fff8ee', '#b9a58f', 0.9); scene.add(hemi);
@@ -374,7 +401,7 @@ const OPEN_KINDS = {
   balcony: { name: '陽台',   w: 240, h: 220, sill: 0, depth: 150 },
   door:    { name: '房門',   w: 90,  h: 210, sill: 0, hinge: 'left', swing: 'in' },
 };
-const OP_MAT = Object.fromEntries(Object.entries({ window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#b8683a' }).map(([k, c]) => [k, new THREE.MeshBasicMaterial({ color: c })]));
+const OP_MAT = Object.fromEntries(Object.entries({ window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#b08a4e' }).map(([k, c]) => [k, new THREE.MeshBasicMaterial({ color: c })]));
 const WALL_NAMES = { N: '後牆', W: '左牆', E: '右牆', S: '前牆' };
 // 每面牆的座標：o 是「站在房內面對這面牆」時左邊的牆角，u 往右，n 朝房內
 function wallFrame(k) {
@@ -404,17 +431,17 @@ function floorTexture() {                     // 木地板：淺色長條＋細�
 }
 const FLOOR_TEX = floorTexture();
 const M = {
-  wall:  new THREE.MeshStandardMaterial({ color: '#ebe4d9', roughness: 0.95 }),
-  skirt: new THREE.MeshStandardMaterial({ color: '#ddd2c4', roughness: 0.8 }),
+  wall:  new THREE.MeshStandardMaterial({ color: '#eef0ec', roughness: 0.95 }),
+  skirt: new THREE.MeshStandardMaterial({ color: '#d8ddd6', roughness: 0.8 }),
   alu:   new THREE.MeshStandardMaterial({ color: '#4a4b4f', roughness: 0.45, metalness: 0.6 }),
   wood:  new THREE.MeshStandardMaterial({ color: '#b48d64', roughness: 0.6 }),
   frame: new THREE.MeshStandardMaterial({ color: '#efe9e0', roughness: 0.7 }),
   glass: new THREE.MeshStandardMaterial({ color: '#bcd7e2', transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0.1, depthWrite: false }),
   tile:  new THREE.MeshStandardMaterial({ color: '#cbc3b8', roughness: 0.85 }),
   rail:  new THREE.MeshStandardMaterial({ color: '#d7e6ec', transparent: true, opacity: 0.3, roughness: 0.05, depthWrite: false }),
-  zone:  new THREE.MeshBasicMaterial({ color: '#b8683a', transparent: true, opacity: 0.1, depthWrite: false }),
-  zoneLine: new THREE.LineBasicMaterial({ color: '#b8683a', transparent: true, opacity: 0.6 }),
-  cap:   new THREE.MeshBasicMaterial({ color: '#8b7d6e' }),                       // 牆頂剖面
+  zone:  new THREE.MeshBasicMaterial({ color: '#b08a4e', transparent: true, opacity: 0.1, depthWrite: false }),
+  zoneLine: new THREE.LineBasicMaterial({ color: '#b08a4e', transparent: true, opacity: 0.6 }),
+  cap:   new THREE.MeshBasicMaterial({ color: '#3b4a44' }),                       // 牆頂剖面
   hidden: new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }),   // 擋在鏡頭前的牆：看不見，但還是會擋光產生影子
 };
 // 在牆的區域座標放一個方塊：x 沿著牆、y 高度、z 往房內為正（牆本身在 z = -T..0）
@@ -638,7 +665,7 @@ function refresh() {
   for (const it of state.items) {
     const isSel = it.id === selId; if (!isSel && !bad.has(it.id)) continue;
     const b = boxOf(it); b.max.y += 1;
-    markGroup.add(new THREE.Box3Helper(b, bad.has(it.id) ? 0xc0392b : 0xb8683a));
+    markGroup.add(new THREE.Box3Helper(b, bad.has(it.id) ? 0xc0392b : 0x2d5a4a));
   }
   renderPlaced(bad); renderSel(bad);
 }
@@ -775,30 +802,29 @@ function estimate(ping, rooms, halls) {
   });
 }
 const qVal = id => +document.querySelector(`#${id} .on`).dataset.v;
+const qPing = () => clamp(parseFloat(String($('#q-ping').value).replace(/[^\d.]/g, '')) || 25, 8, 150);   // 打字輸入：只取數字
+const qSpaces = () => estimate(qPing(), qVal('q-rooms'), qVal('q-halls')).map(e => ({ name: e.name, type: e.type, room: { w: e.w, d: e.d, h: 280, openings: [] }, items: [] }));
 function renderEstimate() {
-  const ping = clamp(+$('#q-ping').value || 0, 8, 150);
-  $('#q-est').innerHTML = estimate(ping, qVal('q-rooms'), qVal('q-halls'))
-    .map(e => `<li><b>${e.name}</b><span>約 ${e.ping} 坪・寬 ${e.w} × 深 ${e.d}</span></li>`).join('');
+  $('#q-est').innerHTML = estimate(qPing(), qVal('q-rooms'), qVal('q-halls'))
+    .map((e, i) => `<li><button data-i="${i}"><b>${e.name}</b><span>約 ${e.ping} 坪・寬 ${e.w} × 深 ${e.d}</span><i>›</i></button></li>`).join('');
 }
+$('#q-est').addEventListener('click', e => { const b = e.target.closest('button'); if (b) startProject(qSpaces(), +b.dataset.i); });   // 直接進那個空間
 function openQuick() {
   renderEstimate(); $('#quick').classList.add('on');
   $('#q-back').style.display = project.started ? '' : 'none';             // 第一次來沒有上一頁
   if (project.started) pushPage('quick');
 }
 function closeQuick(byPop) { $('#quick').classList.remove('on'); if (!byPop) dropPage(); }
-function startProject(spaces) {
-  project = { cur: 0, started: true, spaces };
-  closeQuick(true); switchSpace(0, 'quick');                               // 門窗設定頁會接手這一頁紀錄
+function startProject(spaces, at = 0) {
+  project = { cur: at, started: true, spaces };
+  closeQuick(true); switchSpace(at, 'quick');                               // 門窗設定頁會接手這一頁紀錄
 }
 for (const id of ['q-rooms', 'q-halls']) $('#' + id).addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   $('#' + id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderEstimate();
 });
 $('#q-ping').addEventListener('input', renderEstimate);
-$('#q-go').onclick = () => {
-  const ping = clamp(+$('#q-ping').value || 0, 8, 150);
-  startProject(estimate(ping, qVal('q-rooms'), qVal('q-halls')).map(e => ({ name: e.name, type: e.type, room: { w: e.w, d: e.d, h: 280, openings: [] }, items: [] })));
-};
+$('#q-go').onclick = () => startProject(qSpaces());
 $('#q-manual').onclick = () => startProject(defaultProject().spaces);
 $('#restart').onclick = openQuick;
 
@@ -835,7 +861,7 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
 });
 $('#placed').addEventListener('click', e => { const li = e.target.closest('li'); if (li) select(+li.dataset.id); });
 /* ================= 設定房間（尺寸＋門窗） ================= */
-const OP_COLOR = { window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#b8683a' };
+const OP_COLOR = { window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#b08a4e' };
 /* ---------- 上一頁：設定視窗、坪數視窗也能用手機的返回鍵關掉 ---------- */
 // setupFrom：'quick' 從坪數頁來、{ space: i } 從另一個空間切過來、'edit' 從「房間」分頁打開
 let setupFrom = 'edit', ignorePop = false;
@@ -919,8 +945,8 @@ function drawPlan() {
   const bal = Math.max(0, ...ops.filter(o => o.kind === 'balcony').map(o => o.depth || 150));
   const pad = Math.max(60, Math.max(w, d) * 0.12) + bal, fs = Math.max(w, d) / 15;
   const el = $('#plan'); el.setAttribute('viewBox', `${-w / 2 - pad} ${-d / 2 - pad} ${w + 2 * pad} ${d + 2 * pad}`); el.style.aspectRatio = `${w + 2 * pad} / ${d + 2 * pad}`;
-  let h = `<rect x="${-w / 2 - T}" y="${-d / 2 - T}" width="${w + 2 * T}" height="${d + 2 * T}" fill="#8b7d6e"/>`
-    + `<rect x="${-w / 2}" y="${-d / 2}" width="${w}" height="${d}" fill="#f3eadf"/>`;
+  let h = `<rect x="${-w / 2 - T}" y="${-d / 2 - T}" width="${w + 2 * T}" height="${d + 2 * T}" fill="#3b4a44"/>`
+    + `<rect x="${-w / 2}" y="${-d / 2}" width="${w}" height="${d}" fill="#fbfbf8"/>`;
   const P = (f, along, out = 0) => f.o.clone().addScaledVector(f.u, along).addScaledVector(f.n, -out);
   for (const o of ops) {
     const f = wallFrame(o.wall), c = OP_COLOR[o.kind];
@@ -931,7 +957,7 @@ function drawPlan() {
       h += `<text x="${m.x}" y="${m.z}" font-size="${fs * 0.8}" fill="${c}" text-anchor="middle" dominant-baseline="middle">陽台</text>`;
     }
     const a = P(f, o.off, T / 2), b = P(f, o.off + o.w, T / 2);
-    h += `<line x1="${a.x}" y1="${a.z}" x2="${b.x}" y2="${b.z}" stroke="#fbf8f3" stroke-width="${T + 1}"/>`
+    h += `<line x1="${a.x}" y1="${a.z}" x2="${b.x}" y2="${b.z}" stroke="#f4f5f1" stroke-width="${T + 1}"/>`
       + `<line x1="${a.x}" y1="${a.z}" x2="${b.x}" y2="${b.z}" stroke="${c}" stroke-width="${o.kind === 'door' ? 3 : 5}"/>`;
     if (o.kind === 'door' && o.swing !== 'out') {
       const left = o.hinge !== 'right', hp = P(f, left ? o.off : o.off + o.w), r = o.w;
@@ -942,7 +968,7 @@ function drawPlan() {
     const lab = P(f, o.off + o.w / 2, -fs * 1.3);
     h += `<text x="${lab.x}" y="${lab.z}" font-size="${fs * 0.75}" fill="${c}" text-anchor="middle" dominant-baseline="middle">${OPEN_KINDS[o.kind].name} ${o.w}</text>`;
   }
-  const lw = (x, y, t, rot = 0) => `<text x="${x}" y="${y}" font-size="${fs}" fill="#8a8076" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rot} ${x} ${y})">${t}</text>`;
+  const lw = (x, y, t, rot = 0) => `<text x="${x}" y="${y}" font-size="${fs}" fill="#6c7772" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rot} ${x} ${y})">${t}</text>`;
   const o2 = T + fs * 0.9;
   h += lw(0, -d / 2 - o2, `後牆 ${w}`) + lw(0, d / 2 + o2, `前牆 ${w}`) + lw(-w / 2 - o2, 0, `左牆 ${d}`, -90) + lw(w / 2 + o2, 0, `右牆 ${d}`, 90);
   el.innerHTML = h;
