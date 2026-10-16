@@ -79,6 +79,11 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .seg{position:absolute;top:14px;left:14px;display:flex;gap:2px;padding:4px;background:var(--brand);border-radius:999px;box-shadow:var(--shadow)}
 .seg button{border:0;background:none;color:#cfe0ec;border-radius:999px;padding:6px 14px;font-size:13px}
 .seg button.on{background:var(--yellow);color:var(--yellow-ink);font-weight:600}
+.wallbtn{position:absolute;top:62px;left:14px;display:flex;align-items:center;gap:7px;border:0;border-radius:999px;padding:6px 13px 6px 9px;background:rgba(255,255,255,.92);color:var(--ink);font-size:13px;box-shadow:var(--shadow)}
+.wallbtn i{width:30px;height:17px;border-radius:999px;background:#c9d4de;position:relative;transition:background .15s}
+.wallbtn i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;transition:left .15s}
+.wallbtn[aria-pressed="true"] i{background:var(--accent)}
+.wallbtn[aria-pressed="true"] i::after{left:15px}
 .toolbar{position:absolute;top:14px;right:14px;display:flex;gap:6px}
 .toolbar .btn{box-shadow:var(--shadow);border-color:transparent}
 .help{position:absolute;left:14px;bottom:14px;font-size:12px;color:var(--muted);background:rgba(255,255,255,.8);border-radius:999px;padding:5px 12px}
@@ -206,6 +211,7 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
   .grid{grid-template-columns:repeat(3,1fr);gap:8px}
   .help{display:none}
   .seg{top:10px;left:10px}.seg button{padding:5px 10px}
+  .wallbtn{top:54px;left:10px;padding:5px 11px 5px 8px;font-size:12px}
   .toolbar{top:10px;right:10px}
   .toolbar #undo{display:none}
   .btn{padding:6px 12px;font-size:13px}
@@ -248,6 +254,7 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
   </header>
   <main>
     <canvas id="cv"></canvas>
+    <button class="wallbtn" id="wall-mode" aria-pressed="false"><i></i><span>透明牆</span></button>
     <div class="seg"><button class="on" id="v3d">3D</button><button id="vtop">平面</button><button id="veye">人視角</button></div>
     <div class="help">拖曳家具移動・拖曳空白處轉視角・滾輪縮放</div>
     <div class="toolbar">
@@ -511,7 +518,7 @@ function clampOpening(op) {
 const curStyle = () => STYLES[project.style] || STYLES.base;
 // 依目前風格設定房間材質（牆、主牆、踢腳板、窗框、門）
 function styleMaterials() {
-  const S = curStyle();
+  const S = curStyle(); GLASS.clear();
   M.wall = S.wallTex ? new THREE.MeshStandardMaterial({ map: wallTexture(S.wallTex, S.wall), roughness: 0.95 }) : new THREE.MeshStandardMaterial({ color: S.wall, roughness: 0.95 });
   const A = S.accent;
   M.accent = A.kind === 'plaster' || A.kind === 'marble'
@@ -1285,15 +1292,34 @@ addEventListener('keydown', e => {
 
 /* ================= 繪製 ================= */
 const tmp = new THREE.Vector3(), wallHidden = new Map();
+// 透明牆：每台裝置自己記住
+let glassWalls = false; try { glassWalls = localStorage.getItem('likai-room-glass') === '1'; } catch (e) { }
+const GLASS = new Map();                                  // 牆面材質 → 半透明版本
+function glassOf(m) {
+  let g = GLASS.get(m);
+  if (!g) { g = m.clone(); g.transparent = true; g.opacity = 0.18; g.depthWrite = false; GLASS.set(m, g); }
+  return g;
+}
+function syncWallBtn() { $('#wall-mode').setAttribute('aria-pressed', glassWalls ? 'true' : 'false'); }
+$('#wall-mode').onclick = () => {
+  glassWalls = !glassWalls; syncWallBtn(); wallHidden.clear();
+  try { localStorage.setItem('likai-room-glass', glassWalls ? '1' : '0'); } catch (e) { }
+  toast(glassWalls ? '牆面改成透明，可以從任何角度看進房間' : '牆面改回實牆');
+};
+syncWallBtn();
 function render() {
   // 3D 視角時，擋在鏡頭前的牆藏起來（像娃娃屋）；藏起來的牆仍然會擋陽光
   for (const g of walls) {
     const n = g.userData.n; tmp.copy(camera.position).sub(g.position);
-    const hide = !topView && tmp.x * n.x + tmp.z * n.y < 0;
-    if (wallHidden.get(g) !== hide) { wallHidden.set(g, hide); g.traverse(o => { if (o.isMesh) o.material = hide ? M.hidden : o.userData.mat; }); }
+    const hide = !topView && !glassWalls && tmp.x * n.x + tmp.z * n.y < 0, key = hide ? 'hide' : glassWalls && !topView ? 'glass' : 'solid';
+    if (wallHidden.get(g) !== key) {
+      wallHidden.set(g, key);
+      const wallish = new Set([M.wall, M.accent, M.molding, M.skirt, M.metal, M.cap]);   // 只有牆面本身變透明，窗框、門、衛浴設備不變
+      g.traverse(o => { if (o.isMesh) o.material = key === 'hide' ? M.hidden : key === 'glass' && wallish.has(o.userData.mat) ? glassOf(o.userData.mat) : o.userData.mat; });
+    }
   }
   // 掛在被藏起來的牆上的窗簾、掛畫也一起藏（不然會飄在鏡頭前擋住）
-  const hidN = walls.filter(g => wallHidden.get(g)).map(g => g.userData.n);
+  const hidN = walls.filter(g => wallHidden.get(g) === 'hide').map(g => g.userData.n);
   for (const it of state.items) {
     const T = PRODUCTS[it.type]; if (T.sub !== '窗簾' && T.sub !== '掛畫') continue;
     const o = objs.get(it.id); if (!o) continue;
