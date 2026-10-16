@@ -188,6 +188,7 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .sc.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .sc .sw{display:flex;height:26px;border-radius:7px;overflow:hidden}
 .sc .sw i{flex:1}
+.sc.none .sw{background:repeating-linear-gradient(45deg,#eef2f6 0 6px,#fff 6px 12px);border:1px dashed var(--line)}
 .sc b{font-size:15px}
 .sc p{margin:0;font-size:12px;color:var(--muted);line-height:1.6}
 .sc .tg{display:flex;flex-wrap:wrap;gap:3px}
@@ -1070,12 +1071,12 @@ addEventListener('popstate', () => {
 function openSetup(from = 'edit') {
   setupFrom = typeof from === 'string' || from.space !== project.cur ? from : 'edit';
   $('#setup-title').textContent = `設定${state.name}`; snapshot(); renderOps(); drawPlan(); $('#setup').classList.add('on'); pushPage('setup');
-  $('#setup-done').textContent = project.style ? '完成，開始擺家具' : '下一步：選裝潢風格'; renderSteps(2);
+  $('#setup-done').textContent = project.style || project.styleAsked ? '完成，開始擺家具' : '下一步：選裝潢風格'; renderSteps(2);
 }
 function closeSetup() {
   const first = !state.room.setup;
   $('#setup').classList.remove('on'); state.room.setup = true;
-  if (!project.style) { save(); openStyle(); return; }                  // 第一次：接著選裝潢風格
+  if (!project.style && !project.styleAsked) { save(); openStyle(); return; }   // 第一次：接著選裝潢風格（可跳過；跳過後不再自動跳出）
   if (first || state.decorStyle !== project.style) { styleDecor(); refresh(); }   // 新空間：放上風格軟裝
   save(); roomSummary(); dropPage();
   setView(view === 'top' ? 'top' : 'orbit');
@@ -1090,7 +1091,7 @@ function setupBack(byPop) {
 /* ---------- 步驟列：① 坪數格局 ② 房間門窗 ③ 裝潢風格 ④ 擺家具，做過的步驟都能點回去 ---------- */
 const STEP_NAMES = ['坪數格局', '房間門窗', '裝潢風格', '擺家具'];
 function renderSteps(on) {
-  const reach = n => n === 1 || (project.started && (n === 2 || (n === 3 && state.room.setup) || (n === 4 && project.style && state.room.setup)));
+  const reach = n => n === 1 || (project.started && (n === 2 || (n === 3 && state.room.setup) || (n === 4 && (project.style || project.styleAsked) && state.room.setup)));
   document.querySelectorAll('.steps').forEach(ol => {
     ol.innerHTML = STEP_NAMES.map((t, i) => `<li data-step="${i + 1}" class="${i + 1 === on ? 'on' : reach(i + 1) ? 'done' : ''}">${t}</li>`).join('');
   });
@@ -1113,22 +1114,24 @@ function finishFlow() {                         // 回到擺家具
 
 /* ---------- 裝潢風格 ---------- */
 function openStyle() {
-  renderStyleCards(); renderSteps(3); $('#style-decor').checked = project.decor !== false;
+  project.styleAsked = true; renderStyleCards(); renderSteps(3); $('#style-decor').checked = project.decor !== false;
   $('#style').classList.add('on'); pushPage('style');
 }
 function renderStyleCards() {
-  $('#style-cards').innerHTML = STYLE_KEYS.map(k => {
+  const none = `<button class="sc none ${!project.style ? 'on' : ''}" data-k=""><div class="sw"><i></i></div><b>不選風格</b><p>維持原本的白牆、木地板，只擺家具就好。</p></button>`;
+  $('#style-done').textContent = project.style ? '確定，開始擺家具' : '跳過，直接擺家具';
+  $('#style-cards').innerHTML = none + STYLE_KEYS.map(k => {
     const S = STYLES[k], sw = [S.floor.color, S.wall, S.accent.color, S.decor.curtain.color, S.decor.rug.color].map(c => `<i style="background:${c}"></i>`).join('');
     return `<button class="sc ${project.style === k ? 'on' : ''}" data-k="${k}"><div class="sw">${sw}</div><b>${S.name}</b><p>${S.desc}</p><div class="tg">${S.tags.map(t => `<span>${t}</span>`).join('')}</div></button>`;
   }).join('');
 }
 function applyStyle(k) {
-  project.style = k; buildRoom(); styleDecor(); refresh(); renderStyleCards(); roomSummary(); save();
+  project.style = k || null; buildRoom(); styleDecor(); refresh(); renderStyleCards(); roomSummary(); save();
 }
 $('#style-cards').addEventListener('click', e => { const b = e.target.closest('.sc'); if (b) applyStyle(b.dataset.k); });
 $('#style-decor').addEventListener('change', e => { project.decor = e.target.checked; styleDecor(); refresh(); save(); });
 $('#style-back').onclick = () => { $('#style').classList.remove('on'); openSetup(setupFrom); };
-$('#style-done').onclick = () => { if (!project.style) { toast('先點一個喜歡的風格'); return; } finishFlow(); };
+$('#style-done').onclick = () => { project.styleAsked = true; finishFlow(); };   // 不選也可以
 $('#step-back').onclick = openStyle;
 $('#change-style').onclick = openStyle;
 
