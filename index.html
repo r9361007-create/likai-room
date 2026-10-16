@@ -4,12 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
+<meta name="theme-color" content="#00436A">
 <meta name="description" content="量好房間，把莉凱家俱擺進去看看：3D 空間配置">
 <style>
 :root{
-  --bg:#eceee9; --panel:#ffffff; --surface:#f4f5f1; --line:#dfe3dc; --ink:#1c2824; --muted:#6c7772;
-  --accent:#2d5a4a; --accent-hover:#244a3d; --accent-soft:#e1ebe5; --brass:#b08a4e; --brass-soft:#f3ebdd;
-  --danger:#c0392b; --radius:14px; --shadow:0 10px 30px rgba(18,38,30,.14);
+  --bg:#EDF3F8; --panel:#ffffff; --surface:#F4F8FB; --line:#D2DEE8; --ink:#0E2C45; --muted:#5E7589;
+  --brand:#00436A; --accent:#00436A; --accent-hover:#003454; --accent-soft:#E1ECF5;
+  --yellow:#F9E573; --yellow-ink:#3A3200; --yellow-soft:#FCF5C7; --gold:#C9A227;
+  --danger:#C23E4E; --radius:14px; --shadow:0 10px 30px rgba(0,67,106,.14);
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
@@ -20,17 +22,17 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .app{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top" "main side";height:100dvh}
 /* ---------- 上方深色橫條：品牌＋空間 ---------- */
-.topbar{grid-area:top;display:flex;align-items:center;gap:18px;background:var(--ink);color:#fff;padding:0 16px;min-width:0}
+.topbar{grid-area:top;display:flex;align-items:center;gap:18px;background:var(--brand);color:#fff;padding:0 16px;min-width:0}
 .brand{display:flex;align-items:center;gap:10px;flex:none;padding:10px 0}
-.brand .logo{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--brass);color:var(--brass);display:grid;place-items:center;font-size:12px;font-weight:700;letter-spacing:.05em}
-.brand b{font-size:16px;letter-spacing:.08em}.brand small{display:block;color:#9fb0a8;font-size:11px;letter-spacing:.2em}
+.brand img{height:34px;width:auto;display:block}
+.brand b{font-size:15px;letter-spacing:.1em;padding-left:12px;border-left:1px solid rgba(249,229,115,.35)}
 .spaces-wrap{position:relative;flex:1;min-width:0}
 .spaces{display:flex;gap:6px;overflow-x:auto;padding:12px 0;scrollbar-width:none}
-.sp{flex:none;border:1px solid rgba(255,255,255,.18);background:transparent;color:#d6e0db;border-radius:999px;padding:6px 14px;font-size:13px;display:flex;align-items:center;gap:6px;transition:background .15s}
+.sp{flex:none;border:1px solid rgba(255,255,255,.22);background:transparent;color:#d3e3ef;border-radius:999px;padding:6px 14px;font-size:13px;display:flex;align-items:center;gap:6px;transition:background .15s}
 .sp:hover{background:rgba(255,255,255,.08)}
-.sp span{color:#8fa39a;font-size:11px}
-.sp.on{background:#fff;border-color:#fff;color:var(--ink);font-weight:600}.sp.on span{color:var(--brass)}
-.sp.add{border-style:dashed;border-color:var(--brass);color:var(--brass);font-weight:700}
+.sp span{color:#8fb3cc;font-size:11px}
+.sp.on{background:var(--yellow);border-color:var(--yellow);color:var(--yellow-ink);font-weight:600}.sp.on span{color:#7a6b10}
+.sp.add{border-style:dashed;border-color:var(--yellow);color:var(--yellow);font-weight:700}
 .sp-menu{position:absolute;left:0;top:100%;z-index:30;width:240px;background:var(--panel);color:var(--ink);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;display:none;flex-direction:column;gap:6px}
 .sp-menu.on{display:flex}
 .sp-menu b{font-size:13px;margin-bottom:2px}
@@ -54,7 +56,7 @@ h3:first-child{margin-top:4px}
 .card .th{aspect-ratio:4/3;border-radius:8px;background:#e8ebe6 center/contain no-repeat}
 .card b{font-size:13px;font-weight:600;line-height:1.3;margin-top:2px}
 .card span{font-size:11px;color:var(--muted)}
-.tag{font-style:normal;background:var(--brass-soft);color:var(--brass);border-radius:4px;padding:0 5px;margin-right:4px;font-size:10px;font-weight:600}
+.tag{font-style:normal;background:var(--yellow-soft);color:#7a6b10;border-radius:4px;padding:0 5px;margin-right:4px;font-size:10px;font-weight:600}
 .field{display:flex;align-items:center;gap:8px;margin:8px 0}
 .field label{width:56px;color:var(--muted)}
 .field input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
@@ -74,9 +76,9 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .btn:disabled{opacity:.4;cursor:default}
 .btn.wide{width:100%;margin-top:8px;border-radius:10px;padding:10px}
 .btn.danger{color:var(--danger)}
-.seg{position:absolute;top:14px;left:14px;display:flex;gap:2px;padding:4px;background:var(--ink);border-radius:999px;box-shadow:var(--shadow)}
-.seg button{border:0;background:none;color:#c7d3cd;border-radius:999px;padding:6px 14px;font-size:13px}
-.seg button.on{background:var(--brass);color:#fff;font-weight:600}
+.seg{position:absolute;top:14px;left:14px;display:flex;gap:2px;padding:4px;background:var(--brand);border-radius:999px;box-shadow:var(--shadow)}
+.seg button{border:0;background:none;color:#cfe0ec;border-radius:999px;padding:6px 14px;font-size:13px}
+.seg button.on{background:var(--yellow);color:var(--yellow-ink);font-weight:600}
 .toolbar{position:absolute;top:14px;right:14px;display:flex;gap:6px}
 .toolbar .btn{box-shadow:var(--shadow);border-color:transparent}
 .help{position:absolute;left:14px;bottom:14px;font-size:12px;color:var(--muted);background:rgba(255,255,255,.8);border-radius:999px;padding:5px 12px}
@@ -105,13 +107,13 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .toast.on{opacity:.94}
 .loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);background:var(--bg)}
 /* ---------- 設定房間、快速開始視窗 ---------- */
-.setup{position:fixed;inset:0;background:rgba(20,32,28,.55);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
+.setup{position:fixed;inset:0;background:rgba(14,44,69,.55);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
 .setup.on{display:flex}
 .setup-box{background:var(--panel);border-radius:18px;box-shadow:var(--shadow);width:min(920px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden}
-.setup-head{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px 14px;background:var(--ink);color:#fff}
+.setup-head{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px 14px;background:var(--brand);color:#fff;border-bottom:4px solid var(--yellow)}
 .setup-head b{font-size:18px;letter-spacing:.04em}
-.setup-head .hint{color:#a9bab2}
-.setup-head .x{color:#a9bab2}
+.setup-head .hint{color:#b9d0e0}
+.setup-head .x{color:#b9d0e0}
 .setup-body{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 20px;overflow:auto;min-height:0}
 .setup-plan svg{width:100%;height:auto;max-height:420px;margin:0 auto;display:block;background:var(--surface);border-radius:12px}
 .dims3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -137,9 +139,9 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .chips button{flex:1;min-width:64px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 6px;font-size:15px;display:flex;flex-direction:column;align-items:center;gap:2px}
 .chips button small{font-size:11px;color:var(--muted)}
 .chips button.on{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:600}
-.chips button.on small{color:#cfe0d8}
+.chips button.on small{color:#cfe0ec}
 .est{list-style:none;margin:0;padding:0}
-.est button{width:100%;display:flex;align-items:center;gap:8px;padding:11px 12px;border:0;border-left:3px solid var(--brass);border-radius:10px;margin-bottom:6px;background:var(--surface);text-align:left;transition:background .15s}
+.est button{width:100%;display:flex;align-items:center;gap:8px;padding:11px 12px;border:0;border-left:3px solid var(--gold);border-radius:10px;margin-bottom:6px;background:var(--surface);text-align:left;transition:background .15s}
 .est button:hover{background:var(--accent-soft)}
 .est button b{flex:none}
 .est button span{flex:1;text-align:right;color:var(--muted);font-size:12px}
@@ -148,8 +150,8 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 @media (max-width:760px){
   .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 52dvh minmax(0,1fr);grid-template-areas:"top" "main" "side"}
   .topbar{padding:0 10px;gap:10px}
-  .brand{padding:8px 0}.brand>div:last-child{display:none}
-  .brand .logo{width:32px;height:32px;font-size:10px}
+  .brand{padding:8px 0}.brand b{display:none}
+  .brand img{height:28px}
   .spaces{padding:9px 0}
   .sp-menu{left:auto;right:0}
   aside{border-left:0;border-top:1px solid var(--line)}
@@ -182,7 +184,7 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand"><div class="logo">莉凱</div><div><b>空間配置</b><small>莉凱家俱</small></div></div>
+    <div class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJYAAABSCAYAAAC2eC1AAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAA6VSURBVHhe7Z1lzPy4EYevvcKVUWW8MjOTrswMKpNKKql1mZnpWqnMzMykMjNz1aouqMx1Wc9f8Wnu5wluspvdzYfnwzsZe53EscczY78HpRgOWlgYm0KwsDAGhWBhYQwKwcLCGBSChY1z0RTDk1IMr0oxvDXFcGtHZ/YUgoWNcdUUwydTDP9zeKGjP2sKwcLaOW6K4SVOZ7KkFMMJnbKzpRAsrJVLpRh+5HQkjys65WdLIVhYG3dPMfzH6UAejFgncuqYLYVgYS3cw+k8TTzcqWPWFIKFyWGV91+n89TxBKeO2VMItpCTpBjOmWI4xLk2N66VYviX03k8Pl7ZYFrHVlAItoSTphgekmL4sXkR/0wxvGHGq6dLpBj+5nQg5aMphsOc8ltFIZg5LM2fmWL4h/NCMu9yym2as6cYfuu01fLtFMM1nLJbSSGYMRfrsTRnatTym+IULe3+e4rhfimGozllt5ZCMFNuVU11+lLqOLdTxyY4TorhS077Ml+Z2UcwGoVghtyl5yrqE04dm+AoKYa3OO0D/Fes9o7ulNsJCsHMuJvzUppgJTUX4/3xTvvgjymGqzn6O0UhmBEEZf/tvBiP36UY7jojOwW3grYRsLXO4ejvHIVgJrCK+oPzYhRCHc+pDGStY1OcMsXwa6etX0wxnNzR30kKwQxgKvuu82Is2CgvTTGc3im/ad7ntJdOdXxHd2cpBDOA5DZ9MRaM8/M55eZAcNr79RTDiR3dnaYQbJjbOi8m85cqI0DLzIXzV1OzbTNOz72Z/iyFYIMwrf3J6VDwzRTDoU6ZucCigZHJtvmXKYbTObp7QSHYIJ5tAl+uYoOqPyfuL23Gmbu1AeQxKAQb4jZOh4JPpxhO4OjPCUbav0q77+Xo7RonSzFcuC6rpBBsAGwQ/FDaqT5UhURUf268XtqNt111doljphieZ0JsTPmnVT0ttAlopHYqVn7cgOqOwY0qdwYpLKzi9HofmO5su0njWcXzf+wUw2Mqs+BxMw35vNl5X29XPS20bgjAqnf9VymGUzm6Y3B1iTviDzuNo9eVz0vbiRaoTlcInH9H6sNXp3qb5DxOp4JvqK4WXDfvlAbyoq/k6I3Fm5yHckZHrwu3kHpIMlSdrpy5mlK0beSdEcxW/U1xbaeN8AzV1YLr5NJOA5/i6I3J0+X3Xu7odOFYKYafmnr+vMLIh435A+dZAB1rTtMh07wmLNL2IqqgBdfJR6SB+KqmsqsyPAB2FbMwYOfL0Jf2YGn7fR2dLpAR+wWnQ2VWGQWn4ryVTcUzfHKdTVkI1sTlnYdITrjqzRFGKxtk/vnAD4JO/X7nOWSwPS/plFuVo6YYnlYtYN5TTW+qszKFYE18UB7iax2duaI5YqQVq04b2E3qplCmCl9pnhiLGdJ8VG8lCsEa4DQVe2PkfM8xS8GDr/2Hpu2/r6Yz1WvDc7FYHuiU8bhQZTi/N8XwuRTDq1s6yfFqNqIwcqruShSCNaDpuvhrVGeu3FjaTi6Y6rSBn0pfbIZFAL+hZRRMCaISWj7DFOd5xLX99ndVtw5sLA4x4eOgY+v1AxSCiTmX+JF+MfCL3xRqaPe1gR7lvNQMvqAu2aXU0eXMh6c6ZV/m6AHvQXU9SASwGRy0w92yVggmhsPE7A3d2dGZCgxs3A2fSjEcPiBcpAsOpkTVaYLD1PSFAh/as6pFgZaxHCx2Gasy3DNMg1on4AbQ8r9x9OA1zu95YPRr2c86emvtWGcSLzv53+vKUeehqjOWr1f1mmB6seUZOVSnDjbZ6guB76UYLufoezy7KoNNen25hgtF6+ZZYxNmHaIOqpO5oPN7Ch0fm1LLsrpU3bV2rOdLg0jqU52pYKOFPpBvOXp1eKGMLi8DO+cVTlleOtu/PDvII59OwzTkhY0IAmtojD2LVqduFUqH1fo8bueU9X7nAIVgIk4tczNfqv2apoRR0XrJM0XgtAHtHKTJMAqqngV76avO75JfdgFHvw5W0bnT8IHo9QxRhPwbTK+MUPkaCYfeYSRspu3qg1P7MuMuvgrBROjcfHNHZyo0ppe5p6Pr4b0UzgpVPcsdnRwt7Bt8YG0d0sLHR0ek/Lud6xYWQRjsRDRuItf0+UP00l1q4CPR8hlWiaq/lo7FMUPkq+eGELpZZ2DVOzAWw7vrl+q9FPxFqgd0Qs2EpVPia3JDHy3Q+amD3KeunUBhO5qeckOn7zKVZx7kPAPgXlX3AIVgAnSJ3cVPMxbsT9SHwTTRdScyo4CXh+/5r5im8AdZPU6+oQ2q2wXsr7yKe6VzvQt8wLpo4f6v6+g2oelBmdr060IwMnh67Uria47OlBAk1YfBsl/16vCMfrBHJWHL4PW21/FJXcWprw+cWZHr67pyVHBHaNtZRKleE4yUWgd82NE9gkIwMg+QxrjOtInAliFp0P4+Ppc+Lg46iD7QDP4j3ZnD7+GbG2NhkpP+mAa7TtsWYpjaZgLmRYpLCxobBUY9FhWqewSFYEQYym3yGkOy6kzJZeRhYFf0SepjlNAHWgc25CNHjCJY94Y6OrvASk3bCLgtVLcNnUqh1aFaCEaE6HxuCK6Gszo6U/JoeRhMi6rTRJ3fx6OPIdwFdvnkul0HZA3YVNh/2j5glOl7xgWju65uCWKfwdE9EoVgJGjQT0xjnujoTI0N0uKt7vNQyblXFwMPGCNasz2Jlw1NGKzjdab+nznXPXjmjCS2bRZ2ZWuZDDFADrdjM4eVE9vVegiLafmCQtABvgry0vEc42TkQXMyDA8AuwDD1jrr8JeMNUX0wcbFXuRcb4LsUn2gpFJzjYP86aj22tin8r3R1M1I0+ZqYIq3HxKjCu/BthF/mJYDAunZHfRiucaOJlsH9XY6MqAQNMBX/NgaL3YTXR2RY2NHHL5GZCyPMeA5eKRulMHo5yOx90DA1+rwt71+HaeeVeBDsPXfx9HJ4GzmMLesS6e/corhelIH5oiOSEQA7Kod495e53dtHXT4fI0REvPGHTQKgQMPGgeZdXICUwDLbF4SQzBBXfYDqjOOcvceaaXUB2JYuQ0YoKzW7D3UjTL6lYL+Hxu2ZdnrY0cS1CHJBga1UfGP2ZENSH/JqTyMLDqd46hlhcnpN3QaHXkJ8djfsHYyPLSS84HmVSszQ3H6j96Qgl2iMSK+DjIc2WKt+nSeOmfax1bYyTKE2zttyJCpUNfR8c9YXe5HdUi7sTr8luqsAtvBNOcKc4OOgcP5Hc65rJwPT0zW1qMdD7Rei6ZD00ntdc75IhKhHZYz9490D3pDFhqpGyixp5qS0ditknV5eXrz9O51+rI4E8K6PPAJEc3XKSHDKGbbC5qiAmqD4etRnVXRrWp1YMNibnhhMtwWXiqyx2cc8+AYsgirwwa8D6ANyeAxJwPBFqZTEfdT3QwdLg+tedsSnUiTy+hsLP37OCpXgYfF2VXYE21pKiTc2bbyDLwXplMEU5fqrAojKv4o/TgzOG9JZdHOoBCEbxqlgJhf3eFw+POajkJ/rlOmtmPpUA8Yg6qXoWfnFBE6oA24Mv1xmrHWxxeidkMfrlB1BM4SeFuK4WaOTh/wSGusr27hoXZYXx9ZH5gWb1l1XtrDdq2+JgUrWo0SwPdTDHeo+XgsF3d2VhGeq924UQiqRuvJdBjkTT+enXL4erw0ChYArCj16+NLIJ7VJ8yAz0VvMoP3W/W7wgLD1kXwmZFb9YB7tLp9s1E3BVM9H8UNUwxnca63wYzFzNT6vgpBlUukL6w49MFAj896NFqvWwjMavwOkHF4WVODmRpom44qFjrukFGQuvXfkjBqq16GEdpmbNamj+wrhaAaWfSF8TI9g5chOs/flNPrHvjDdHt9hpGR0YhlLbG+s1X2ESEOXUjUMWSDxg2kDjpo2xdtA9QsEPT6XlMIKo+6viwgdoaHl6+V/WQM/3lqa/q6PRghmLbajMohDFn6qw3YJWCuGxjavON7RSFo+K8Kdazyb2UxwHHqaZ1DYWndd1c1H4nW0yWXSke5vslzO00hqIx0DVl4MG2x3NXyfcEJW2eM9wU7TetvwwZ8gSlXdTw4G9XaWX22g+08haCCPWRsodbVIWBvMQ00OUr7Qmd+mOPR7QqrUVZ1Wm8bTO26barruQmAyySXczdu7iuFQGA0IT0Xe4gpj2Bu3x3EfcBYx5bTl10HuUqEE+qce23kTaCZvkdHqovCc7XsJYVgJhBOwrv9gip2h3OPrfF0Ovxed6och1quD6xONdzR123A+fPWK43DVnX2kkKwR3ixuCHee8JXuTyB4raw0VRwhAFuGfYWEgq6qaOzNgrBnkBmhqb3DD2Zj9wnWw8p0aozFbhtcEprRkamNTd9KgrBlsODJqOB0ajJk89XrS9hlTPfmaZzPdiH/GN01RkbAvxs/tX7UNqiIZNQCLYYEvzzdvQMQVb9506XdRyzhJTajhFqQk+AZlGxSn1NsBrX3dZNdD30Y1QKwRZTd04UoZecAHfNmljlEP+XohsZOLmQKIXqDYUAMCNxX5dMXYbGpBSCLYXzCfSBWngZ3tlOQEcbw4VC59X/CcTZnkPObLBgD3K8pM1r7wpJgJ02P4xNIdhSdHNqH8jO0PqGwpSoLgzy0/r+tw2mUfLfiMdqXnpXGMFb9/9NRSHYUkhE0wfbBUJJTXlmQ+DQE807A/LFybxg44F1SbDAILuVHCn+McEHVuhMuDvY4XOY0661Ugi2FDzvapC3wVFGQz32bei2qTp0dBsC0zybK+jQQ9wlk1AIthjdoNkE8U42GmgdY8ImDPsfLMaEEY3UHpIApvo4VqIQbDGkv3QZAcgUXVdMj5Ucxybpnswh4MAlxMXm2KlcGaNRCLYcvOD2P0dYiOnxYjbxhRNTJNzCPr+2/DPaiR8Md8UjKiO+zyk5s6AQ7AA5zEGqNGcRcCAJW6A2suyugWREDtxgOib1mtNqLlLF+/qcUTpbCsHCwhgUgoWFMSgECwtjUAgWFsbg/x5Z9OC80Fc+AAAAAElFTkSuQmCC" alt="Likai 莉凱家俱" width="150" height="82"><b>空間配置</b></div>
     <div class="spaces-wrap"><div class="spaces" id="spaces"></div>
       <div class="sp-menu" id="sp-menu"><b>新增哪一種空間？</b>
         <button data-type="living">客廳</button><button data-type="dining">餐廳（含廚房）</button><button data-type="bedroom">臥室</button><button data-type="ld">客餐廳（開放式）</button>
@@ -201,9 +203,9 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
     <div class="sel-card" id="sel">
       <div class="top"><div><b id="s-name"></b><div class="hint" id="s-sub"></div></div><button class="x" id="s-close" aria-label="關閉">×</button></div>
       <div class="dims">
-        <div><label>寬</label><input type="number" id="s-w"></div>
-        <div><label>深</label><input type="number" id="s-d"></div>
-        <div><label>高</label><input type="number" id="s-h"></div>
+        <div><label>寬</label><input type="text" inputmode="decimal" autocomplete="off" id="s-w"></div>
+        <div><label>深</label><input type="text" inputmode="decimal" autocomplete="off" id="s-d"></div>
+        <div><label>高</label><input type="text" inputmode="decimal" autocomplete="off" id="s-h"></div>
       </div>
       <div id="s-opts"></div>
       <div class="hint" style="margin-top:8px">離牆距離（公分）</div>
@@ -250,9 +252,9 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
           <div class="setup-form">
             <h3>1. 房間尺寸（公分，牆到牆的淨尺寸）</h3>
             <div class="dims3">
-              <label>寬（左右）<input type="number" inputmode="numeric" id="rw"></label>
-              <label>深（前後）<input type="number" inputmode="numeric" id="rd"></label>
-              <label>天花板高<input type="number" inputmode="numeric" id="rh"></label>
+              <label>寬（左右）<input type="text" inputmode="decimal" autocomplete="off" id="rw"></label>
+              <label>深（前後）<input type="text" inputmode="decimal" autocomplete="off" id="rd"></label>
+              <label>天花板高<input type="text" inputmode="decimal" autocomplete="off" id="rh"></label>
             </div>
             <h3>2. 窗戶、落地窗、陽台、房門在哪裡？</h3>
             <div class="addrow">
@@ -303,6 +305,7 @@ import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js';
 
 const $ = s => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const toNum = v => parseFloat(String(v).replace(/[^\d.]/g, '')) || 0;   // 數字欄位都是打字輸入，只取裡面的數字
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const deg = Math.PI / 180;
 const STORE = 'likai-room-v1';
@@ -376,7 +379,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('#e6e9e4');
+scene.background = new THREE.Color('#e3ebf2');
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 0.55;
 const hemi = new THREE.HemisphereLight('#fff8ee', '#b9a58f', 0.9); scene.add(hemi);
@@ -401,7 +404,7 @@ const OPEN_KINDS = {
   balcony: { name: '陽台',   w: 240, h: 220, sill: 0, depth: 150 },
   door:    { name: '房門',   w: 90,  h: 210, sill: 0, hinge: 'left', swing: 'in' },
 };
-const OP_MAT = Object.fromEntries(Object.entries({ window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#b08a4e' }).map(([k, c]) => [k, new THREE.MeshBasicMaterial({ color: c })]));
+const OP_MAT = Object.fromEntries(Object.entries({ window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#c9a227' }).map(([k, c]) => [k, new THREE.MeshBasicMaterial({ color: c })]));
 const WALL_NAMES = { N: '後牆', W: '左牆', E: '右牆', S: '前牆' };
 // 每面牆的座標：o 是「站在房內面對這面牆」時左邊的牆角，u 往右，n 朝房內
 function wallFrame(k) {
@@ -431,17 +434,17 @@ function floorTexture() {                     // 木地板：淺色長條＋細�
 }
 const FLOOR_TEX = floorTexture();
 const M = {
-  wall:  new THREE.MeshStandardMaterial({ color: '#eef0ec', roughness: 0.95 }),
-  skirt: new THREE.MeshStandardMaterial({ color: '#d8ddd6', roughness: 0.8 }),
+  wall:  new THREE.MeshStandardMaterial({ color: '#f1f4f6', roughness: 0.95 }),
+  skirt: new THREE.MeshStandardMaterial({ color: '#d5dee6', roughness: 0.8 }),
   alu:   new THREE.MeshStandardMaterial({ color: '#4a4b4f', roughness: 0.45, metalness: 0.6 }),
   wood:  new THREE.MeshStandardMaterial({ color: '#b48d64', roughness: 0.6 }),
   frame: new THREE.MeshStandardMaterial({ color: '#efe9e0', roughness: 0.7 }),
   glass: new THREE.MeshStandardMaterial({ color: '#bcd7e2', transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0.1, depthWrite: false }),
   tile:  new THREE.MeshStandardMaterial({ color: '#cbc3b8', roughness: 0.85 }),
   rail:  new THREE.MeshStandardMaterial({ color: '#d7e6ec', transparent: true, opacity: 0.3, roughness: 0.05, depthWrite: false }),
-  zone:  new THREE.MeshBasicMaterial({ color: '#b08a4e', transparent: true, opacity: 0.1, depthWrite: false }),
-  zoneLine: new THREE.LineBasicMaterial({ color: '#b08a4e', transparent: true, opacity: 0.6 }),
-  cap:   new THREE.MeshBasicMaterial({ color: '#3b4a44' }),                       // 牆頂剖面
+  zone:  new THREE.MeshBasicMaterial({ color: '#c9a227', transparent: true, opacity: 0.1, depthWrite: false }),
+  zoneLine: new THREE.LineBasicMaterial({ color: '#c9a227', transparent: true, opacity: 0.6 }),
+  cap:   new THREE.MeshBasicMaterial({ color: '#1d4763' }),                       // 牆頂剖面
   hidden: new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }),   // 擋在鏡頭前的牆：看不見，但還是會擋光產生影子
 };
 // 在牆的區域座標放一個方塊：x 沿著牆、y 高度、z 往房內為正（牆本身在 z = -T..0）
@@ -665,7 +668,7 @@ function refresh() {
   for (const it of state.items) {
     const isSel = it.id === selId; if (!isSel && !bad.has(it.id)) continue;
     const b = boxOf(it); b.max.y += 1;
-    markGroup.add(new THREE.Box3Helper(b, bad.has(it.id) ? 0xc0392b : 0x2d5a4a));
+    markGroup.add(new THREE.Box3Helper(b, bad.has(it.id) ? 0xc23e4e : 0x00436a));
   }
   renderPlaced(bad); renderSel(bad);
 }
@@ -704,7 +707,7 @@ $('#s-opts').addEventListener('input', e => {             // 拖曳顏色時即�
 });
 $('#s-opts').addEventListener('change', e => { if (e.target.type === 'color') { colorSnap = false; save(); } });
 for (const k of ['w', 'd', 'h']) $('#s-' + k).addEventListener('change', e => {
-  const v = clamp(Math.round(+e.target.value || 0), 20, 600); editSel(it => { it[k] = v; }); e.target.value = v;
+  const v = clamp(Math.round(toNum(e.target.value)), 20, 600); editSel(it => { it[k] = v; }); e.target.value = v;
 });
 const rotate = () => editSel(it => { it.rot = (it.rot + 90) % 360; });
 const remove = () => { const it = cur(); if (!it) return; snapshot(); state.items = state.items.filter(i => i !== it); const g = objs.get(it.id); furnGroup.remove(g); dispose(g); objs.delete(it.id); select(null); save(); };
@@ -861,7 +864,7 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
 });
 $('#placed').addEventListener('click', e => { const li = e.target.closest('li'); if (li) select(+li.dataset.id); });
 /* ================= 設定房間（尺寸＋門窗） ================= */
-const OP_COLOR = { window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#b08a4e' };
+const OP_COLOR = { window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#c9a227' };
 /* ---------- 上一頁：設定視窗、坪數視窗也能用手機的返回鍵關掉 ---------- */
 // setupFrom：'quick' 從坪數頁來、{ space: i } 從另一個空間切過來、'edit' 從「房間」分頁打開
 let setupFrom = 'edit', ignorePop = false;
@@ -897,7 +900,7 @@ function roomSummary() {
 }
 function renderOps() {
   const ops = state.room.openings || [], cnt = {};
-  const num = (k, label, v) => `<label>${label}<input type="number" inputmode="numeric" data-k="${k}" value="${v}"></label>`;
+  const num = (k, label, v) => `<label>${label}<input type="text" inputmode="decimal" autocomplete="off" data-k="${k}" value="${v}"></label>`;
   $('#ops').innerHTML = ops.map((o, i) => {
     cnt[o.kind] = (cnt[o.kind] || 0) + 1;
     let h = `<label>在哪面牆<select data-k="wall">${Object.entries(WALL_NAMES).map(([k, n]) => `<option value="${k}" ${k === o.wall ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`
@@ -924,14 +927,14 @@ $('#ops').addEventListener('click', e => {
 $('#ops').addEventListener('change', e => {
   const k = e.target.dataset.k, box = e.target.closest('.op'); if (!k || !box) return;
   const op = state.room.openings[+box.dataset.i];
-  op[k] = e.target.tagName === 'SELECT' ? e.target.value : +e.target.value;
+  op[k] = e.target.tagName === 'SELECT' ? e.target.value : toNum(e.target.value);
   if (k === 'depth') op.depth = clamp(Math.round(op.depth || 0), 60, 400);
   clampOpening(op);
   if (k === 'wall') renderOps(); else box.querySelectorAll('input').forEach(inp => { inp.value = op[inp.dataset.k]; });
   applyRoom();
 });
 for (const k of ['w', 'd', 'h']) $('#r' + k).addEventListener('change', e => {
-  state.room[k] = clamp(Math.round(+e.target.value || 0), k === 'h' ? 200 : 150, k === 'h' ? 500 : 2000);
+  state.room[k] = clamp(Math.round(toNum(e.target.value)), k === 'h' ? 200 : 150, k === 'h' ? 500 : 2000);
   e.target.value = state.room[k]; applyRoom(); renderOps();
 });
 $('#setup-done').onclick = closeSetup; $('#setup-x').onclick = closeSetup;
@@ -945,8 +948,8 @@ function drawPlan() {
   const bal = Math.max(0, ...ops.filter(o => o.kind === 'balcony').map(o => o.depth || 150));
   const pad = Math.max(60, Math.max(w, d) * 0.12) + bal, fs = Math.max(w, d) / 15;
   const el = $('#plan'); el.setAttribute('viewBox', `${-w / 2 - pad} ${-d / 2 - pad} ${w + 2 * pad} ${d + 2 * pad}`); el.style.aspectRatio = `${w + 2 * pad} / ${d + 2 * pad}`;
-  let h = `<rect x="${-w / 2 - T}" y="${-d / 2 - T}" width="${w + 2 * T}" height="${d + 2 * T}" fill="#3b4a44"/>`
-    + `<rect x="${-w / 2}" y="${-d / 2}" width="${w}" height="${d}" fill="#fbfbf8"/>`;
+  let h = `<rect x="${-w / 2 - T}" y="${-d / 2 - T}" width="${w + 2 * T}" height="${d + 2 * T}" fill="#1d4763"/>`
+    + `<rect x="${-w / 2}" y="${-d / 2}" width="${w}" height="${d}" fill="#fbfdfe"/>`;
   const P = (f, along, out = 0) => f.o.clone().addScaledVector(f.u, along).addScaledVector(f.n, -out);
   for (const o of ops) {
     const f = wallFrame(o.wall), c = OP_COLOR[o.kind];
@@ -957,7 +960,7 @@ function drawPlan() {
       h += `<text x="${m.x}" y="${m.z}" font-size="${fs * 0.8}" fill="${c}" text-anchor="middle" dominant-baseline="middle">陽台</text>`;
     }
     const a = P(f, o.off, T / 2), b = P(f, o.off + o.w, T / 2);
-    h += `<line x1="${a.x}" y1="${a.z}" x2="${b.x}" y2="${b.z}" stroke="#f4f5f1" stroke-width="${T + 1}"/>`
+    h += `<line x1="${a.x}" y1="${a.z}" x2="${b.x}" y2="${b.z}" stroke="#f4f8fb" stroke-width="${T + 1}"/>`
       + `<line x1="${a.x}" y1="${a.z}" x2="${b.x}" y2="${b.z}" stroke="${c}" stroke-width="${o.kind === 'door' ? 3 : 5}"/>`;
     if (o.kind === 'door' && o.swing !== 'out') {
       const left = o.hinge !== 'right', hp = P(f, left ? o.off : o.off + o.w), r = o.w;
@@ -968,7 +971,7 @@ function drawPlan() {
     const lab = P(f, o.off + o.w / 2, -fs * 1.3);
     h += `<text x="${lab.x}" y="${lab.z}" font-size="${fs * 0.75}" fill="${c}" text-anchor="middle" dominant-baseline="middle">${OPEN_KINDS[o.kind].name} ${o.w}</text>`;
   }
-  const lw = (x, y, t, rot = 0) => `<text x="${x}" y="${y}" font-size="${fs}" fill="#6c7772" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rot} ${x} ${y})">${t}</text>`;
+  const lw = (x, y, t, rot = 0) => `<text x="${x}" y="${y}" font-size="${fs}" fill="#5e7589" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rot} ${x} ${y})">${t}</text>`;
   const o2 = T + fs * 0.9;
   h += lw(0, -d / 2 - o2, `後牆 ${w}`) + lw(0, d / 2 + o2, `前牆 ${w}`) + lw(-w / 2 - o2, 0, `左牆 ${d}`, -90) + lw(w / 2 + o2, 0, `右牆 ${d}`, 90);
   el.innerHTML = h;
