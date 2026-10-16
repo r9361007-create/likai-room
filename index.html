@@ -836,9 +836,14 @@ function renderPlaced(bad) {
 
 /* ================= 選取面板 ================= */
 const cur = () => state.items.find(i => i.id === selId);
-function select(id) { selId = id; buildSelPanel(); refresh(); }
+// 單點只選取（顯示外框、可以拖、可以用鍵盤），點兩下才打開編輯面板
+let panelOpen = false, tipShown = false;
+function select(id, open = false) {
+  selId = id; panelOpen = !!id && open; buildSelPanel(); refresh();
+  if (id && !open && !tipShown) { tipShown = true; toast('點兩下家具可以修改尺寸、顏色'); }
+}
 function buildSelPanel() {
-  const it = cur(); $('#sel').classList.toggle('on', !!it); if (!it) return;
+  const it = cur(); $('#sel').classList.toggle('on', !!it && panelOpen); if (!it) return;
   const T = PRODUCTS[it.type];
   $('#s-name').textContent = T.name;
   $('#s-w').value = it.w; $('#s-d').value = it.d; $('#s-h').value = it.h;
@@ -872,7 +877,7 @@ const rotate = () => editSel(it => { it.rot = (it.rot + 90) % 360; });
 const remove = () => { const it = cur(); if (!it) return; snapshot(); state.items = state.items.filter(i => i !== it); const g = objs.get(it.id); furnGroup.remove(g); dispose(g); objs.delete(it.id); select(null); save(); };
 function duplicate() {
   const it = cur(); if (!it) return; snapshot();
-  const n = { ...it, id: nextId++, x: it.x + 30, z: it.z + 30 }; state.items.push(n); makeObj(n); fit(n, false); select(n.id); save();
+  const n = { ...it, id: nextId++, x: it.x + 30, z: it.z + 30 }; state.items.push(n); makeObj(n); fit(n, false); select(n.id, true); save();
 }
 // 更多設定：展開或收起（記住上次的選擇）
 let moreOpen = false; try { moreOpen = localStorage.getItem('likai-room-more') === '1'; } catch (e) { }
@@ -932,9 +937,15 @@ canvas.addEventListener('pointermove', e => {
   drag.moved = true;
   drag.it.x = p.x + drag.dx; drag.it.z = p.z + drag.dz; fit(drag.it, true); refresh();
 });
+let lastTap = {};
 canvas.addEventListener('pointerup', e => {
   if (drag) {
     if (drag.moved) { undoStack.push(drag.before); $('#undo').disabled = false; save(); }
+    else {                                                // 沒拖動＝點一下；同一件 0.4 秒內再點一下＝點兩下，打開編輯面板
+      const now = performance.now();
+      if (lastTap.id === drag.it.id && now - lastTap.t < 400) { select(drag.it.id, true); lastTap = {}; }
+      else lastTap = { id: drag.it.id, t: now };
+    }
     drag = null; controls.enabled = !topView; return;
   }
   if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) select(null);   // 點空白處取消選取
@@ -1053,7 +1064,7 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + b.dataset.tab));
 });
-$('#placed').addEventListener('click', e => { const li = e.target.closest('li'); if (li) select(+li.dataset.id); });
+$('#placed').addEventListener('click', e => { const li = e.target.closest('li'); if (li) select(+li.dataset.id, true); });
 /* ================= 設定房間（尺寸＋門窗） ================= */
 const OP_COLOR = { window: '#4f9cc6', floor: '#2f7fb0', balcony: '#3b8f6a', door: '#c9a227', bath: '#7d6bb0' };
 /* ---------- 上一頁：設定視窗、坪數視窗也能用手機的返回鍵關掉 ---------- */
