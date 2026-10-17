@@ -1854,25 +1854,19 @@ function exitOverview(i) {
 }
 // 總覽裡：點房間＝進去擺設，按住拖曳＝調整這間的位置
 let ovDrag = null;
+// 總覽：房間照平面圖固定（不能拖）。點一下＝進去擺設；拖曳＝轉動視角（交給 OrbitControls）
 function ovDown(e) {
   setNdc(e);
   const h = ray.intersectObjects(houseGroup.children, true).find(h => h.object.userData.spaceIdx != null && !h.object.userData.label && !h.object.isSprite);
-  if (!h) return;
-  const i = h.object.userData.spaceIdx, sp = project.spaces[i]; dragPlane.constant = 0; const pt = dragPt(e); if (!pt) return;
-  controls.enabled = false; canvas.setPointerCapture(e.pointerId);
-  ovDrag = { i, dx: sp.pos.x - pt.x, dz: sp.pos.z - pt.z, x0: e.clientX, y0: e.clientY, moved: false };
+  ovDrag = h ? { i: h.object.userData.spaceIdx, x0: e.clientX, y0: e.clientY, moved: false } : null;
 }
 function ovMove(e) {
-  return;                                                   // 房間照平面圖格局固定，不能拖（使用者 2026-10-17）
-  if (!ovDrag.moved && Math.hypot(e.clientX - ovDrag.x0, e.clientY - ovDrag.y0) < 6) return;
-  ovDrag.moved = true; const pt = dragPt(e); if (!pt) return;
-  const sp = project.spaces[ovDrag.i]; sp.pos = { x: Math.round((pt.x + ovDrag.dx) / 5) * 5, z: Math.round((pt.z + ovDrag.dz) / 5) * 5 };
-  const g = houseGroup.children.find(c => c.userData.spaceIdx === ovDrag.i); if (g) g.position.set(sp.pos.x, 0, sp.pos.z);
+  if (ovDrag && !ovDrag.moved && Math.hypot(e.clientX - ovDrag.x0, e.clientY - ovDrag.y0) > 6) ovDrag.moved = true;   // 有拖動就不算點房間
 }
 function ovUp() {
   if (!ovDrag) return false;
-  const d = ovDrag; ovDrag = null; controls.enabled = !topView;
-  if (d.moved) save(); else exitOverview(d.i);
+  const d = ovDrag; ovDrag = null;
+  if (!d.moved) exitOverview(d.i);
   return true;
 }
 
