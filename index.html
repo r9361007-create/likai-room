@@ -289,6 +289,12 @@ body.walk-mode main{cursor:grab}
 .walk-exit{position:absolute;top:14px;left:14px;z-index:6;border:0;border-radius:999px;background:rgba(255,255,255,.85);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:9px 16px;font-size:14px;color:var(--ink);box-shadow:0 6px 18px rgba(0,67,106,.14)}
 .walk-tip{position:absolute;left:50%;top:16px;transform:translateX(-50%);z-index:5;background:rgba(0,67,106,.82);color:#fff;font-size:13px;padding:7px 14px;border-radius:999px;white-space:nowrap;pointer-events:none;transition:opacity .6s}
 .walk-tip.fade{opacity:0}
+.walk-fade{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .2s;z-index:4}
+.walk-fade.on{opacity:1}
+.walk-rooms{position:absolute;left:14px;right:200px;bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:4px}
+.walk-rooms button{flex:none;border:0;border-radius:999px;background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:10px 16px;font-size:14px;color:var(--ink);box-shadow:0 6px 18px rgba(0,67,106,.14)}
+.walk-rooms button.on{background:var(--brand);color:#fff;font-weight:600}
+@media (max-width:760px){ .walk-rooms{left:10px;right:184px} .walk-rooms button{padding:9px 13px;font-size:13px} }
 .walk-pad{position:absolute;right:18px;bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:6;display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:6px}
 .walk-pad button{border:0;border-radius:14px;background:rgba(255,255,255,.85);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:20px;color:var(--brand);box-shadow:0 6px 18px rgba(0,67,106,.14);touch-action:none;user-select:none;-webkit-user-select:none}
 .walk-pad button:active{background:var(--brand);color:#fff}
@@ -560,7 +566,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
     <button class="walkbtn" id="walk-btn"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="13" cy="4" r="2" fill="currentColor"/><path d="M10 21l2-6 3 3v3M8 12l2-4h4l3 4M12 8l-1 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>走進去逛逛</button>
     <div class="walk-ui" id="walk-ui">
       <button class="walk-exit" id="walk-exit">← 回總覽</button>
-      <div class="walk-tip" id="walk-tip">拖曳看四周・點地板走過去・點門推開</div>
+      <div class="walk-tip" id="walk-tip">拖曳看四周・點地板走過去・點門推開・下面按鈕直接到各房間</div>
+      <div class="walk-fade" id="walk-fade"></div>
+      <div class="walk-rooms" id="walk-rooms"></div>
       <div class="walk-pad" id="walk-pad"><button data-w="f" aria-label="往前走">▲</button><button data-w="l" aria-label="往左轉">⟲</button><button data-w="b" aria-label="往後退">▼</button><button data-w="r" aria-label="往右轉">⟳</button></div>
     </div>
     <button class="setupchip" id="setup-chip" hidden>這間還沒設定門窗・點這裡設定 ›</button>
@@ -1077,7 +1085,7 @@ function zoneBoxes() {
 
 /* ---------- 視角：3D 鳥瞰／平面／人視角 ---------- */
 let view = 'orbit';
-const walk = { on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
+const walk = { room: -1, on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
 if (location.search.includes("debug")) window.__dbg = { walk, get cam() { return persp; } };   // 除錯用
 function fitCamera() {
   if (overview) {                                            // 總覽：從斜上方看整間房子
@@ -2144,11 +2152,40 @@ function labelSprite(name, sub) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true })); sp.scale.set(150, 51.5, 1); sp.renderOrder = 10; return sp;
 }
 const pingOf = sp => (sp.room.w * sp.room.d / 33058).toFixed(1);
+// 每間房的世界座標範圍（室內）
+const roomBox = sp => ({ x0: sp.pos.x - sp.room.w / 2, x1: sp.pos.x + sp.room.w / 2, z0: sp.pos.z - sp.room.d / 2, z1: sp.pos.z + sp.room.d / 2 });
+// A 房的門正對 B 房的牆（兩道牆幾乎貼在一起）→ 幫 B 那道牆開一樣的門洞，兩間才走得通
+function linkDoors(spaces) {
+  const extra = spaces.map(() => []);
+  spaces.forEach((A, ia) => {
+    const a = roomBox(A);
+    for (const op of A.room.openings || []) {
+      if (op.kind !== 'door') continue;
+      const m = op.off + op.w / 2;
+      const P = { N: [a.x0 + m, a.z0], S: [a.x1 - m, a.z1], W: [a.x0, a.z1 - m], E: [a.x1, a.z0 + m] }[op.wall];
+      spaces.forEach((B, ib) => {
+        if (ib === ia) return; const b = roomBox(B);
+        let wall = null, off = 0, L = 0;
+        if (op.wall === 'N' && a.z0 - b.z1 > -5 && a.z0 - b.z1 < 70 && P[0] > b.x0 + op.w / 2 && P[0] < b.x1 - op.w / 2) { wall = 'S'; off = b.x1 - P[0] - op.w / 2; L = B.room.w; }
+        else if (op.wall === 'S' && b.z0 - a.z1 > -5 && b.z0 - a.z1 < 70 && P[0] > b.x0 + op.w / 2 && P[0] < b.x1 - op.w / 2) { wall = 'N'; off = P[0] - b.x0 - op.w / 2; L = B.room.w; }
+        else if (op.wall === 'W' && a.x0 - b.x1 > -5 && a.x0 - b.x1 < 70 && P[1] > b.z0 + op.w / 2 && P[1] < b.z1 - op.w / 2) { wall = 'E'; off = P[1] - b.z0 - op.w / 2; L = B.room.d; }
+        else if (op.wall === 'E' && b.x0 - a.x1 > -5 && b.x0 - a.x1 < 70 && P[1] > b.z0 + op.w / 2 && P[1] < b.z1 - op.w / 2) { wall = 'W'; off = b.z1 - P[1] - op.w / 2; L = B.room.d; }
+        if (!wall) return;
+        const all = [...(B.room.openings || []), ...extra[ib]];
+        if (all.some(o => o.wall === wall && o.off < off + op.w && o.off + o.w > off)) return;   // 那裡已經有門窗
+        extra[ib].push({ kind: 'door', wall, w: op.w, h: op.h, sill: 0, off: Math.round(clamp(off, 0, L - op.w)), hinge: 'left', swing: 'in' });
+      });
+    }
+  });
+  return extra;
+}
 function buildOverview(full) {                     // full：走進去逛用，牆是完整高度、有天花板、窗簾掛畫吊燈都放
   autoLayout();
   houseGroup.clear(); const keep = state;
+  const extra = full ? linkDoors(project.spaces) : null;
   project.spaces.forEach((sp, i) => {
     const tmp = JSON.parse(JSON.stringify(sp)); if (!full) tmp.room.h = Math.min(tmp.room.h, 120);   // 牆切到 120 公分高，看得到每一間
+    if (full) tmp.room.openings = [...(tmp.room.openings || []), ...extra[i]];
     state = tmp; buildRoom();
     const g = new THREE.Group();
     for (const c of [...roomGroup.children]) g.add(c);
@@ -2163,6 +2200,14 @@ function buildOverview(full) {                     // full：走進去逛用，�
     } else { const lab = labelSprite(sp.name, `${pingOf(sp)} 坪・家具 ${sp.items.length} 件`); lab.position.set(0, 175, 0); lab.userData.label = true; g.add(lab); }
     g.position.set(sp.pos.x, 0, sp.pos.z); g.userData.spaceIdx = i; houseGroup.add(g);
   });
+  if (full) {                                      // 房間之間的走道：整片地板（比房間地板低一點）＋天花板
+    const bs = project.spaces.map(roomBox), x0 = Math.min(...bs.map(b => b.x0)) - WALL_T, x1 = Math.max(...bs.map(b => b.x1)) + WALL_T, z0 = Math.min(...bs.map(b => b.z0)) - WALL_T, z1 = Math.max(...bs.map(b => b.z1)) + WALL_T;
+    const H = Math.max(...project.spaces.map(sp => sp.room.h)) + 1;
+    const fl = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshStandardMaterial({ color: '#e4ddd2', roughness: 0.8 }));
+    fl.rotation.x = -Math.PI / 2; fl.position.set((x0 + x1) / 2, -0.6, (z0 + z1) / 2); fl.receiveShadow = true; houseGroup.add(fl);
+    const ce = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshStandardMaterial({ color: '#f7f5f0', roughness: 0.95 }));
+    ce.rotation.x = Math.PI / 2; ce.position.set((x0 + x1) / 2, H, (z0 + z1) / 2); ce.userData.ceiling = true; houseGroup.add(ce);
+  }
   { const bb = new THREE.Box3().setFromObject(houseGroup), S = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z), lw = Math.max(80, Math.min(190, S * 0.13));   // 標籤大小跟著房子大小
     houseGroup.traverse(o => { if (o.userData.label) o.scale.set(lw, lw * 0.344, 1); }); }
   state = keep; walls = []; zones = []; wallHidden.clear(); roomGroup.clear();
@@ -2233,7 +2278,7 @@ function walkStep(dx, dz) {
 function enterWalk() {
   if (!overview || walk.on) return;
   select(null); if (topView) setView('orbit');
-  walk.on = true; walk.go = null; walk.key = {}; document.body.classList.add('walk-mode');
+  walk.on = true; walk.go = null; walk.key = {}; walk.room = -1; document.body.classList.add('walk-mode');
   buildOverview(true);
   walk.doors = []; houseGroup.updateMatrixWorld(true);
   houseGroup.traverse(o => {
@@ -2241,14 +2286,32 @@ function enterWalk() {
     if (walk.doors.some(d => d.userData.door.c.distanceTo(c) < 60)) { o.visible = false; return; }   // 兩個房間在同一個門口各畫了一扇門：只留一扇
     o.userData.door.c = c; walk.doors.push(o);
   });
-  // 從客廳（或客餐廳）門口往裡看
+  // 從客廳（或客餐廳）開始
   let i = project.spaces.findIndex(sp => sp.type === 'ld' || sp.type === 'living'); if (i < 0) i = 0;
-  const sp = project.spaces[i];
-  persp.position.set(sp.pos.x, EYE, sp.pos.z + sp.room.d / 2 - 45); walk.yaw = 0; walk.pitch = -0.06;
-  persp.fov = 68; persp.near = 5; persp.updateProjectionMatrix(); controls.enabled = false;
+  $('#walk-rooms').innerHTML = project.spaces.map((sp, j) => `<button data-i="${j}">${esc(sp.name)}</button>`).join('');
+  walk.pitch = -0.06; walkInto(i, true);
+  persp.fov = 74; persp.near = 5; persp.updateProjectionMatrix(); controls.enabled = false;
   setTimeout(() => { resize(); updateViewOffset(); }, 30);
   const tip = $('#walk-tip'); tip.classList.remove('fade'); clearTimeout(walk.tipT); walk.tipT = setTimeout(() => tip.classList.add('fade'), 5000);
 }
+// 到某間房：找一個腳下沒有家具的位置，面向房間中間
+function walkInto(i, instant) {
+  const sp = project.spaces[i], b = roomBox(sp), { w, d } = sp.room, cx = sp.pos.x, cz = sp.pos.z;
+  // 像房仲拍照：站在角落，往對角看，看得到最多（先試靠前面的兩個角）
+  const k = 45, cands = [[b.x0 + k, b.z1 - k], [b.x1 - k, b.z1 - k], [b.x0 + k, b.z0 + k], [b.x1 - k, b.z0 + k], [cx, b.z1 - k], [cx, b.z0 + k], [b.x0 + k, cz], [b.x1 - k, cz], [cx, cz]];
+  houseGroup.updateMatrixWorld(true);
+  const free = ([x, z]) => { wv.o.set(x, EYE, z); const h = walkHits(wv.o, wv.down, EYE + 30)[0]; return h && isFloorHit(h) && h.point.y > -0.3; };   // 正下方第一個碰到的是房間地板（不是家具）
+  const at = cands.find(free) || [cx, cz];
+  const tx = 2 * cx - at[0], tz = 2 * cz - at[1], dx = tx - at[0], dz = tz - at[1];   // 看向對角
+  const yaw = Math.hypot(dx, dz) > 10 ? Math.atan2(-dx, -dz) : 0;
+  walk.go = null;
+  if (instant) { persp.position.set(at[0], EYE, at[1]); walk.yaw = yaw; }
+  else { const el = $('#walk-fade'); el.classList.add('on'); setTimeout(() => { persp.position.set(at[0], EYE, at[1]); walk.yaw = yaw; walk.pitch = -0.06; el.classList.remove('on'); }, 220); }
+  syncWalkRooms(i);
+}
+function roomAt(x, z) { return project.spaces.findIndex(sp => { const b = roomBox(sp); return x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1; }); }
+function syncWalkRooms(i) { if (i === walk.room) return; walk.room = i; $('#walk-rooms').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.i === i)); }
+$('#walk-rooms').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) walkInto(+b.dataset.i); });
 function exitWalk() {
   if (!walk.on) return;
   walk.on = false; walk.go = null; walk.key = {}; walk.doors = []; document.body.classList.remove('walk-mode');
@@ -2274,6 +2337,7 @@ function walkFrame() {
     const s2 = Math.sign(u.target - u.ang), v = 2.6 * dt; u.ang = Math.abs(u.target - u.ang) <= v ? u.target : u.ang + s2 * v; p.rotation.y = u.ang;
   }
   persp.position.y = EYE; persp.rotation.set(walk.pitch, walk.yaw, 0, 'YXZ');
+  syncWalkRooms(roomAt(persp.position.x, persp.position.z));   // 走到哪間，下面的按鈕就亮哪間
 }
 const doorOf = o => { for (; o; o = o.parent) if (o.userData.door) return o; return null; };
 const wp = { down: null, last: null };
