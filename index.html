@@ -191,11 +191,19 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden;b
 .layers li.off{opacity:.55}
 .layers li.dragging{box-shadow:var(--shadow);background:#fff;opacity:.95}
 /* ---------- AR ---------- */
-.ar-box{width:min(560px,100%)}
-.ar-body{padding:12px 20px 16px;overflow:auto}
-#mv{width:100%;height:46dvh;background:var(--surface);border-radius:12px;display:block}
-.ar-go{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:12px 22px;font-size:15px;box-shadow:var(--shadow)}
-#ar-msg{color:var(--ink);font-weight:600}
+.ar-box{width:min(520px,100%)}
+.ar-body{padding:12px 20px 18px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+#mv{width:100%;height:min(38dvh,340px);background:radial-gradient(100% 90% at 50% 30%,#fbfdff,#e3ebf2);border-radius:14px;display:block}
+.ar-size{margin:0;text-align:center;font-weight:700;color:var(--brand);font-size:15px}
+.ar-steps{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.ar-steps li{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink);background:var(--surface);border-radius:10px;padding:8px 10px}
+.ar-steps b{flex:none;width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:12px}
+.ar-steps strong{color:var(--brand)}
+.ar-go{padding:14px 0!important;font-size:16px!important;margin-top:0!important}
+.ar-go:disabled{opacity:.55}
+.ar-warn{background:#fff6d6;border:1px solid #f1d978;color:#5c4a00;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.6}
+.ar-warn[hidden]{display:none}
+@media (max-width:760px){ #mv{height:30dvh} .ar-body{padding:10px 14px calc(16px + env(safe-area-inset-bottom,0px))} }
 /* ---------- 首頁：我的客人 ---------- */
 .home{position:fixed;inset:0;z-index:45;background:radial-gradient(120% 90% at 50% 0%,#fbfdff 0%,#eaf1f7 60%,#dbe6ef 100%);display:none;overflow:auto}
 .home.on{display:block}
@@ -449,7 +457,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
     <div class="mbar" id="mbar" hidden>
       <b id="mbar-name"></b>
       <div class="mbar-btns">
-        <button data-a="edit" class="pri">編輯</button><button data-a="rot">旋轉</button><button data-a="dup">複製</button><button data-a="del" class="del">刪除</button>
+        <button data-a="edit" class="pri">編輯</button><button data-a="ar">AR</button><button data-a="rot">旋轉</button><button data-a="dup">複製</button><button data-a="del" class="del">刪除</button>
       </div>
     </div>
     <div class="sel-card" id="sel">
@@ -542,13 +550,20 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
     </div>
     <div class="setup" id="ar">
       <div class="setup-box ar-box">
-        <div class="setup-head"><div><b id="ar-title">用相機擺擺看</b><div class="hint">按下方按鈕開相機，對著地板慢慢移動手機，家具會以實際大小出現</div></div><button class="x" id="ar-x" aria-label="關閉">×</button></div>
+        <div class="setup-head"><div><b id="ar-title">用相機擺擺看</b><div class="hint">家具會以 1:1 實際大小出現在家裡</div></div><button class="x" id="ar-x" aria-label="關閉">×</button></div>
         <div class="ar-body">
+          <div class="ar-warn" id="ar-warn" hidden></div>
           <model-viewer id="mv" loading="eager" reveal="auto" ar ar-modes="webxr quick-look scene-viewer" ar-scale="fixed" ar-placement="floor" camera-controls touch-action="pan-y" shadow-intensity="1" exposure="1.1" interaction-prompt="none">
-            <button slot="ar-button" class="btn pri ar-go" id="ar-go">開啟相機，擺進家裡</button>
+            <button slot="ar-button" hidden></button>
           </model-viewer>
-          <p class="hint" id="ar-msg"></p>
-          <p class="hint">小技巧：先讓手機對著地板左右晃一下，等出現家具再用手指拖曳、兩指旋轉。iPhone 會用內建的 AR，Android 需要支援 Google ARCore 的手機。</p>
+          <p class="ar-size" id="ar-msg"></p>
+          <ol class="ar-steps">
+            <li><b>1</b><span>手機對著<strong>地板</strong>，慢慢左右移動</span></li>
+            <li><b>2</b><span>家具出現後，<strong>用手指拖</strong>到想放的位置</span></li>
+            <li><b>3</b><span><strong>兩指轉動</strong>調整方向，不要兩指縮放</span></li>
+          </ol>
+          <button class="btn pri wide ar-go" id="ar-go">開啟相機，放進家裡</button>
+          <button class="btn wide" id="ar-copy" hidden>複製連結，用手機打開</button>
         </div>
       </div>
     </div>
@@ -584,7 +599,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <h3>整間房子總覽</h3>
       <p class="hint" id="ov-sum"></p>
       <div class="ov-list" id="ov-list"></div>
-      <p class="hint">點畫面上的房間或下面的按鈕，就能進去擺家具；按住房間拖曳可以調整位置。之後隨時按上方的「總覽」回來看整體。</p>
+      <p class="hint">點畫面上的房間或下面的按鈕，就能進去擺家具。之後隨時按上方的「總覽」回來看整體。</p>
     </div>
     <div class="tabs">
       <button data-tab="lib" class="on">商品</button>
@@ -691,6 +706,7 @@ function load() {
 }
 function save() {
   try { localStorage.setItem(STORE, JSON.stringify(project)); } catch (e) { }
+  try { prewarmAR(); } catch (e) { }
   const m = projMeta(); if (m) { m.updated = Date.now(); writeIdx(); }
 }
 function setState(s) { project.spaces[project.cur] = state = s; }
@@ -1273,6 +1289,7 @@ function select(id, open = false) {
   if (isMob() && id && !open && !showMode && document.body.dataset.sheet !== 'min') setSheet('min');   // 手機：選到家具就把抽屜收起來
   if (typeof syncMobile === 'function') syncMobile();
   if (typeof renderShowCard === 'function' && showMode) renderShowCard();
+  try { prewarmAR(); } catch (e) { }
   if (id && !open && !tipShown && !isMob() && !showMode) { tipShown = true; toast('點兩下家具可以修改尺寸、顏色'); }
 }
 // 常用色：窗簾、布料、木作都適用
@@ -1375,33 +1392,84 @@ function plainMats(root) {
 }
 // 整組 AR：顯示中的家具照房間裡的相對位置一起帶進去（牆上的窗簾、掛畫、吊燈不帶）
 const AR_SKIP = T => T.ceil || T.sub === '窗簾' || T.sub === '掛畫';
-async function openAR(all = false) {
-  const list = all ? state.items.filter(i => !i.hidden && !AR_SKIP(PRODUCTS[i.type])) : [cur()].filter(Boolean);
-  if (!list.length) { toast('這個空間還沒有可以帶進 AR 的家具'); return; }
-  const it = list[0], T = PRODUCTS[it.type];
-  $('#ar-title').textContent = all ? `整組 ${list.length} 件：用相機擺擺看` : `${T.name}：用相機擺擺看`; $('#ar-msg').textContent = '準備 3D 模型中…'; $('#ar-go').hidden = true;
-  $('#ar').classList.add('on'); pushPage('ar');
-  try {
+// 先把模型準備好放進 model-viewer：按 AR 時就能一鍵直接開相機
+const arCache = { key: null, ready: null, done: false, size: null };
+const IN_APP = /Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(navigator.userAgent);   // LINE、FB、IG、微信的內建瀏覽器開不了 AR
+const TOUCH = matchMedia('(pointer: coarse)').matches;
+const arList = all => all ? state.items.filter(i => !i.hidden && !AR_SKIP(PRODUCTS[i.type])) : [cur()].filter(Boolean);
+function prepareAR(list, all) {
+  const key = (all ? 'A' : 'S') + JSON.stringify(list);
+  if (arCache.key === key && arCache.ready) return arCache.ready;
+  arCache.key = key; arCache.done = false;
+  arCache.ready = (async () => {
     await loadMV();
     const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
     const root = new THREE.Group(), set = new THREE.Group();
     for (const x of list) { const g = buildItemModel({ ...x }); if (all) { g.position.set(x.x, x.elev || 0, x.z); g.rotation.y = -x.rot * deg; } set.add(g); }
-    if (all) {                                                  // 整組：以整組的中心當原點，放在地上
-      set.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(set), c = bb.getCenter(new THREE.Vector3());
-      set.position.set(-c.x, 0, -c.z); var size = bb.getSize(new THREE.Vector3());
-    }
+    set.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(set), c = bb.getCenter(new THREE.Vector3()), size = bb.getSize(new THREE.Vector3());
+    if (all) set.position.set(-c.x, 0, -c.z);                   // 整組：以整組的中心當原點，放在地上
     set.scale.setScalar(0.01); root.add(set); plainMats(root); root.updateMatrixWorld(true);   // 公分 → 公尺
     const glb = await new GLTFExporter().parseAsync(root, { binary: true });
     const mv = $('#mv'), url = URL.createObjectURL(new Blob([glb], { type: 'model/gltf-binary' }));
+    if (arCache.key !== key) { URL.revokeObjectURL(url); throw new Error('stale'); }   // 準備途中又換了目標
     if (mv.dataset.url) URL.revokeObjectURL(mv.dataset.url);
     mv.dataset.url = url;
-    const loaded = new Promise((res, rej) => { mv.addEventListener('load', res, { once: true }); mv.addEventListener('error', rej, { once: true }); });
+    // 等模型載好：聽 load 事件，也每 0.1 秒看一下 mv.loaded（有時事件會錯過）
+    const loaded = new Promise((res, rej) => {
+      const t0 = performance.now(), done = () => { clearInterval(iv); res(); };
+      const iv = setInterval(() => { if (mv.src === url && mv.loaded && performance.now() - t0 > 150) done(); else if (performance.now() - t0 > 20000) { clearInterval(iv); rej(new Error('timeout')); } }, 100);
+      mv.addEventListener('load', done, { once: true }); mv.addEventListener('error', e => { clearInterval(iv); rej(e); }, { once: true });
+    });
     mv.src = url; await loaded;
-    $('#ar-go').hidden = !mv.canActivateAR;                     // 電腦或不支援的手機不顯示開相機按鈕
-    $('#ar-msg').textContent = mv.canActivateAR ? (all ? `整組實際範圍 約 寬 ${Math.round(size.x)} × 深 ${Math.round(size.z)} 公分` : `實際尺寸 寬 ${it.w} × 深 ${it.d} × 高 ${it.h} 公分`)
-      : '這台裝置不能開 AR 相機。請用手機（iPhone，或支援 Google ARCore 的 Android）打開網站再試。';
-  } catch (e) { $('#ar-msg').textContent = '模型準備失敗，請再試一次（' + (e.message || e.type || e) + '）'; }
+    if (arCache.key === key) { arCache.done = true; arCache.size = size; }
+    return size;
+  })();
+  arCache.ready.catch(() => { if (arCache.key === key) { arCache.key = null; arCache.ready = null; } });
+  return arCache.ready;
 }
+// 選到家具、改了東西、進展示模式時，背景先準備（只在手機上做）
+let warmT = null;
+function prewarmAR() {
+  if (!TOUCH || IN_APP) return;
+  clearTimeout(warmT);
+  warmT = setTimeout(() => { if (overview) return; const all = showMode && !cur(), list = arList(all); if (list.length) prepareAR(list, all).catch(() => { }); }, 900);
+}
+function arSizeText(list, all, size) {
+  const it = list[0]; return all ? `整組 ${list.length} 件・範圍約 寬 ${Math.round(size.x)} × 深 ${Math.round(size.z)} 公分` : `實際尺寸 寬 ${it.w} × 深 ${it.d} × 高 ${it.h} 公分`;
+}
+function arWarn(t) { $('#ar-warn').hidden = !t; $('#ar-warn').innerHTML = t || ''; }
+async function openAR(all = false) {
+  if (overview) { toast('先點進一個空間，再用相機看'); return; }
+  const list = arList(all);
+  if (!list.length) { toast(all ? '這個空間還沒有可以帶進 AR 的家具' : '先點一件家具'); return; }
+  const T = PRODUCTS[list[0].type], key = (all ? 'A' : 'S') + JSON.stringify(list), mv = $('#mv');
+  $('#ar-title').textContent = all ? '整組放進家裡看看' : `${T.name}放進家裡看看`;
+  $('#ar').classList.add('on'); pushPage('ar'); arWarn(''); $('#ar-copy').hidden = true;
+  // 已經準備好：同一下就直接開相機（不用再按一次）
+  if (arCache.key === key && arCache.done && mv.canActivateAR && !IN_APP) {
+    $('#ar-msg').textContent = arSizeText(list, all, arCache.size); $('#ar-go').disabled = false; $('#ar-go').hidden = false;
+    try { mv.activateAR(); return; } catch (e) { }
+  }
+  $('#ar-msg').textContent = '準備 3D 模型中…'; $('#ar-go').hidden = false; $('#ar-go').disabled = true;
+  try {
+    const size = await prepareAR(list, all);
+    $('#ar-msg').textContent = arSizeText(list, all, size);
+    if (IN_APP) { $('#ar-go').hidden = true; arWarn('<b>這個 App 裡面開不了相機。</b><br>請點右上角「⋯」或「分享」→ 選「用瀏覽器開啟」（iPhone 用 Safari、Android 用 Chrome），再按一次 AR。'); }
+    else if (!mv.canActivateAR) {
+      $('#ar-go').hidden = true;
+      if (TOUCH) arWarn('這支手機不支援 AR 相機。<br>iPhone 請用 Safari 打開；Android 需要支援 Google ARCore 的手機，並用 Chrome 打開。');
+      else { arWarn('電腦沒有 AR 相機。按下面的按鈕複製連結，傳到手機打開，就能把家具放進家裡。'); $('#ar-copy').hidden = false; }
+    } else $('#ar-go').disabled = false;
+  } catch (e) { if (e && e.message === 'stale') return; $('#ar-msg').textContent = ''; arWarn('模型準備失敗，請關掉再試一次。'); $('#ar-go').hidden = true; }
+}
+$('#ar-go').onclick = () => { const mv = $('#mv'); if (mv.canActivateAR) mv.activateAR(); };
+$('#mv').addEventListener('ar-status', e => {
+  if (e.detail && e.detail.status === 'failed') arWarn('開啟相機失敗。請確認已允許這個網站使用相機；Android 需要支援 Google ARCore 的手機和 Chrome。');
+});
+$('#ar-copy').onclick = async () => {                         // 電腦：連結傳到手機，打開就是展示畫面＋AR
+  const url = location.origin + location.pathname + '?show=1&ar=1#p=' + encode();
+  try { await navigator.clipboard.writeText(url); toast('已複製，用 LINE 傳到手機後，記得用瀏覽器打開'); } catch (e) { prompt('複製這個連結到手機打開：', url); }
+};
 function closeAR(byPop) { $('#ar').classList.remove('on'); if (!byPop) dropPage(); }
 $('#s-ar').onclick = () => openAR(false); $('#ar-all').onclick = () => openAR(true); $('#ar-x').onclick = () => closeAR(false);
 $('#s-rot').onclick = rotate; $('#s-del').onclick = remove; $('#s-dup').onclick = duplicate; $('#s-close').onclick = () => { if (isMob() && selId) { panelOpen = false; buildSelPanel(); syncMobile(); } else select(null); };   // 手機：關面板回到動作列
@@ -1669,7 +1737,7 @@ function syncMobile() {
 $('#mbar').addEventListener('click', e => {
   const b = e.target.closest('[data-a]'); if (!b || !cur()) return;
   const a = b.dataset.a;
-  if (a === 'edit') select(selId, true); else if (a === 'rot') rotate(); else if (a === 'dup') duplicate(); else if (a === 'del') remove();
+  if (a === 'edit') select(selId, true); else if (a === 'ar') openAR(false); else if (a === 'rot') rotate(); else if (a === 'dup') duplicate(); else if (a === 'del') remove();
   syncMobile();
 });
 // 「⋯」選單
@@ -1702,8 +1770,9 @@ function enterShow() {
   showMode = true; document.body.classList.add('show-mode'); select(null);
   $('#more-menu').classList.remove('on'); hideFlow();
   if (view === 'top') setView('orbit'); else setView(view);
-  renderShowSpaces(); renderShowCard(); syncChip(); setTimeout(() => { resize(); fitCamera(); updateViewOffset(); }, 30);
-  if (!document.body.classList.contains('show-locked')) toast('展示中：客人點家具可以換顏色、用相機看');
+  renderShowSpaces(); renderShowCard(); syncChip(); setTimeout(() => { resize(); fitCamera(); updateViewOffset(); }, 30); prewarmAR();
+  if (IN_APP) toast('要用相機看，請點右上角「⋯」→ 用瀏覽器開啟');
+  else if (!document.body.classList.contains('show-locked')) toast('展示中：客人點家具可以換顏色、用相機看');
 }
 function exitShow() {
   showMode = false; document.body.classList.remove('show-mode'); $('#show-card').hidden = true;
@@ -1794,7 +1863,7 @@ function ovDown(e) {
   ovDrag = { i, dx: sp.pos.x - pt.x, dz: sp.pos.z - pt.z, x0: e.clientX, y0: e.clientY, moved: false };
 }
 function ovMove(e) {
-  if (!ovDrag || showMode) return;                          // 展示中不能拖房間
+  return;                                                   // 房間照平面圖格局固定，不能拖（使用者 2026-10-17）
   if (!ovDrag.moved && Math.hypot(e.clientX - ovDrag.x0, e.clientY - ovDrag.y0) < 6) return;
   ovDrag.moved = true; const pt = dragPt(e); if (!pt) return;
   const sp = project.spaces[ovDrag.i]; sp.pos = { x: Math.round((pt.x + ovDrag.dx) / 5) * 5, z: Math.round((pt.z + ovDrag.dz) / 5) * 5 };
@@ -2247,7 +2316,7 @@ else if (project.spaces.length > 1) enterOverview();   // 有兩個以上空間�
 {
   const q = START_Q, shared = START_SHARED || q.get('show') === '1';
   syncChip();
-  if (q.get('show') === '1') { document.body.classList.add('show-locked'); enterShow(); }   // 客人打開的連結：只有展示畫面
+  if (q.get('show') === '1') { document.body.classList.add('show-locked'); enterShow(); if (q.get('ar') === '1') setTimeout(() => openAR(true), 600); }   // 客人打開的連結：只有展示畫面
   else if (!q.get('proj') && !shared && (project.started || projIdx.list.length > 1)) openHome();   // 業務一打開：先看我的客人
 }
 $('#loading').remove();
