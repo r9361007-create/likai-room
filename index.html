@@ -229,6 +229,71 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden;b
 /* ---------- 還沒設門窗的提示 ---------- */
 .setupchip{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:5;border:0;border-radius:999px;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--accent);font-size:13px;font-weight:600;padding:8px 16px;box-shadow:0 6px 18px rgba(0,67,106,.12);white-space:nowrap}
 .setupchip[hidden]{display:none}
+/* ---------- 匯入平面圖 ---------- */
+.plan-box{width:min(1180px,100%);height:min(820px,100%)}
+.plan-body{display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:0;flex:1}
+.pl-stage{position:relative;background:#eef2f6;min-height:0;overflow:hidden;touch-action:none}
+#pl-cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.pl-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:13px;background:#eef2f6}
+.pl-empty[hidden]{display:none}
+.pl-file{padding:13px 26px;font-size:15px;cursor:pointer}
+.pl-zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px}
+.pl-zoom button{width:38px;height:38px;border:0;border-radius:10px;background:rgba(255,255,255,.9);box-shadow:0 4px 12px rgba(0,67,106,.14);font-size:18px;color:var(--brand)}
+.pl-pop{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:#fff;border-radius:16px;box-shadow:0 12px 30px rgba(0,67,106,.25);padding:12px 14px;width:min(420px,calc(100% - 24px));z-index:3}
+.pl-pop[hidden]{display:none}
+.pl-pop b{display:block;font-size:14px;margin-bottom:8px}
+.pl-pbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pl-pbtns button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:9px 0;font-size:14px}
+.pl-pbtns button:hover,.pl-pbtns button.on{border-color:var(--accent);background:var(--accent);color:#fff}
+.pl-del{margin-top:8px;color:var(--danger);font-size:12px}
+.pl-lenrow{display:flex;align-items:center;gap:8px}
+.pl-lenrow input{flex:1;min-width:0;font-size:18px;padding:8px 12px;border:1.5px solid var(--accent);border-radius:10px}
+.pl-lenrow span{color:var(--muted)}
+.pl-side{padding:14px 16px;overflow:auto;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.pl-tools{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pl-tools button{display:flex;align-items:center;gap:7px;border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:9px 10px;font-size:14px;color:var(--ink)}
+.pl-tools button i{width:12px;height:12px;border-radius:3px;flex:none}
+.pl-tools button.on{border-color:var(--accent);background:var(--accent-soft,#e6eff6);font-weight:600;color:var(--accent)}
+.pl-tools .pl-scale-t{grid-column:span 2}
+.pl-tip{margin:0;min-height:38px}
+.pl-sc{background:var(--surface);border-radius:12px;padding:10px 12px;font-size:13px}
+.pl-sc-txt{font-weight:600;margin-bottom:6px;color:var(--accent)}
+.pl-sc label{display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:12px}
+.pl-sc input{font-size:16px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.pl-rooms{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.pl-rooms li{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:8px 10px;cursor:pointer}
+.pl-rooms li b{font-size:14px}
+.pl-rooms li span{font-size:12px;color:var(--muted);margin-left:auto;text-align:right}
+@media (max-width:760px){
+  .plan-box{height:100%;border-radius:0}
+  #plan{padding:0}
+  .plan-body{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}
+  .pl-side{border-left:0;border-top:1px solid var(--line);max-height:38vh;padding:10px 12px}
+  .pl-tools{grid-template-columns:repeat(3,1fr)}
+  .pl-tools .pl-scale-t{grid-column:span 1}
+  .pl-tools button{padding:8px 6px;font-size:13px;justify-content:center}
+  .pl-pbtns button{padding:10px 0}
+  #plan .quick-foot{flex-direction:row}
+  #plan .quick-foot .btn{padding:10px 14px}
+}
+/* ---------- 走進去逛 ---------- */
+.walkbtn{display:none;position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:5;align-items:center;gap:8px;border:0;border-radius:999px;background:var(--yellow);color:var(--yellow-ink);font-weight:700;font-size:15px;padding:11px 22px;box-shadow:0 10px 26px rgba(0,67,106,.22);white-space:nowrap}
+body.ov-mode .walkbtn{display:flex}
+body.ov-mode .setupchip{display:none}
+body.show-mode .walkbtn{top:16px}
+.walk-ui{display:none}
+body.walk-mode .walk-ui{display:block}
+body.walk-mode .topbar,body.walk-mode aside,body.walk-mode .toolbar,body.walk-mode .wallbtn,body.walk-mode .gyrobtn,body.walk-mode .seg,body.walk-mode .help,body.walk-mode .walkbtn,body.walk-mode .show-ui,body.walk-mode .mbar,body.walk-mode .more-menu,body.walk-mode #sel{display:none!important}
+body.walk-mode .app{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"main"}
+body.walk-mode main{cursor:grab}
+.walk-exit{position:absolute;top:14px;left:14px;z-index:6;border:0;border-radius:999px;background:rgba(255,255,255,.85);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:9px 16px;font-size:14px;color:var(--ink);box-shadow:0 6px 18px rgba(0,67,106,.14)}
+.walk-tip{position:absolute;left:50%;top:16px;transform:translateX(-50%);z-index:5;background:rgba(0,67,106,.82);color:#fff;font-size:13px;padding:7px 14px;border-radius:999px;white-space:nowrap;pointer-events:none;transition:opacity .6s}
+.walk-tip.fade{opacity:0}
+.walk-pad{position:absolute;right:18px;bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:6;display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:6px}
+.walk-pad button{border:0;border-radius:14px;background:rgba(255,255,255,.85);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:20px;color:var(--brand);box-shadow:0 6px 18px rgba(0,67,106,.14);touch-action:none;user-select:none;-webkit-user-select:none}
+.walk-pad button:active{background:var(--brand);color:#fff}
+.walk-pad [data-w="f"]{grid-column:2;grid-row:1}.walk-pad [data-w="l"]{grid-column:1;grid-row:2}.walk-pad [data-w="b"]{grid-column:2;grid-row:2}.walk-pad [data-w="r"]{grid-column:3;grid-row:2}
+@media (max-width:760px){ .walk-tip{top:62px;font-size:12px} }
 /* ---------- 給客人看（簡報模式） ---------- */
 .show-ui{display:none}
 body.show-mode .show-ui{display:block}
@@ -492,6 +557,12 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
         <div id="s-opts"></div>
       </div>
     </div>
+    <button class="walkbtn" id="walk-btn"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="13" cy="4" r="2" fill="currentColor"/><path d="M10 21l2-6 3 3v3M8 12l2-4h4l3 4M12 8l-1 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>走進去逛逛</button>
+    <div class="walk-ui" id="walk-ui">
+      <button class="walk-exit" id="walk-exit">← 回總覽</button>
+      <div class="walk-tip" id="walk-tip">拖曳看四周・點地板走過去・點門推開</div>
+      <div class="walk-pad" id="walk-pad"><button data-w="f" aria-label="往前走">▲</button><button data-w="l" aria-label="往左轉">⟲</button><button data-w="b" aria-label="往後退">▼</button><button data-w="r" aria-label="往右轉">⟳</button></div>
+    </div>
     <button class="setupchip" id="setup-chip" hidden>這間還沒設定門窗・點這裡設定 ›</button>
     <div class="show-ui" id="show-ui">
       <button class="show-exit" id="show-exit">結束展示</button>
@@ -527,8 +598,48 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
         </div>
         <div class="setup-foot quick-foot">
           <button class="btn" id="q-back">← 返回</button>
+          <button class="btn" id="q-plan">匯入平面圖</button>
           <button class="btn" id="q-manual">不知道，我自己輸入</button>
           <button class="btn pri" id="q-go">用這個開始</button>
+        </div>
+      </div>
+    </div>
+    <div class="setup" id="plan">
+      <div class="setup-box plan-box">
+        <div class="setup-head"><div><b>匯入平面圖</b><div class="hint">照著建商平面圖框出每個房間、點上門窗，就能變成 3D</div></div><button class="x" id="pl-x" aria-label="關閉">×</button></div>
+        <div class="plan-body">
+          <div class="pl-stage" id="pl-stage">
+            <canvas id="pl-cv"></canvas>
+            <div class="pl-empty" id="pl-empty">
+              <label class="btn pri pl-file">選擇平面圖圖片<input type="file" accept="image/*" id="pl-file" hidden></label>
+              <p>建商 DM 拍照、截圖、存下來的圖都可以</p>
+            </div>
+            <div class="pl-zoom" id="pl-zoom"><button data-z="1.25" aria-label="放大">＋</button><button data-z="0.8" aria-label="縮小">－</button><button data-z="0" aria-label="整張">⤢</button></div>
+            <div class="pl-pop" id="pl-pick" hidden><b>這間是？</b><div class="pl-pbtns">
+              <button data-n="客廳" data-t="living">客廳</button><button data-n="餐廳" data-t="dining">餐廳</button><button data-n="客餐廳" data-t="ld">客餐廳</button><button data-n="廚房" data-t="dining">廚房</button>
+              <button data-n="主臥" data-t="bedroom">主臥</button><button data-n="臥室" data-t="bedroom">臥室</button><button data-n="和室" data-t="bedroom">和室</button><button data-n="書房" data-t="bedroom">書房</button></div>
+              <button class="link pl-del" id="pl-pick-del">刪掉這間</button></div>
+            <div class="pl-pop" id="pl-len" hidden><b>這段是幾公分？</b>
+              <div class="pl-lenrow"><input type="text" inputmode="decimal" id="pl-len-v" placeholder="例如 420" autocomplete="off"><span>公分</span><button class="btn pri" id="pl-len-ok">確定</button></div></div>
+          </div>
+          <div class="pl-side">
+            <div class="pl-tools" id="pl-tools">
+              <button data-t="room" class="on"><i style="background:#00436a"></i>框房間</button><button data-t="door"><i style="background:#c9a227"></i>房門</button>
+              <button data-t="window"><i style="background:#4f9cc6"></i>窗戶</button><button data-t="floor"><i style="background:#2f7fb0"></i>落地窗</button>
+              <button data-t="scale" class="pl-scale-t"><i style="background:#F9E573"></i>量比例尺</button>
+            </div>
+            <p class="hint pl-tip" id="pl-tip"></p>
+            <div class="pl-sc">
+              <div id="pl-sc-txt" class="pl-sc-txt">還沒設定比例</div>
+              <label>不知道尺寸？輸入室內坪數<input type="text" inputmode="decimal" id="pl-ping" placeholder="例如 28" autocomplete="off"></label>
+            </div>
+            <ul class="pl-rooms" id="pl-rooms"></ul>
+          </div>
+        </div>
+        <div class="setup-foot quick-foot">
+          <button class="btn" id="pl-back">← 返回</button>
+          <button class="btn" id="pl-undo" style="margin-left:auto">復原</button>
+          <button class="btn pri" id="pl-go" disabled>建立 3D 空間</button>
         </div>
       </div>
     </div>
@@ -852,8 +963,9 @@ function buildOpening(g, op) {
     const leaf = new THREE.Group(), lw = op.w - 2 * F, hingeL = op.hinge !== 'right';
     lbox(leaf, 0, lw, 0.5, op.h - F - 0.5, -2, 2, M.wood);
     const hx = hingeL ? lw - 8 : 8; lbox(leaf, hx - 1.5, hx + 1.5, 95, 110, 2, 6, M.alu); lbox(leaf, hx - 1.5, hx + 1.5, 95, 110, -6, -2, M.alu);
-    leaf.position.set(hingeL ? x0 + F : x1 - F - lw, 0, -T / 2);
-    g.add(leaf);
+    const pivot = new THREE.Group();                 // 門軸：逛的時候點門，門片繞這裡轉開
+    pivot.position.set(hingeL ? x0 + F : x1 - F, 0, -T / 2); leaf.position.x = hingeL ? 0 : -lw; pivot.add(leaf); g.add(pivot);
+    pivot.userData.door = { open: (hingeL ? -1 : 1) * (op.swing === 'out' ? -1 : 1) * Math.PI / 2 * 0.92, ang: 0, target: 0, cx: hingeL ? lw / 2 : -lw / 2, hl: hingeL };
     if (op.swing !== 'out') {                    // 地上畫出開門的範圍
       const r = lw, hx0 = hingeL ? x0 + F : x1 - F;
       const sec = new THREE.Mesh(new THREE.CircleGeometry(r, 24, hingeL ? Math.PI * 1.5 : Math.PI, Math.PI / 2), M.zone);
@@ -964,6 +1076,8 @@ function zoneBoxes() {
 
 /* ---------- 視角：3D 鳥瞰／平面／人視角 ---------- */
 let view = 'orbit';
+const walk = { on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
+if (location.search.includes("debug")) window.__dbg = { walk, get cam() { return persp; } };   // 除錯用
 function fitCamera() {
   if (overview) {                                            // 總覽：從斜上方看整間房子
     const b = new THREE.Box3().setFromObject(houseGroup), c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3());
@@ -1555,6 +1669,7 @@ const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 function dragPt(e) { setNdc(e); const p = new THREE.Vector3(); return ray.ray.intersectPlane(dragPlane, p) ? p : null; }
 canvas.addEventListener('pointerdown', e => {           // 要比 OrbitControls 先註冊，按到家具時才能擋住視角旋轉
   down = { x: e.clientX, y: e.clientY };
+  if (walk.on) { walkDown(e); e.stopImmediatePropagation(); return; }
   if (overview) { ovDown(e); return; }
   if (gyro.on) { gyro.lastX = e.clientX; return; }          // 環視中：只走路、轉方向，不選家具
   setNdc(e);
@@ -1569,6 +1684,7 @@ canvas.addEventListener('pointerdown', e => {           // 要比 OrbitControls 
   if (selId !== it.id) select(it.id);
 }, { capture: true });
 canvas.addEventListener('pointermove', e => {
+  if (walk.on) { walkMove(e); return; }
   if (overview) { ovMove(e); return; }
   if (gyro.on && down && !drag) { gyro.offset += (e.clientX - (gyro.lastX ?? e.clientX)) * 0.006; gyro.lastX = e.clientX; return; }   // 手指左右滑：轉方向
   if (!drag) return;
@@ -1580,6 +1696,7 @@ canvas.addEventListener('pointermove', e => {
 });
 let lastTap = {};
 canvas.addEventListener('pointerup', e => {
+  if (walk.on) { walkUp(e); return; }
   if (overview) { ovUp(); return; }
   if (drag) {
     if (drag.moved) { undoStack.push(drag.before); $('#undo').disabled = false; save(); }
@@ -1681,6 +1798,7 @@ function startProject(spaces, at = 0) {
   const nm = ($('#q-name').value || '').trim(), m = projMeta(); if (nm && m) { m.name = nm; writeIdx(); renderProjects(); }
   project = { cur: at, started: true, styleAsked: true, spaces };           // 風格不再自動跳出，想要再到「房間」選
   closeQuick(true); dropPage();
+  if (overview) exitOverview(at);                                         // 原本停在總覽：先出來，下面才會用新的房間重建總覽
   if (spaces.length > 1 && !startProject.direct) { switchSpace(at); enterOverview(); } else switchSpace(at);   // 直接開始擺：門窗之後想補再補
   startProject.direct = false; toast('開始擺吧！門窗和裝潢風格之後想補再補');
 }
@@ -1691,6 +1809,220 @@ for (const id of ['q-rooms', 'q-halls']) $('#' + id).addEventListener('click', e
 $('#q-ping').addEventListener('input', renderEstimate);
 $('#q-go').onclick = () => startProject(qSpaces());
 $('#q-manual').onclick = () => startProject(defaultProject().spaces);
+
+/* ================= 匯入平面圖 ================= */
+// 座標都用「圖片像素」記；pl.v 是圖片 → 畫面的換算（s 倍、位移 ox, oy）
+const pl = { img: null, rooms: [], marks: [], line: null, cmPerPx: 0, tool: 'room', v: { s: 1, ox: 0, oy: 0 }, draft: null, hist: [], pick: -1, ptrs: new Map(), pinch: null };
+const plcv = $('#pl-cv'), plx = plcv.getContext('2d');
+const PL_TIPS = {
+  room: '從房間的一個角拖到對角，框出一間房（照牆的中線框；相鄰的房間邊線會自動對齊）',
+  door: '點在牆線上，加一扇房門。兩間房共用的牆，門會讓兩間相通',
+  window: '點在牆線上加一扇窗戶',
+  floor: '點在牆線上加一扇落地窗',
+  scale: '沿著圖上一段標了尺寸的線拖一條，再輸入它是幾公分',
+};
+function openPlan() { $('#plan').classList.add('on'); pushPage('plan'); setTimeout(() => { plFit(); plDraw(); }, 30); plSide(); }
+function closePlan(byPop, done) {
+  $('#plan').classList.remove('on'); if (done) return;
+  const backToQuick = $('#quick').classList.contains('on') && project.started;   // 回到「歡迎」畫面，它的返回鍵要還在
+  if (byPop) { if (backToQuick) pushPage('quick'); } else if (backToQuick) history.replaceState({ m: 'quick' }, ''); else dropPage();
+}
+$('#q-plan').onclick = openPlan; $('#pl-x').onclick = () => closePlan(); $('#pl-back').onclick = () => closePlan();
+$('#pl-file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const im = new Image(); im.onload = () => { pl.img = im; pl.rooms = []; pl.marks = []; pl.line = null; pl.cmPerPx = 0; pl.hist = []; $('#pl-empty').hidden = true; plFit(); plDraw(); plSide(); };
+  im.src = URL.createObjectURL(f); e.target.value = '';
+});
+function plFit() {
+  const r = plcv.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+  plcv.width = Math.max(1, r.width * dpr); plcv.height = Math.max(1, r.height * dpr);
+  if (!pl.img) return;
+  const s = Math.min((r.width - 30) / pl.img.width, (r.height - 30) / pl.img.height);
+  pl.v = { s, ox: (r.width - pl.img.width * s) / 2, oy: (r.height - pl.img.height * s) / 2 };
+}
+new ResizeObserver(() => { if ($('#plan').classList.contains('on')) { const r = plcv.getBoundingClientRect(), dpr = devicePixelRatio || 1; plcv.width = Math.max(1, r.width * dpr); plcv.height = Math.max(1, r.height * dpr); plDraw(); } }).observe(plcv);
+const plToImg = e => { const r = plcv.getBoundingClientRect(); return { x: (e.clientX - r.left - pl.v.ox) / pl.v.s, y: (e.clientY - r.top - pl.v.oy) / pl.v.s }; };
+// 比例：量過一段就用那段；沒量但有坪數，就用「框出來的總面積＝室內坪數」反推
+function plScale() {
+  if (pl.cmPerPx) return pl.cmPerPx;
+  const ping = toNum($('#pl-ping').value), A = pl.rooms.reduce((a, r) => a + (r.x1 - r.x0) * (r.y1 - r.y0), 0);
+  return ping > 0 && A > 0 ? Math.sqrt(ping * PING / A) : 0;
+}
+const OPW = { door: 90, window: 150, floor: 240 };
+const plCol = { door: '#c9a227', window: '#4f9cc6', floor: '#2f7fb0' };
+function plDraw() {
+  const dpr = devicePixelRatio || 1, W = plcv.width, H = plcv.height, { s, ox, oy } = pl.v;
+  plx.setTransform(1, 0, 0, 1, 0, 0); plx.clearRect(0, 0, W, H);
+  if (!pl.img) return;
+  plx.setTransform(dpr * s, 0, 0, dpr * s, dpr * ox, dpr * oy);
+  plx.drawImage(pl.img, 0, 0);
+  const lw = 1 / s, sc = plScale();
+  pl.rooms.forEach((r, i) => {
+    plx.fillStyle = i === pl.pick ? 'rgba(249,229,115,.35)' : 'rgba(0,67,106,.14)'; plx.fillRect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
+    plx.strokeStyle = '#00436a'; plx.lineWidth = 2.5 * lw; plx.strokeRect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
+    const cx = (r.x0 + r.x1) / 2, cy = (r.y0 + r.y1) / 2, fz = 14 * lw;
+    plx.font = `bold ${fz}px "Noto Sans TC",sans-serif`; plx.textAlign = 'center';
+    const t2 = sc ? `${Math.round((r.x1 - r.x0) * sc - WALL_T)} × ${Math.round((r.y1 - r.y0) * sc - WALL_T)}` : '';
+    const tw = Math.max(plx.measureText(r.name).width, t2 ? plx.measureText(t2).width * 0.85 : 0) + 14 * lw;
+    plx.fillStyle = 'rgba(0,67,106,.9)'; plx.beginPath(); plx.roundRect(cx - tw / 2, cy - fz * (t2 ? 1.25 : 0.95), tw, fz * (t2 ? 2.5 : 1.7), 6 * lw); plx.fill();
+    plx.fillStyle = '#fff'; plx.fillText(r.name, cx, cy + (t2 ? -fz * 0.15 : fz * 0.35));
+    if (t2) { plx.fillStyle = '#F9E573'; plx.font = `${fz * 0.8}px "Noto Sans TC",sans-serif`; plx.fillText(t2, cx, cy + fz * 0.95); }
+  });
+  for (const m of pl.marks) {                       // 門窗：沿著牆畫一段色條
+    const half = sc ? OPW[m.kind] / sc / 2 : 18 * lw;
+    plx.strokeStyle = plCol[m.kind]; plx.lineWidth = 7 * lw; plx.lineCap = 'butt'; plx.beginPath();
+    if (m.horiz) { plx.moveTo(m.x - half, m.y); plx.lineTo(m.x + half, m.y); } else { plx.moveTo(m.x, m.y - half); plx.lineTo(m.x, m.y + half); }
+    plx.stroke();
+  }
+  const ln = pl.draft && pl.draft.kind === 'line' ? pl.draft : pl.line;
+  if (ln) {
+    plx.strokeStyle = '#e0b400'; plx.lineWidth = 3 * lw; plx.setLineDash([8 * lw, 5 * lw]); plx.beginPath(); plx.moveTo(ln.ax, ln.ay); plx.lineTo(ln.bx, ln.by); plx.stroke(); plx.setLineDash([]);
+    for (const [x, y] of [[ln.ax, ln.ay], [ln.bx, ln.by]]) { plx.fillStyle = '#e0b400'; plx.beginPath(); plx.arc(x, y, 5 * lw, 0, 7); plx.fill(); }
+  }
+  if (pl.draft && pl.draft.kind === 'rect') {
+    const d = pl.draft; plx.fillStyle = 'rgba(249,229,115,.3)'; plx.strokeStyle = '#00436a'; plx.lineWidth = 2 * lw; plx.setLineDash([6 * lw, 4 * lw]);
+    plx.fillRect(Math.min(d.ax, d.bx), Math.min(d.ay, d.by), Math.abs(d.bx - d.ax), Math.abs(d.by - d.ay)); plx.strokeRect(Math.min(d.ax, d.bx), Math.min(d.ay, d.by), Math.abs(d.bx - d.ax), Math.abs(d.by - d.ay)); plx.setLineDash([]);
+  }
+}
+// 新房間的邊靠近已經框好的房間邊線時，自動對齊（相鄰房間共用一道牆）
+function plSnap(v, axis) {
+  const tol = 10 / pl.v.s; let best = v, bd = tol;
+  for (const r of pl.rooms) for (const e of axis === 'x' ? [r.x0, r.x1] : [r.y0, r.y1]) if (Math.abs(e - v) < bd) { bd = Math.abs(e - v); best = e; }
+  return best;
+}
+// 點的位置最靠近哪個房間的哪道牆（門窗會吸到牆線上）
+function plEdge(x, y) {
+  const tol = 22 / pl.v.s; let best = null;
+  for (const r of pl.rooms) {
+    for (const [horiz, e, a, b] of [[true, r.y0, r.x0, r.x1], [true, r.y1, r.x0, r.x1], [false, r.x0, r.y0, r.y1], [false, r.x1, r.y0, r.y1]]) {
+      const along = horiz ? x : y, dist = Math.abs((horiz ? y : x) - e);
+      if (along < a - tol || along > b + tol || dist > tol || (best && dist >= best.dist)) continue;
+      best = { horiz, dist, x: horiz ? clamp(x, a, b) : e, y: horiz ? e : clamp(y, a, b) };
+    }
+  }
+  return best;
+}
+function plSide() {
+  $('#pl-tools').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === pl.tool));
+  $('#pl-tip').textContent = pl.img ? PL_TIPS[pl.tool] : '先選一張平面圖圖片';
+  const sc = plScale();
+  const tot = pl.rooms.reduce((a, r) => a + Math.max(0, (r.x1 - r.x0) * sc - WALL_T) * Math.max(0, (r.y1 - r.y0) * sc - WALL_T), 0) / PING;
+  $('#pl-sc-txt').textContent = pl.cmPerPx ? `比例已設定・房間合計約 ${tot.toFixed(1)} 坪` : sc ? `用坪數換算比例・房間合計約 ${tot.toFixed(1)} 坪` : '還沒設定比例（量一段，或輸入坪數）';
+  $('#pl-rooms').innerHTML = pl.rooms.map((r, i) => `<li data-i="${i}"><b>${esc(r.name)}</b><span>${sc ? `寬 ${Math.round((r.x1 - r.x0) * sc - WALL_T)} × 深 ${Math.round((r.y1 - r.y0) * sc - WALL_T)}` : '設好比例就會顯示尺寸'}</span></li>`).join('')
+    || '<li style="cursor:default;color:var(--muted);font-size:13px">還沒有房間。用「框房間」在圖上拖出來</li>';
+  $('#pl-go').disabled = !(pl.rooms.length && sc);
+  $('#pl-undo').disabled = !pl.hist.length;
+}
+$('#pl-tools').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; pl.tool = b.dataset.t; $('#pl-pick').hidden = true; pl.pick = -1; plSide(); plDraw(); });
+$('#pl-ping').addEventListener('input', () => { plSide(); plDraw(); });
+$('#pl-rooms').addEventListener('click', e => { const li = e.target.closest('[data-i]'); if (!li) return; plOpenPick(+li.dataset.i); });
+function plOpenPick(i) { pl.pick = i; $('#pl-len').hidden = true; $('#pl-pick').hidden = false; plDraw(); }
+$('#pl-pick').addEventListener('click', e => {
+  const b = e.target.closest('[data-n]'); if (!b || pl.pick < 0) return;
+  const r = pl.rooms[pl.pick], base = b.dataset.n, used = pl.rooms.filter((x, j) => j !== pl.pick && x.name.replace(/ \d+$/, '') === base).length;
+  r.name = used ? `${base} ${used + 1}` : base; r.type = b.dataset.t;
+  $('#pl-pick').hidden = true; pl.pick = -1; plSide(); plDraw();
+});
+$('#pl-pick-del').onclick = () => { if (pl.pick < 0) return; const r = pl.rooms.splice(pl.pick, 1)[0]; pl.hist.push({ t: 'del', r, i: pl.pick }); $('#pl-pick').hidden = true; pl.pick = -1; plSide(); plDraw(); };
+$('#pl-len-ok').onclick = () => {
+  const v = toNum($('#pl-len-v').value), ln = pl.line; if (!(v > 0) || !ln) { $('#pl-len-v').focus(); return; }
+  pl.cmPerPx = v / Math.hypot(ln.bx - ln.ax, ln.by - ln.ay); $('#pl-len').hidden = true; pl.tool = 'room'; plSide(); plDraw();
+  toast('比例設好了，房間尺寸都換算出來了');
+};
+$('#pl-len-v').addEventListener('keydown', e => { if (e.key === 'Enter') $('#pl-len-ok').click(); });
+$('#pl-undo').onclick = () => {
+  const h = pl.hist.pop(); if (!h) return;
+  if (h.t === 'room') pl.rooms.pop(); else if (h.t === 'mark') pl.marks.pop(); else if (h.t === 'del') pl.rooms.splice(h.i, 0, h.r);
+  else if (h.t === 'line') { pl.line = h.prev; pl.cmPerPx = h.prevS; }
+  $('#pl-pick').hidden = $('#pl-len').hidden = true; pl.pick = -1; plSide(); plDraw();
+};
+$('#pl-zoom').addEventListener('click', e => {
+  const b = e.target.closest('[data-z]'); if (!b || !pl.img) return; const z = +b.dataset.z;
+  if (!z) plFit(); else { const r = plcv.getBoundingClientRect(); plZoom(z, r.width / 2, r.height / 2); }
+  plDraw();
+});
+function plZoom(k, cx, cy) { const v = pl.v, ns = clamp(v.s * k, 0.05, 20); k = ns / v.s; v.ox = cx - (cx - v.ox) * k; v.oy = cy - (cy - v.oy) * k; v.s = ns; }
+plcv.addEventListener('wheel', e => { if (!pl.img) return; e.preventDefault(); const r = plcv.getBoundingClientRect(); plZoom(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - r.left, e.clientY - r.top); plDraw(); }, { passive: false });
+plcv.addEventListener('pointerdown', e => {
+  if (!pl.img) return; plcv.setPointerCapture(e.pointerId);
+  pl.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pl.ptrs.size === 2) {                         // 兩指：縮放、移動圖
+    pl.draft = null; const [a, b] = [...pl.ptrs.values()];
+    pl.pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 }; plDraw(); return;
+  }
+  const q = plToImg(e);
+  if (e.button === 1 || e.button === 2 || e.altKey) { pl.draft = { kind: 'pan', x: e.clientX, y: e.clientY }; return; }   // 中鍵／右鍵／Alt：拖動圖
+  if (pl.tool === 'room') { const x = plSnap(q.x, 'x'), y = plSnap(q.y, 'y'); pl.draft = { kind: 'rect', ax: x, ay: y, bx: x, by: y, sx: e.clientX, sy: e.clientY }; }
+  else if (pl.tool === 'scale') pl.draft = { kind: 'line', ax: q.x, ay: q.y, bx: q.x, by: q.y };
+  else pl.draft = { kind: 'tap', sx: e.clientX, sy: e.clientY };
+  $('#pl-pick').hidden = true; pl.pick = -1;
+});
+plcv.addEventListener('pointermove', e => {
+  if (!pl.ptrs.has(e.pointerId)) return; pl.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pl.pinch && pl.ptrs.size >= 2) {
+    const [a, b] = [...pl.ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2, r = plcv.getBoundingClientRect();
+    pl.v.ox += cx - pl.pinch.cx; pl.v.oy += cy - pl.pinch.cy; plZoom(d / pl.pinch.d, cx - r.left, cy - r.top);
+    pl.pinch = { d, cx, cy }; plDraw(); return;
+  }
+  const d = pl.draft; if (!d) return;
+  if (d.kind === 'pan') { pl.v.ox += e.clientX - d.x; pl.v.oy += e.clientY - d.y; d.x = e.clientX; d.y = e.clientY; }
+  else if (d.kind === 'rect') { const q = plToImg(e); d.bx = plSnap(q.x, 'x'); d.by = plSnap(q.y, 'y'); }
+  else if (d.kind === 'line') { const q = plToImg(e); d.bx = q.x; d.by = q.y; if (e.shiftKey || true) { if (Math.abs(d.bx - d.ax) * 8 < Math.abs(d.by - d.ay)) d.bx = d.ax; else if (Math.abs(d.by - d.ay) * 8 < Math.abs(d.bx - d.ax)) d.by = d.ay; } }   // 接近水平／垂直就拉直
+  plDraw();
+});
+function plUp(e) {
+  pl.ptrs.delete(e.pointerId);
+  if (pl.pinch) { if (pl.ptrs.size < 2) pl.pinch = null; pl.draft = null; return; }
+  const d = pl.draft; pl.draft = null; if (!d) return;
+  if (d.kind === 'rect') {
+    const r = { x0: Math.min(d.ax, d.bx), y0: Math.min(d.ay, d.by), x1: Math.max(d.ax, d.bx), y1: Math.max(d.ay, d.by) };
+    if ((r.x1 - r.x0) * pl.v.s < 20 || (r.y1 - r.y0) * pl.v.s < 20) {    // 只是點一下：點到哪間就改那間的名稱
+      const q = plToImg(e), i = pl.rooms.findIndex(o => q.x > o.x0 && q.x < o.x1 && q.y > o.y0 && q.y < o.y1);
+      if (i >= 0) plOpenPick(i); plDraw(); return;
+    }
+    const first = !pl.rooms.length; r.name = first ? '客廳' : '臥室'; r.type = first ? 'living' : 'bedroom';
+    if (!first) { const n = pl.rooms.filter(o => o.name.replace(/ \d+$/, '') === '臥室').length; if (n) r.name = '臥室 ' + (n + 1); }
+    pl.rooms.push(r); pl.hist.push({ t: 'room' }); plOpenPick(pl.rooms.length - 1);
+  } else if (d.kind === 'line') {
+    if (Math.hypot(d.bx - d.ax, d.by - d.ay) * pl.v.s < 15) { plDraw(); return; }
+    pl.hist.push({ t: 'line', prev: pl.line, prevS: pl.cmPerPx }); pl.line = { ax: d.ax, ay: d.ay, bx: d.bx, by: d.by };
+    $('#pl-pick').hidden = true; $('#pl-len').hidden = false; $('#pl-len-v').value = ''; setTimeout(() => $('#pl-len-v').focus(), 50);
+  } else if (d.kind === 'tap' && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 8) {
+    const q = plToImg(e), ed = plEdge(q.x, q.y);
+    if (!ed) toast(pl.rooms.length ? '門窗要點在房間的牆線上' : '先框出房間，再把門窗點在牆線上');
+    else { pl.marks.push({ kind: pl.tool, x: ed.x, y: ed.y, horiz: ed.horiz }); pl.hist.push({ t: 'mark' }); }
+  }
+  plSide(); plDraw();
+}
+plcv.addEventListener('pointerup', plUp); plcv.addEventListener('pointercancel', plUp);
+plcv.addEventListener('contextmenu', e => e.preventDefault());
+// 建成專案：每間房＝一個空間（牆中線往內縮半個牆厚），門窗分給牆線剛好在那裡的房間（共用牆的兩間都會有）
+$('#pl-go').onclick = () => {
+  const sc = plScale(); if (!sc || !pl.rooms.length) return;
+  const mx = Math.min(...pl.rooms.map(r => r.x0)), my = Math.min(...pl.rooms.map(r => r.y0)), tol = 4 / pl.v.s;
+  const spaces = pl.rooms.map(r => {
+    const w = Math.max(120, Math.round((r.x1 - r.x0) * sc - WALL_T)), d = Math.max(120, Math.round((r.y1 - r.y0) * sc - WALL_T));
+    const openings = [];
+    for (const m of pl.marks) {
+      let wall = null, along = 0, L = 0;
+      if (m.horiz && m.x >= r.x0 - tol && m.x <= r.x1 + tol) {
+        if (Math.abs(m.y - r.y0) < tol) { wall = 'N'; along = (m.x - r.x0) * sc - WALL_T / 2; L = w; }
+        else if (Math.abs(m.y - r.y1) < tol) { wall = 'S'; along = (r.x1 - m.x) * sc - WALL_T / 2; L = w; }
+      } else if (!m.horiz && m.y >= r.y0 - tol && m.y <= r.y1 + tol) {
+        if (Math.abs(m.x - r.x0) < tol) { wall = 'W'; along = (r.y1 - m.y) * sc - WALL_T / 2; L = d; }
+        else if (Math.abs(m.x - r.x1) < tol) { wall = 'E'; along = (m.y - r.y0) * sc - WALL_T / 2; L = d; }
+      }
+      if (!wall) continue;
+      const K = OPEN_KINDS[m.kind], ow = Math.min(K.w, L);
+      const op = { kind: m.kind, wall, w: ow, h: K.h, sill: K.sill, off: Math.round(clamp(along - ow / 2, 0, L - ow)) };
+      if (K.hinge) { op.hinge = K.hinge; op.swing = K.swing; }
+      openings.push(op);
+    }
+    return { name: r.name, type: r.type, room: { w, d, h: 280, setup: true, openings }, items: [],
+      pos: { x: Math.round(((r.x0 + r.x1) / 2 - mx) * sc), z: Math.round(((r.y0 + r.y1) / 2 - my) * sc) } };
+  });
+  closePlan(true, true); startProject.direct = false; startProject(spaces);
+};
 $('#restart').onclick = openQuick;
 
 /* ================= 手機介面 ================= */
@@ -1702,7 +2034,8 @@ if (!document.body.dataset.sheet) document.body.dataset.sheet = 'half';
 function updateViewOffset() {
   const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
   let cover = 0;
-  if (showMode) { const c = $('#show-card'); cover = c.hidden ? 70 : c.offsetHeight + 90; }
+  if (walk.on) cover = 0;
+  else if (showMode) { const c = $('#show-card'); cover = c.hidden ? 70 : c.offsetHeight + 90; }
   else if (isMob()) {
     const sel = $('#sel'), mbar = $('#mbar');
     cover = sel.classList.contains('on') ? sel.offsetHeight : document.querySelector('aside').offsetHeight;
@@ -1810,20 +2143,23 @@ function labelSprite(name, sub) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true })); sp.scale.set(150, 51.5, 1); sp.renderOrder = 10; return sp;
 }
 const pingOf = sp => (sp.room.w * sp.room.d / 33058).toFixed(1);
-function buildOverview() {
+function buildOverview(full) {                     // full：走進去逛用，牆是完整高度、有天花板、窗簾掛畫吊燈都放
   autoLayout();
   houseGroup.clear(); const keep = state;
   project.spaces.forEach((sp, i) => {
-    const tmp = JSON.parse(JSON.stringify(sp)); tmp.room.h = Math.min(tmp.room.h, 120);   // 牆切到 120 公分高，看得到每一間
+    const tmp = JSON.parse(JSON.stringify(sp)); if (!full) tmp.room.h = Math.min(tmp.room.h, 120);   // 牆切到 120 公分高，看得到每一間
     state = tmp; buildRoom();
     const g = new THREE.Group();
     for (const c of [...roomGroup.children]) g.add(c);
     for (const it of tmp.items) {
-      const T = PRODUCTS[it.type]; if (!T || it.hidden || T.ceil || T.sub === '窗簾' || T.sub === '掛畫') continue;
+      const T = PRODUCTS[it.type]; if (!T || it.hidden || (!full && (T.ceil || T.sub === '窗簾' || T.sub === '掛畫'))) continue;
       try { const m = buildItemModel(withDefaults({ ...it })); m.position.set(it.x, it.elev || 0, it.z); m.rotation.y = -it.rot * deg; m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); g.add(m); } catch (e) { }
     }
     g.traverse(o => { o.userData.spaceIdx = i; });
-    const lab = labelSprite(sp.name, `${pingOf(sp)} 坪・家具 ${sp.items.length} 件`); lab.position.set(0, 175, 0); lab.userData.label = true; g.add(lab);
+    if (full) {                                    // 天花板（不擋陽光）
+      const c = new THREE.Mesh(new THREE.PlaneGeometry(sp.room.w + 2 * WALL_T, sp.room.d + 2 * WALL_T), new THREE.MeshStandardMaterial({ color: '#f7f5f0', roughness: 0.95 }));
+      c.rotation.x = Math.PI / 2; c.position.y = sp.room.h + 0.4; c.userData.ceiling = true; g.add(c);
+    } else { const lab = labelSprite(sp.name, `${pingOf(sp)} 坪・家具 ${sp.items.length} 件`); lab.position.set(0, 175, 0); lab.userData.label = true; g.add(lab); }
     g.position.set(sp.pos.x, 0, sp.pos.z); g.userData.spaceIdx = i; houseGroup.add(g);
   });
   { const bb = new THREE.Box3().setFromObject(houseGroup), S = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z), lw = Math.max(80, Math.min(190, S * 0.13));   // 標籤大小跟著房子大小
@@ -1848,6 +2184,7 @@ function enterOverview() {
   buildOverview(); renderOverviewPanel(); renderSpaces(); setView(view === 'top' ? 'top' : 'orbit'); fitCamera(); save();
 }
 function exitOverview(i) {
+  if (walk.on) exitWalk();
   overview = false; document.body.classList.remove('ov-mode');
   houseGroup.visible = false; houseGroup.clear(); roomGroup.visible = furnGroup.visible = markGroup.visible = true;
   switchSpace(i ?? project.cur);
@@ -1869,6 +2206,111 @@ function ovUp() {
   if (!d.moved) exitOverview(d.i);
   return true;
 }
+
+/* ================= 走進去逛（總覽裡用人的高度走） ================= */
+const EYE = 155;
+const wv = { dir: new THREE.Vector3(), o: new THREE.Vector3(), down: new THREE.Vector3(0, -1, 0), rc: new THREE.Raycaster() };
+const shownUp = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+function walkHits(origin, dir, far) {             // 只算看得到的東西（不含標籤、天花板）
+  wv.rc.set(origin, dir); wv.rc.far = far;
+  return wv.rc.intersectObjects(houseGroup.children, true).filter(h => !h.object.isSprite && !h.object.isLine && !h.object.userData.ceiling && shownUp(h.object));
+}
+const isFloorHit = h => h.point.y < 4 && h.face && Math.abs(h.face.normal.clone().transformDirection(h.object.matrixWorld).y) > 0.6;
+function hasFloor(x, z) { wv.o.set(x, EYE, z); return walkHits(wv.o, wv.down, EYE + 30).some(isFloorHit); }
+// 往某個方向走一段，撞到牆、關著的門、家具就停；腳下要有地板（門檻那一小段例外）
+function walkStep(dx, dz) {
+  const len = Math.hypot(dx, dz); if (len < 0.01) return true;
+  wv.dir.set(dx / len, 0, dz / len);
+  for (const y of [45, 120]) {
+    wv.o.set(persp.position.x, y, persp.position.z);
+    if (walkHits(wv.o, wv.dir, len + 25).some(h => !isFloorHit(h))) return false;
+  }
+  const nx = persp.position.x + dx, nz = persp.position.z + dz;
+  if (!hasFloor(nx, nz) && !hasFloor(nx + wv.dir.x * 40, nz + wv.dir.z * 40)) return false;
+  persp.position.x = nx; persp.position.z = nz; return true;
+}
+function enterWalk() {
+  if (!overview || walk.on) return;
+  select(null); if (topView) setView('orbit');
+  walk.on = true; walk.go = null; walk.key = {}; document.body.classList.add('walk-mode');
+  buildOverview(true);
+  walk.doors = []; houseGroup.updateMatrixWorld(true);
+  houseGroup.traverse(o => {
+    if (!o.userData.door) return; const c = o.localToWorld(new THREE.Vector3(o.userData.door.cx, 0, 0));
+    if (walk.doors.some(d => d.userData.door.c.distanceTo(c) < 60)) { o.visible = false; return; }   // 兩個房間在同一個門口各畫了一扇門：只留一扇
+    o.userData.door.c = c; walk.doors.push(o);
+  });
+  // 從客廳（或客餐廳）門口往裡看
+  let i = project.spaces.findIndex(sp => sp.type === 'ld' || sp.type === 'living'); if (i < 0) i = 0;
+  const sp = project.spaces[i];
+  persp.position.set(sp.pos.x, EYE, sp.pos.z + sp.room.d / 2 - 45); walk.yaw = 0; walk.pitch = -0.06;
+  persp.fov = 68; persp.near = 5; persp.updateProjectionMatrix(); controls.enabled = false;
+  setTimeout(() => { resize(); updateViewOffset(); }, 30);
+  const tip = $('#walk-tip'); tip.classList.remove('fade'); clearTimeout(walk.tipT); walk.tipT = setTimeout(() => tip.classList.add('fade'), 5000);
+}
+function exitWalk() {
+  if (!walk.on) return;
+  walk.on = false; walk.go = null; walk.key = {}; walk.doors = []; document.body.classList.remove('walk-mode');
+  persp.near = 1; controls.enabled = true;
+  buildOverview(); setView('orbit'); setTimeout(() => { resize(); updateViewOffset(); fitCamera(); }, 30);
+}
+function walkFrame() {
+  const now = performance.now(), dt = Math.min(0.05, (now - (walk.t || now)) / 1000); walk.t = now;
+  const k = walk.key, fwd = (k.f ? 1 : 0) - (k.b ? 1 : 0), turn = (k.r ? 1 : 0) - (k.l ? 1 : 0);
+  if (turn) walk.yaw -= turn * 1.7 * dt;
+  const sx = -Math.sin(walk.yaw), sz = -Math.cos(walk.yaw);
+  if (fwd) { walk.go = null; walkStep(sx * fwd * 150 * dt, sz * fwd * 150 * dt); }
+  if (walk.go) {                                    // 點地板：走過去
+    const dx = walk.go.x - persp.position.x, dz = walk.go.z - persp.position.z, d = Math.hypot(dx, dz), st = Math.min(d, 230 * dt);
+    if (walk.go.turn != null) {                     // 邊走邊轉向要去的方向
+      let a = walk.go.turn - walk.yaw; a = Math.atan2(Math.sin(a), Math.cos(a)); walk.yaw += a * Math.min(1, dt * 5);
+    }
+    const mx = dx / d * st, mz = dz / d * st;
+    if (d < 2 || !(walkStep(mx, mz) || walkStep(mx, 0) || walkStep(0, mz))) walk.go = null;   // 卡到門框就沿著牆滑過去
+  }
+  for (const p of walk.doors) {                    // 門慢慢轉開／關上
+    const u = p.userData.door; if (u.ang === u.target) continue;
+    const s2 = Math.sign(u.target - u.ang), v = 2.6 * dt; u.ang = Math.abs(u.target - u.ang) <= v ? u.target : u.ang + s2 * v; p.rotation.y = u.ang;
+  }
+  persp.position.y = EYE; persp.rotation.set(walk.pitch, walk.yaw, 0, 'YXZ');
+}
+const doorOf = o => { for (; o; o = o.parent) if (o.userData.door) return o; return null; };
+const wp = { down: null, last: null };
+function walkDown(e) { wp.down = { x: e.clientX, y: e.clientY }; wp.last = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); }
+function walkMove(e) {
+  if (!wp.down) return;
+  const k = matchMedia('(pointer: coarse)').matches ? 0.006 : 0.004;
+  walk.yaw += (e.clientX - wp.last.x) * k; walk.pitch = clamp(walk.pitch + (e.clientY - wp.last.y) * k, -1.1, 1.1);   // 像 Google 街景：往左拖＝轉向右邊
+  wp.last = { x: e.clientX, y: e.clientY };
+}
+function walkUp(e) {
+  const d = wp.down; wp.down = null; if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) return;
+  setNdc(e); const hit = walkHits(ray.ray.origin, ray.ray.direction, 5000)[0]; if (!hit) return;
+  const door = doorOf(hit.object);
+  if (door) {                                      // 點門：推開／關上
+    const u = door.userData.door, opening = !u.target;
+    // 「推開」：門片往離人遠的那一邊轉
+    const z = door.worldToLocal(persp.position.clone()).z;
+    u.target = opening ? (u.hl ? 1 : -1) * (z > 0 ? 1 : -1) * Math.PI / 2 * 0.92 : 0;
+    if (hit.distance > 200) {                       // 門太遠：先走到門正前方 80 公分
+      const n = new THREE.Vector3(0, 0, z > 0 ? 1 : -1).transformDirection(door.matrixWorld), q = u.c.clone().addScaledVector(n, 80);
+      walk.go = { x: q.x, z: q.z, turn: Math.atan2(n.x, n.z) };
+    }
+    return;
+  }
+  const q = hit.point;                              // 點地板走過去；點到家具就走到它前面
+  walk.go = { x: q.x, z: q.z, turn: Math.atan2(-(q.x - persp.position.x), -(q.z - persp.position.z)) };
+  shorten(walk.go, isFloorHit(hit) ? Math.min(60, Math.hypot(q.x - persp.position.x, q.z - persp.position.z) * 0.35) : 90);   // 停在前面一點，不要貼著牆
+}
+function shorten(g, by) { const dx = g.x - persp.position.x, dz = g.z - persp.position.z, d = Math.hypot(dx, dz); if (d <= by) { g.x = persp.position.x; g.z = persp.position.z; return; } g.x -= dx / d * by; g.z -= dz / d * by; }
+$('#walk-btn').onclick = enterWalk; $('#walk-exit').onclick = exitWalk;
+{ const pad = $('#walk-pad');
+  pad.addEventListener('pointerdown', e => { const b = e.target.closest('[data-w]'); if (!b) return; e.preventDefault(); walk.key[b.dataset.w] = true; b.setPointerCapture(e.pointerId); });
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) pad.addEventListener(ev, e => { const b = e.target.closest('[data-w]'); if (b) walk.key[b.dataset.w] = false; });
+  pad.addEventListener('contextmenu', e => e.preventDefault()); }
+const WALK_KEYS = { ArrowUp: 'f', w: 'f', W: 'f', ArrowDown: 'b', s: 'b', S: 'b', ArrowLeft: 'l', a: 'l', A: 'l', ArrowRight: 'r', d: 'r', D: 'r' };
+addEventListener('keyup', e => { if (walk.on && WALK_KEYS[e.key]) walk.key[WALK_KEYS[e.key]] = false; });
+addEventListener('blur', () => { walk.key = {}; });
 
 /* ================= 專案 ================= */
 const fmtTime = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
@@ -2020,6 +2462,7 @@ function dropPage() { if (history.state && history.state.m) { ignorePop = true; 
 addEventListener('popstate', () => {
   if (ignorePop) { ignorePop = false; return; }
   if ($('#ar').classList.contains('on')) { closeAR(true); return; }
+  if ($('#plan').classList.contains('on')) { closePlan(true); return; }
   if ($('#style').classList.contains('on')) { $('#style').classList.remove('on'); openSetup(setupFrom); }
   else if ($('#setup').classList.contains('on')) setupBack(true);
   else if ($('#quick').classList.contains('on') && project.started) closeQuick(true);
@@ -2244,6 +2687,7 @@ $('#share').onclick = async () => {
 addEventListener('keydown', e => {
   if (e.target.matches('input,select')) return;
   if ($('#quick').classList.contains('on') || $('#style').classList.contains('on') || $('#ar').classList.contains('on') || $('#home').classList.contains('on')) return;
+  if (walk.on) { if (e.key === 'Escape') exitWalk(); else if (WALK_KEYS[e.key]) { e.preventDefault(); walk.key[WALK_KEYS[e.key]] = true; } return; }
   if (showMode) { if (e.key === 'Escape' && !document.body.classList.contains('show-locked')) exitShow(); return; }
   if ($('#setup').classList.contains('on')) { if (e.key === 'Escape') closeSetup(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
@@ -2300,7 +2744,7 @@ function resize() {
   renderer.setSize(w, h, false); persp.aspect = w / h; persp.updateProjectionMatrix(); sizeOrtho();
 }
 new ResizeObserver(resize).observe(canvas);
-renderer.setAnimationLoop(() => { if (gyro.on) gyroFrame(); else if (!topView) controls.update(); render(); });
+renderer.setAnimationLoop(() => { if (walk.on) walkFrame(); else if (gyro.on) gyroFrame(); else if (!topView) controls.update(); render(); });
 
 load(); rememberProj(); renderProjects(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary(); renderSpaces(); filterLib();
 { const v = new URLSearchParams(location.search).get('view'); if (v === 'eye' || v === 'top') setView(v); }   // 網址加 ?view=eye 直接用人視角打開
