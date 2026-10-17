@@ -499,7 +499,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
     </div>
     <div class="spaces-wrap"><div class="spaces" id="spaces"></div>
       <div class="sp-menu" id="sp-menu"><b>新增哪一種空間？</b>
-        <button data-type="living">客廳</button><button data-type="dining">餐廳（含廚房）</button><button data-type="bedroom">臥室</button><button data-type="ld">客餐廳（開放式）</button>
+        <button data-type="living">客廳</button><button data-type="dining">餐廳（含廚房）</button><button data-type="bedroom">臥室</button><button data-type="ld">客餐廳（開放式）</button><button data-type="bath">衛浴</button>
       </div>
     </div>
   </header>
@@ -625,7 +625,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
             <div class="pl-zoom" id="pl-zoom"><button data-z="1.25" aria-label="放大">＋</button><button data-z="0.8" aria-label="縮小">－</button><button data-z="0" aria-label="整張">⤢</button></div>
             <div class="pl-pop" id="pl-pick" hidden><b>這間是？</b><div class="pl-pbtns">
               <button data-n="客廳" data-t="living">客廳</button><button data-n="餐廳" data-t="dining">餐廳</button><button data-n="客餐廳" data-t="ld">客餐廳</button><button data-n="廚房" data-t="dining">廚房</button>
-              <button data-n="主臥" data-t="bedroom">主臥</button><button data-n="臥室" data-t="bedroom">臥室</button><button data-n="和室" data-t="bedroom">和室</button><button data-n="書房" data-t="bedroom">書房</button></div>
+              <button data-n="主臥" data-t="bedroom">主臥</button><button data-n="臥室" data-t="bedroom">臥室</button><button data-n="和室" data-t="bedroom">和室</button><button data-n="書房" data-t="bedroom">書房</button><button data-n="衛浴" data-t="bath">衛浴</button></div>
               <button class="link pl-del" id="pl-pick-del">刪掉這間</button></div>
             <div class="pl-pop" id="pl-len" hidden><b>這段是幾公分？</b>
               <div class="pl-lenrow"><input type="text" inputmode="decimal" id="pl-len-v" placeholder="例如 420" autocomplete="off"><span>公分</span><button class="btn pri" id="pl-len-ok">確定</button></div></div>
@@ -797,6 +797,7 @@ const SPACE_TYPES = {
   living:  { name: '客廳',   room: { w: 450, d: 400, h: 280 }, subs: ['沙發', '單椅', '茶几', '邊几', '窗簾', '燈具', '地毯', '植栽', '抱枕', '桌上擺飾', '掛畫'] },
   dining:  { name: '餐廳',   room: { w: 350, d: 300, h: 280 }, subs: ['餐桌', '餐椅', '長凳', '廚具', '中島', '廚房家電', '小家電', '餐櫃', '吧檯桌', '吧檯椅', '窗簾', '燈具', '地毯', '植栽', '桌上擺飾', '掛畫'] },
   bedroom: { name: '臥室',   room: { w: 350, d: 330, h: 280 }, subs: ['床台', '床頭櫃', '化妝桌椅', '書桌', '單椅', '窗簾', '燈具', '地毯', '植栽', '抱枕', '桌上擺飾', '掛畫'] },
+  bath:    { name: '衛浴',   room: { w: 180, d: 220, h: 230 }, subs: ['衛浴', '植栽', '桌上擺飾', '掛畫', '燈具'] },
   ld:      { name: '客餐廳', room: { w: 700, d: 420, h: 280 }, subs: ['沙發', '單椅', '茶几', '邊几', '餐桌', '餐椅', '長凳', '廚具', '中島', '廚房家電', '小家電', '餐櫃', '吧檯桌', '吧檯椅', '窗簾', '燈具', '地毯', '植栽', '抱枕', '桌上擺飾', '掛畫'] },
 };
 const newSpace = (type, name) => ({ name: name || SPACE_TYPES[type].name, type, room: { ...SPACE_TYPES[type].room, openings: [] }, items: [] });
@@ -952,7 +953,7 @@ function lbox(g, x0, x1, y0, y1, z0, z1, mat, shadow = true) {
   m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); m.castShadow = shadow; m.receiveShadow = true; g.add(m); return m;
 }
 // 衛浴：門外的地坪、矮邊框、馬桶、浴櫃洗手台（牆外看得到，不做高牆以免擋住視線）
-const BATH = { tile: new THREE.MeshStandardMaterial({ color: '#dfe3e6', roughness: 0.4 }), curb: new THREE.MeshStandardMaterial({ color: '#b9c3cc', roughness: 0.6 }) };
+const BATH = { wall: new THREE.MeshStandardMaterial({ color: '#efede9', roughness: 0.32 }), tile: new THREE.MeshStandardMaterial({ color: '#dfe3e6', roughness: 0.4 }), curb: new THREE.MeshStandardMaterial({ color: '#b9c3cc', roughness: 0.6 }) };
 function bathArea(g, op) {
   const T = WALL_T, cx = op.off + op.w / 2, x0 = cx - op.bw / 2, x1 = cx + op.bw / 2, z0 = -T, z1 = -T - op.depth;
   lbox(g, x0, x1, -2, -0.4, z0, z1, BATH.tile);
@@ -1026,8 +1027,8 @@ function buildWall(key) {
   const ops = (state.room.openings || []).filter(o => o.wall === key).sort((a, b) => a.off - b.off);
   const ext = key === 'N' || key === 'S' ? T : 0;                  // 前後牆兩端多延伸一個牆厚，把牆角補滿
   let cur = -ext;
-  const WM = key === 'N' ? M.accent : M.wall;
-  const solid = (a, b) => { lbox(g, a, b, 0, h, -T, 0, WM); if (key === 'N') accentDeco(g, Math.max(a, 0), Math.min(b, f.L), h); lbox(g, a, b, h, h + 0.3, -T, 0, M.cap, false); lbox(g, Math.max(a, 0), Math.min(b, f.L), 0, 8, 0, 1.2, M.skirt); };
+  const bath = state.type === 'bath', WM = bath ? BATH.wall : key === 'N' ? M.accent : M.wall;   // 衛浴：亮面磁磚牆、沒有主牆
+  const solid = (a, b) => { lbox(g, a, b, 0, h, -T, 0, WM); if (key === 'N' && !bath) accentDeco(g, Math.max(a, 0), Math.min(b, f.L), h); lbox(g, a, b, h, h + 0.3, -T, 0, M.cap, false); lbox(g, Math.max(a, 0), Math.min(b, f.L), 0, 8, 0, 1.2, M.skirt); };
   for (const op of ops) {
     if (op.off > cur) solid(cur, op.off);
     const a = Math.max(cur, op.off), b = op.off + op.w;
@@ -1048,7 +1049,7 @@ function buildRoom() {
   const { w, d, h } = state.room;
   (state.room.openings || []).forEach(clampOpening);
   styleMaterials();
-  const SF = curStyle().floor, tex = floorTexture(SF).clone(); tex.repeat.set(w / 120, d / 120); tex.needsUpdate = true;
+  const SF = state.type === 'bath' ? { kind: 'tile', color: '#d9d7d3', grout: '#b9b6b0' } : curStyle().floor, tex = floorTexture(SF).clone(); tex.repeat.set(w / 120, d / 120); tex.needsUpdate = true;
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: tex, roughness: SF.kind === 'marble' ? 0.25 : SF.kind === 'tile' ? 0.5 : 0.75 }));
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; floor.name = 'floor'; roomGroup.add(floor);
   for (const k of ['N', 'S', 'W', 'E']) buildWall(k);
@@ -2311,14 +2312,34 @@ function walkInto(i, instant) {
   // 像房仲拍照：站在角落，往對角看，看得到最多（先試靠前面的兩個角）
   const k = 45, cands = [[b.x0 + k, b.z1 - k], [b.x1 - k, b.z1 - k], [b.x0 + k, b.z0 + k], [b.x1 - k, b.z0 + k], [cx, b.z1 - k], [cx, b.z0 + k], [b.x0 + k, cz], [b.x1 - k, cz], [cx, cz]];
   houseGroup.updateMatrixWorld(true);
-  const free = ([x, z]) => { wv.o.set(x, EYE, z); const h = walkHits(wv.o, wv.down, EYE + 30)[0]; return h && isFloorHit(h) && h.point.y > -0.3; };   // 正下方第一個碰到的是房間地板（不是家具）
-  const at = cands.find(free) || [cx, cz];
+  // 腳下第一個碰到的是房間地板（不是家具），而且四周 25 公分內沒有東西（不會站進淋浴間）
+  const free = ([x, z]) => {
+    wv.o.set(x, EYE, z); const h = walkHits(wv.o, wv.down, EYE + 30)[0]; if (!(h && isFloorHit(h) && h.point.y > -0.3)) return false;
+    for (const [ax, az] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { wv.o.set(x, 100, z); wv.dir.set(ax, 0, az); if (walkHits(wv.o, wv.dir, 25).length) return false; }
+    return true;
+  };
+  // 小房間（衛浴、窄的房間）：站在門口往裡看，最自然；大房間：站角落看對角
+  const small = sp.type === 'bath' || Math.min(w, d) < 220, doorViews = [];
+  for (const o of sp.room.openings || []) {
+    if (o.kind !== 'door') continue; const m = o.off + o.w / 2, IN = 42;
+    doorViews.push(o.wall === 'N' ? [b.x0 + m, b.z0 + IN, Math.PI] : o.wall === 'S' ? [b.x1 - m, b.z1 - IN, 0] : o.wall === 'W' ? [b.x0 + IN, b.z1 - m, -Math.PI / 2] : [b.x1 - IN, b.z0 + m, Math.PI / 2]);
+  }
+  const dv = small ? doorViews.find(free) : null;
+  const at = dv || cands.find(free) || [cx, cz];
   const tx = 2 * cx - at[0], tz = 2 * cz - at[1], dx = tx - at[0], dz = tz - at[1];   // 看向對角
-  const yaw = Math.hypot(dx, dz) > 10 ? Math.atan2(-dx, -dz) : 0;
+  let yaw = dv ? dv[2] : Math.hypot(dx, dz) > 10 ? Math.atan2(-dx, -dz) : 0;
+  if (dv && sp.items.length) {                       // 小房間：轉向設備／家具的中心（例如衛浴的馬桶、洗手台）
+    const ix = sp.pos.x + sp.items.reduce((a, t) => a + t.x, 0) / sp.items.length, iz = sp.pos.z + sp.items.reduce((a, t) => a + t.z, 0) / sp.items.length;
+    if (Math.hypot(ix - at[0], iz - at[1]) > 20) yaw = Math.atan2(-(ix - at[0]), -(iz - at[1]));
+  }
+  if (dv) for (const p of walk.doors) {             // 從門口進來：那扇門先打開（往房間外開，不擋人）
+    const u = p.userData.door; if (u.target || Math.hypot(u.c.x - at[0], u.c.z - at[1]) > 90) continue;
+    const z = p.worldToLocal(new THREE.Vector3(at[0], EYE, at[1])).z; u.target = (u.hl ? 1 : -1) * (z > 0 ? 1 : -1) * Math.PI / 2 * 0.92;
+  }
   walk.go = null; walk.v = 0; walk.av = 0; walk.wq = 0;
   const place = () => {
-    const bx = Math.sin(yaw) * 45, bz = Math.cos(yaw) * 45;                         // 從身後 45 公分滑進來
-    persp.position.set(at[0] + bx, EYE, at[1] + bz); walk.yaw = walk.ty = yaw; walk.pitch = walk.tp = -0.06;
+    const by = dv ? dv[2] : yaw, bx = Math.sin(by) * 45, bz = Math.cos(by) * 45;   // 從門外（門的方向）滑進來                         // 從身後 45 公分滑進來
+    persp.position.set(at[0] + bx, EYE, at[1] + bz); walk.yaw = walk.ty = yaw; walk.pitch = walk.tp = dv ? -0.3 : -0.06;   // 小房間稍微往下看，看得到設備
     walk.go = { x: at[0], z: at[1], free: true };
   };
   if (instant) { persp.position.set(at[0], EYE, at[1]); walk.yaw = walk.ty = yaw; walk.tp = walk.pitch; }
@@ -2367,6 +2388,8 @@ function walkFrame() {
   if (walk.ring && walk.ring.material.opacity > 0) {   // 地上的圈圈慢慢淡掉
     walk.ring.material.opacity = Math.max(0, walk.ring.material.opacity - dt * (walk.go ? 0.5 : 2.2)); walk.ring.scale.setScalar(1 + (0.9 - walk.ring.material.opacity) * 0.25);
   }
+  { const ri = roomAt(persp.position.x, persp.position.z), sp = project.spaces[ri], f = sp && (sp.type === 'bath' || Math.min(sp.room.w, sp.room.d) < 220) ? 86 : 74;   // 小房間視野廣一點
+    if (Math.abs(persp.fov - f) > 0.05) { persp.fov += (f - persp.fov) * ease(3, dt); persp.updateProjectionMatrix(); } }
   persp.position.y = EYE; persp.rotation.set(walk.pitch, walk.yaw, 0, 'YXZ');
   syncWalkRooms(roomAt(persp.position.x, persp.position.z));   // 走到哪間，下面的按鈕就亮哪間
 }
@@ -2828,7 +2851,7 @@ function render() {
     const hide = !topView && !glassWalls && tmp.x * n.x + tmp.z * n.y < 0, key = hide ? 'hide' : glassWalls && !topView ? 'glass' : 'solid';
     if (wallHidden.get(g) !== key) {
       wallHidden.set(g, key);
-      const wallish = new Set([M.wall, M.accent, M.molding, M.skirt, M.metal, M.cap]);   // 只有牆面本身變透明，窗框、門、衛浴設備不變
+      const wallish = new Set([BATH.wall, M.wall, M.accent, M.molding, M.skirt, M.metal, M.cap]);   // 只有牆面本身變透明，窗框、門、衛浴設備不變
       g.traverse(o => { if (o.isMesh) o.material = key === 'hide' ? M.hidden : key === 'glass' && wallish.has(o.userData.mat) ? glassOf(o.userData.mat) : o.userData.mat; });
     }
   }
