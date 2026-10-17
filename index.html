@@ -289,8 +289,8 @@ body.walk-mode main{cursor:grab}
 .walk-exit{position:absolute;top:14px;left:14px;z-index:6;border:0;border-radius:999px;background:rgba(255,255,255,.85);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:9px 16px;font-size:14px;color:var(--ink);box-shadow:0 6px 18px rgba(0,67,106,.14)}
 .walk-tip{position:absolute;left:50%;top:16px;transform:translateX(-50%);z-index:5;background:rgba(0,67,106,.82);color:#fff;font-size:13px;padding:7px 14px;border-radius:999px;white-space:nowrap;pointer-events:none;transition:opacity .6s}
 .walk-tip.fade{opacity:0}
-.walk-fade{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .2s;z-index:4}
-.walk-fade.on{opacity:1}
+.walk-fade{position:absolute;inset:0;background:#f6f4ef;opacity:0;pointer-events:none;transition:opacity .38s ease;z-index:4}
+.walk-fade.on{opacity:1;transition-duration:.18s}
 .walk-rooms{position:absolute;left:14px;right:200px;bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:4px}
 .walk-rooms button{flex:none;border:0;border-radius:999px;background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:10px 16px;font-size:14px;color:var(--ink);box-shadow:0 6px 18px rgba(0,67,106,.14)}
 .walk-rooms button.on{background:var(--brand);color:#fff;font-weight:600}
@@ -1085,7 +1085,7 @@ function zoneBoxes() {
 
 /* ---------- 視角：3D 鳥瞰／平面／人視角 ---------- */
 let view = 'orbit';
-const walk = { room: -1, on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
+const walk = { col: [], ty: 0, tp: 0, v: 0, av: 0, wq: 0, ring: null, room: -1, on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
 if (location.search.includes("debug")) window.__dbg = { walk, get cam() { return persp; } };   // 除錯用
 function fitCamera() {
   if (overview) {                                            // 總覽：從斜上方看整間房子
@@ -2257,9 +2257,9 @@ function ovUp() {
 const EYE = 155;
 const wv = { dir: new THREE.Vector3(), o: new THREE.Vector3(), down: new THREE.Vector3(0, -1, 0), rc: new THREE.Raycaster() };
 const shownUp = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
-function walkHits(origin, dir, far) {             // 只算看得到的東西（不含標籤、天花板）
+function walkHits(origin, dir, far) {             // 只算看得到的東西（不含標籤、天花板）；進來時先把要算的網格收好
   wv.rc.set(origin, dir); wv.rc.far = far;
-  return wv.rc.intersectObjects(houseGroup.children, true).filter(h => !h.object.isSprite && !h.object.isLine && !h.object.userData.ceiling && shownUp(h.object));
+  return wv.rc.intersectObjects(walk.col, false);
 }
 const isFloorHit = h => h.point.y < 4 && h.face && Math.abs(h.face.normal.clone().transformDirection(h.object.matrixWorld).y) > 0.6;
 function hasFloor(x, z) { wv.o.set(x, EYE, z); return walkHits(wv.o, wv.down, EYE + 30).some(isFloorHit); }
@@ -2269,7 +2269,7 @@ function walkStep(dx, dz) {
   wv.dir.set(dx / len, 0, dz / len);
   for (const y of [45, 120]) {
     wv.o.set(persp.position.x, y, persp.position.z);
-    if (walkHits(wv.o, wv.dir, len + 25).some(h => !isFloorHit(h))) return false;
+    if (walkHits(wv.o, wv.dir, len + 45).some(h => !isFloorHit(h))) return false;
   }
   const nx = persp.position.x + dx, nz = persp.position.z + dz;
   if (!hasFloor(nx, nz) && !hasFloor(nx + wv.dir.x * 40, nz + wv.dir.z * 40)) return false;
@@ -2286,6 +2286,13 @@ function enterWalk() {
     if (walk.doors.some(d => d.userData.door.c.distanceTo(c) < 60)) { o.visible = false; return; }   // 兩個房間在同一個門口各畫了一扇門：只留一扇
     o.userData.door.c = c; walk.doors.push(o);
   });
+  walk.col = []; houseGroup.traverse(o => { if (o.isMesh && !o.userData.ceiling && shownUp(o)) walk.col.push(o); });
+  walk.v = 0; walk.av = 0; walk.wq = 0;
+  if (!walk.ring) {                                // 點地板時，地上出現一圈「要走去這裡」
+    walk.ring = new THREE.Mesh(new THREE.RingGeometry(14, 19, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+    walk.ring.rotation.x = -Math.PI / 2; walk.ring.renderOrder = 5;
+  }
+  scene.add(walk.ring); walk.ring.material.opacity = 0;
   // 從客廳（或客餐廳）開始
   let i = project.spaces.findIndex(sp => sp.type === 'ld' || sp.type === 'living'); if (i < 0) i = 0;
   $('#walk-rooms').innerHTML = project.spaces.map((sp, j) => `<button data-i="${j}">${esc(sp.name)}</button>`).join('');
@@ -2304,9 +2311,14 @@ function walkInto(i, instant) {
   const at = cands.find(free) || [cx, cz];
   const tx = 2 * cx - at[0], tz = 2 * cz - at[1], dx = tx - at[0], dz = tz - at[1];   // 看向對角
   const yaw = Math.hypot(dx, dz) > 10 ? Math.atan2(-dx, -dz) : 0;
-  walk.go = null;
-  if (instant) { persp.position.set(at[0], EYE, at[1]); walk.yaw = yaw; }
-  else { const el = $('#walk-fade'); el.classList.add('on'); setTimeout(() => { persp.position.set(at[0], EYE, at[1]); walk.yaw = yaw; walk.pitch = -0.06; el.classList.remove('on'); }, 220); }
+  walk.go = null; walk.v = 0; walk.av = 0; walk.wq = 0;
+  const place = () => {
+    const bx = Math.sin(yaw) * 45, bz = Math.cos(yaw) * 45;                         // 從身後 45 公分滑進來
+    persp.position.set(at[0] + bx, EYE, at[1] + bz); walk.yaw = walk.ty = yaw; walk.pitch = walk.tp = -0.06;
+    walk.go = { x: at[0], z: at[1], free: true };
+  };
+  if (instant) { persp.position.set(at[0], EYE, at[1]); walk.yaw = walk.ty = yaw; walk.tp = walk.pitch; }
+  else { const el = $('#walk-fade'); el.classList.add('on'); setTimeout(() => { place(); requestAnimationFrame(() => el.classList.remove('on')); }, 200); }
   syncWalkRooms(i);
 }
 function roomAt(x, z) { return project.spaces.findIndex(sp => { const b = roomBox(sp); return x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1; }); }
@@ -2314,42 +2326,62 @@ function syncWalkRooms(i) { if (i === walk.room) return; walk.room = i; $('#walk
 $('#walk-rooms').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) walkInto(+b.dataset.i); });
 function exitWalk() {
   if (!walk.on) return;
-  walk.on = false; walk.go = null; walk.key = {}; walk.doors = []; document.body.classList.remove('walk-mode');
+  walk.on = false; walk.go = null; walk.key = {}; walk.doors = []; walk.col = []; if (walk.ring) scene.remove(walk.ring); document.body.classList.remove('walk-mode');
   persp.near = 1; controls.enabled = true;
   buildOverview(); setView('orbit'); setTimeout(() => { resize(); updateViewOffset(); fitCamera(); }, 30);
 }
+const ease = (rate, dt) => 1 - Math.exp(-rate * dt);   // 跟幀率無關的平滑
+const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
 function walkFrame() {
   const now = performance.now(), dt = Math.min(0.05, (now - (walk.t || now)) / 1000); walk.t = now;
   const k = walk.key, fwd = (k.f ? 1 : 0) - (k.b ? 1 : 0), turn = (k.r ? 1 : 0) - (k.l ? 1 : 0);
-  if (turn) walk.yaw -= turn * 1.7 * dt;
+  // 轉頭：按鍵轉、放手後的慣性，再平滑跟上
+  if (turn) walk.ty -= turn * 1.6 * dt;
+  if (!wp.down && Math.abs(walk.av) > 0.0005) { walk.ty += walk.av * dt * 1000; walk.av *= Math.exp(-dt * 7); } else if (!wp.down) walk.av = 0;
+  if (walk.go && walk.go.turn != null) walk.ty += wrapA(walk.go.turn - walk.ty) * ease(4, dt);   // 點了要去的地方：邊走邊轉過去
+  walk.yaw += (walk.ty - walk.yaw) * ease(14, dt); walk.pitch += (walk.tp - walk.pitch) * ease(14, dt);
   const sx = -Math.sin(walk.yaw), sz = -Math.cos(walk.yaw);
-  if (fwd) { walk.go = null; walkStep(sx * fwd * 150 * dt, sz * fwd * 150 * dt); }
-  if (walk.go) {                                    // 點地板：走過去
-    const dx = walk.go.x - persp.position.x, dz = walk.go.z - persp.position.z, d = Math.hypot(dx, dz), st = Math.min(d, 230 * dt);
-    if (walk.go.turn != null) {                     // 邊走邊轉向要去的方向
-      let a = walk.go.turn - walk.yaw; a = Math.atan2(Math.sin(a), Math.cos(a)); walk.yaw += a * Math.min(1, dt * 5);
-    }
-    const mx = dx / d * st, mz = dz / d * st;
-    if (d < 2 || !(walkStep(mx, mz) || walkStep(mx, 0) || walkStep(0, mz))) walk.go = null;   // 卡到門框就沿著牆滑過去
-  }
-  for (const p of walk.doors) {                    // 門慢慢轉開／關上
+  // 前進後退（按鈕、方向鍵）：慢慢加速、放開慢慢停
+  if (fwd) walk.go = null;
+  walk.v += (fwd * 165 - walk.v) * ease(fwd ? 5 : 8, dt);
+  if (Math.abs(walk.v) > 0.5 && !walkStep(sx * walk.v * dt, sz * walk.v * dt)) walk.v = 0;
+  // 滾輪：排隊的距離一點一點走完
+  if (Math.abs(walk.wq) > 0.5) { const st = walk.wq * ease(7, dt); if (walkStep(sx * st, sz * st)) walk.wq -= st; else walk.wq = 0; }
+  if (walk.go) {                                    // 點地板：先轉身、再加速走過去、快到時慢下來
+    const dx = walk.go.x - persp.position.x, dz = walk.go.z - persp.position.z, d = Math.hypot(dx, dz);
+    const face = walk.go.turn == null ? 1 : Math.max(0, Math.cos(wrapA(walk.go.turn - walk.yaw)));   // 還沒轉過去時先不走
+    const want = Math.min(230, Math.sqrt(2 * 380 * d) + 8) * (face * face);
+    walk.gv = (walk.gv || 0) + (want - (walk.gv || 0)) * ease(6, dt);
+    const st = Math.min(d, walk.gv * dt), mx = dx / (d || 1) * st, mz = dz / (d || 1) * st;
+    if (d < 1.5) { walk.go = null; walk.gv = 0; }
+    else if (st > 0.01 && !(walk.go.free ? (persp.position.x += mx, persp.position.z += mz, true) : (walkStep(mx, mz) || walkStep(mx, 0) || walkStep(0, mz)))) { walk.go = null; walk.gv = 0; }   // 卡到門框就沿著牆滑過去
+  } else walk.gv = 0;
+  for (const p of walk.doors) {                    // 門：開始快、最後慢慢停（緩動）
     const u = p.userData.door; if (u.ang === u.target) continue;
-    const s2 = Math.sign(u.target - u.ang), v = 2.6 * dt; u.ang = Math.abs(u.target - u.ang) <= v ? u.target : u.ang + s2 * v; p.rotation.y = u.ang;
+    u.ang += (u.target - u.ang) * ease(4.5, dt); if (Math.abs(u.target - u.ang) < 0.003) u.ang = u.target; p.rotation.y = u.ang;
+  }
+  if (walk.ring && walk.ring.material.opacity > 0) {   // 地上的圈圈慢慢淡掉
+    walk.ring.material.opacity = Math.max(0, walk.ring.material.opacity - dt * (walk.go ? 0.5 : 2.2)); walk.ring.scale.setScalar(1 + (0.9 - walk.ring.material.opacity) * 0.25);
   }
   persp.position.y = EYE; persp.rotation.set(walk.pitch, walk.yaw, 0, 'YXZ');
   syncWalkRooms(roomAt(persp.position.x, persp.position.z));   // 走到哪間，下面的按鈕就亮哪間
 }
 const doorOf = o => { for (; o; o = o.parent) if (o.userData.door) return o; return null; };
-const wp = { down: null, last: null };
-function walkDown(e) { wp.down = { x: e.clientX, y: e.clientY }; wp.last = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); }
+const wp = { down: null, last: null, t: 0 };
+function walkDown(e) { wp.down = { x: e.clientX, y: e.clientY }; wp.last = { x: e.clientX, y: e.clientY }; wp.t = performance.now(); walk.av = 0; canvas.setPointerCapture(e.pointerId); }
 function walkMove(e) {
   if (!wp.down) return;
-  const k = matchMedia('(pointer: coarse)').matches ? 0.006 : 0.004;
-  walk.yaw += (e.clientX - wp.last.x) * k; walk.pitch = clamp(walk.pitch + (e.clientY - wp.last.y) * k, -1.1, 1.1);   // 像 Google 街景：往左拖＝轉向右邊
-  wp.last = { x: e.clientX, y: e.clientY };
+  const k = matchMedia('(pointer: coarse)').matches ? 0.0055 : 0.0038, now = performance.now(), dtm = Math.max(8, now - wp.t);
+  const dy = (e.clientX - wp.last.x) * k;
+  walk.ty += dy; walk.tp = clamp(walk.tp + (e.clientY - wp.last.y) * k, -1.1, 1.1);   // 像 Google 街景：往左拖＝轉向右邊
+  walk.av = clamp(walk.av * 0.6 + (dy / dtm) * 0.4, -0.0035, 0.0035);   // 記住轉的速度，放手後繼續滑一下（最多多轉約 30 度）
+  wp.last = { x: e.clientX, y: e.clientY }; wp.t = now;
 }
 function walkUp(e) {
-  const d = wp.down; wp.down = null; if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) return;
+  const d = wp.down; wp.down = null; if (!d) return;
+  if (performance.now() - wp.t > 80) walk.av = 0;   // 停住才放手：不要慣性
+  if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) return;
+  walk.av = 0;
   setNdc(e); const hit = walkHits(ray.ray.origin, ray.ray.direction, 5000)[0]; if (!hit) return;
   const door = doorOf(hit.object);
   if (door) {                                      // 點門：推開／關上
@@ -2359,14 +2391,17 @@ function walkUp(e) {
     u.target = opening ? (u.hl ? 1 : -1) * (z > 0 ? 1 : -1) * Math.PI / 2 * 0.92 : 0;
     if (hit.distance > 200) {                       // 門太遠：先走到門正前方 80 公分
       const n = new THREE.Vector3(0, 0, z > 0 ? 1 : -1).transformDirection(door.matrixWorld), q = u.c.clone().addScaledVector(n, 80);
-      walk.go = { x: q.x, z: q.z, turn: Math.atan2(n.x, n.z) };
+      walk.go = { x: q.x, z: q.z, turn: walk.ty + wrapA(Math.atan2(n.x, n.z) - walk.ty) };
     }
     return;
   }
   const q = hit.point;                              // 點地板走過去；點到家具就走到它前面
-  walk.go = { x: q.x, z: q.z, turn: Math.atan2(-(q.x - persp.position.x), -(q.z - persp.position.z)) };
+  walk.go = { x: q.x, z: q.z, turn: walk.ty + wrapA(Math.atan2(-(q.x - persp.position.x), -(q.z - persp.position.z)) - walk.ty) };
   shorten(walk.go, isFloorHit(hit) ? Math.min(60, Math.hypot(q.x - persp.position.x, q.z - persp.position.z) * 0.35) : 90);   // 停在前面一點，不要貼著牆
+  if (isFloorHit(hit) && walk.ring) { walk.ring.position.set(q.x, q.y + 0.8, q.z); walk.ring.material.opacity = 0.9; walk.ring.scale.setScalar(1); }
 }
+// 電腦滾輪：往前滾＝往前走一步
+canvas.addEventListener('wheel', e => { if (!walk.on) return; e.preventDefault(); e.stopImmediatePropagation(); walk.go = null; walk.wq = clamp(walk.wq - e.deltaY * 0.9, -300, 300); }, { passive: false, capture: true });
 function shorten(g, by) { const dx = g.x - persp.position.x, dz = g.z - persp.position.z, d = Math.hypot(dx, dz); if (d <= by) { g.x = persp.position.x; g.z = persp.position.z; return; } g.x -= dx / d * by; g.z -= dz / d * by; }
 $('#walk-btn').onclick = enterWalk; $('#walk-exit').onclick = exitWalk;
 { const pad = $('#walk-pad');
