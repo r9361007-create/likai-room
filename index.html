@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
 <meta name="description" content="量好房間，把莉凱家俱擺進去看看：3D 空間配置">
 <style>
@@ -14,7 +16,7 @@
   --danger:#C23E4E; --radius:14px; --shadow:0 10px 30px rgba(0,67,106,.14);
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.6 "Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:.01em}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 /* 數字欄位一律用打字，不顯示上下箭頭 */
@@ -22,7 +24,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .app{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top" "main side";height:100dvh}
 /* ---------- 上方深色橫條：品牌＋空間 ---------- */
-.topbar{grid-area:top;display:flex;align-items:center;gap:18px;background:var(--brand);color:#fff;padding:0 16px;min-width:0}
+.topbar{grid-area:top;display:flex;align-items:center;gap:18px;background:linear-gradient(180deg,#044d78 0%,var(--brand) 100%);color:#fff;padding:0 16px;min-width:0}
 .brand{display:flex;align-items:center;gap:10px;flex:none;padding:10px 0}
 .brand img{height:34px;width:auto;display:block}
 .brand b{font-size:15px;letter-spacing:.1em;padding-left:12px;border-left:1px solid rgba(249,229,115,.35)}
@@ -51,9 +53,9 @@ h3:first-child{margin-top:4px}
 .libbar b{font-size:15px}
 .link{border:0;background:none;color:var(--accent);font-size:13px;font-weight:600;padding:4px 0}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.card{border:0;border-radius:12px;background:var(--surface);padding:8px;text-align:left;display:flex;flex-direction:column;gap:3px;outline:2px solid transparent;transition:outline-color .15s,transform .15s}
+.card{border:0;border-radius:14px;background:var(--surface);box-shadow:0 1px 0 rgba(0,67,106,.04);padding:8px;text-align:left;display:flex;flex-direction:column;gap:3px;outline:2px solid transparent;transition:outline-color .15s,transform .15s}
 .card:hover{outline-color:var(--accent);transform:translateY(-2px)}
-.card .th{aspect-ratio:4/3;border-radius:8px;background:#e8ebe6 center/contain no-repeat}
+.card .th{aspect-ratio:4/3;border-radius:9px;background:radial-gradient(90% 80% at 50% 35%,#ffffff 0%,#eef3f7 70%,#e3eaf0 100%) center/contain no-repeat}
 .card b{font-size:13px;font-weight:600;line-height:1.3;margin-top:2px}
 .card span{font-size:11px;color:var(--muted)}
 .tag{font-style:normal;background:var(--yellow-soft);color:#7a6b10;border-radius:4px;padding:0 5px;margin-right:4px;font-size:10px;font-weight:600}
@@ -67,7 +69,7 @@ h3:first-child{margin-top:4px}
 .list li.bad span{color:var(--danger)}
 .list span{font-size:12px;color:var(--muted)}
 /* ---------- 3D 畫面 ---------- */
-main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
+main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden;background:radial-gradient(120% 90% at 50% 28%,#fbfdff 0%,#eaf1f7 55%,#d9e4ee 100%)}
 #cv{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}
 .btn{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 15px;white-space:nowrap;transition:background .15s}
 .btn:hover{background:var(--surface)}
@@ -79,7 +81,7 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .seg{position:absolute;top:14px;left:14px;display:flex;gap:2px;padding:4px;background:var(--brand);border-radius:999px;box-shadow:var(--shadow)}
 .seg button{border:0;background:none;color:#cfe0ec;border-radius:999px;padding:6px 14px;font-size:13px}
 .seg button.on{background:var(--yellow);color:var(--yellow-ink);font-weight:600}
-.wallbtn{position:absolute;top:62px;left:14px;display:flex;align-items:center;gap:7px;border:0;border-radius:999px;padding:6px 13px 6px 9px;background:rgba(255,255,255,.92);color:var(--ink);font-size:13px;box-shadow:var(--shadow)}
+.wallbtn{position:absolute;top:62px;left:14px;display:flex;align-items:center;gap:7px;border:0;border-radius:999px;padding:6px 13px 6px 9px;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--ink);font-size:13px;box-shadow:var(--shadow)}
 .gyrobtn{position:absolute;top:106px;left:14px;border:0;border-radius:999px;padding:7px 14px;background:var(--brand);color:#fff;font-size:13px;font-weight:600;box-shadow:var(--shadow)}
 .gyrobtn.on{background:var(--yellow);color:var(--yellow-ink)}
 .wallbtn i{width:30px;height:17px;border-radius:999px;background:#c9d4de;position:relative;transition:background .15s}
@@ -87,7 +89,9 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 .wallbtn[aria-pressed="true"] i{background:var(--accent)}
 .wallbtn[aria-pressed="true"] i::after{left:15px}
 .toolbar{position:absolute;top:14px;right:14px;display:flex;gap:6px}
-.toolbar .btn{box-shadow:var(--shadow);border-color:transparent}
+.toolbar .btn{box-shadow:0 6px 18px rgba(0,67,106,.12);border-color:transparent;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.toolbar .btn.pri{background:var(--accent)}
+.btn:active,.card:active,.sp:active,.ovc:active{transform:scale(.97)}
 .help{position:absolute;left:14px;bottom:14px;font-size:12px;color:var(--muted);background:rgba(255,255,255,.8);border-radius:999px;padding:5px 12px}
 /* 選取家具的面板 */
 .sel-card{position:absolute;left:14px;bottom:14px;width:300px;max-height:calc(100% - 80px);overflow:auto;background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);padding:10px 14px 6px;display:none;border-top:4px solid var(--accent)}
@@ -192,6 +196,10 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 #mv{width:100%;height:46dvh;background:var(--surface);border-radius:12px;display:block}
 .ar-go{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:12px 22px;font-size:15px;box-shadow:var(--shadow)}
 #ar-msg{color:var(--ink);font-weight:600}
+/* ---------- 改尺寸方式 ---------- */
+.rmode{display:flex;gap:4px;margin:2px 0 6px;padding:3px;background:var(--surface);border-radius:10px}
+.rmode button{flex:1;border:0;background:none;border-radius:8px;padding:6px 4px;font-size:12px;color:var(--muted);line-height:1.3}
+.rmode button.on{background:#fff;color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 /* ---------- 商品分類捷徑 ---------- */
 .catbar{display:flex;gap:6px;overflow-x:auto;padding:6px 0 4px;position:sticky;top:-8px;z-index:2;background:var(--panel);scrollbar-width:none}
 .catbar button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:13px;color:var(--ink)}
@@ -396,6 +404,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
         <label>高<input type="text" inputmode="decimal" autocomplete="off" id="s-h"></label>
         <span class="unit">公分</span>
       </div>
+      <div class="rmode" id="s-rmode" role="group" aria-label="改尺寸方式"></div>
       <div class="swatches" id="s-sw" role="group" aria-label="顏色"></div>
       <div class="movebox">
         <div><div class="hint">離牆距離（公分，可直接打字）</div>
@@ -642,14 +651,14 @@ function renderSpaces() {
 
 /* ================= 3D 場景 ================= */
 const canvas = $('#cv');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('#e3ebf2');
+scene.background = null;                         // 背景交給 CSS 的柔和漸層
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environmentIntensity = 0.55;
+scene.environmentIntensity = 0.62;
 const hemi = new THREE.HemisphereLight('#fff8ee', '#b9a58f', 0.9); scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff3e2', 1.6);
 sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.6;
@@ -903,9 +912,59 @@ function setView(v) {
 }
 
 /* ================= 家具 ================= */
+/* ---------- 改尺寸方式 ----------
+ * chaise：貴妃不變，只調一字型——先照原本的寬度建模，再只把主座那一段拉長／縮短（自動找出貴妃在哪一側、多寬）
+ * scale：等比例縮放——照開始縮放時的尺寸建模，再整個等比例放大縮小
+ * free：自由調整（交給模型自己的規則） */
+const hasChaise = T => T.sub === '沙發' && optsOf(T).some(g => g.key === 'side');
+const resizeMode = it => it.resize || (hasChaise(PRODUCTS[it.type]) ? 'chaise' : 'free');
+function warpChaise(g, it) {
+  g.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(g.matrixWorld).invert(), M = new THREE.Matrix4(), Mi = new THREE.Matrix4(), v = new THREE.Vector3();
+  const meshes = []; g.traverse(o => { if (o.isMesh && o.geometry && o.geometry.attributes.position) meshes.push(o); });
+  let zMin = Infinity, zMax = -Infinity, xMin = Infinity, xMax = -Infinity; const pts = [];
+  for (const o of meshes) {
+    M.multiplyMatrices(inv, o.matrixWorld); const P = o.geometry.attributes.position, step = Math.max(1, Math.floor(P.count / 500));
+    for (let i = 0; i < P.count; i += step) { v.fromBufferAttribute(P, i).applyMatrix4(M); pts.push(v.x, v.z); zMin = Math.min(zMin, v.z); zMax = Math.max(zMax, v.z); xMin = Math.min(xMin, v.x); xMax = Math.max(xMax, v.x); }
+  }
+  // 貴妃：模型最前段（深度 72% 以後）只有貴妃那一側會伸到
+  const zc = zMin + (zMax - zMin) * 0.72; let dx0 = Infinity, dx1 = -Infinity;
+  for (let i = 0; i < pts.length; i += 2) if (pts[i + 1] > zc) { dx0 = Math.min(dx0, pts[i]); dx1 = Math.max(dx1, pts[i]); }
+  const W0 = xMax - xMin; if (!(dx1 > dx0) || dx1 - dx0 > W0 * 0.8) return false;
+  const right = (xMax - dx1) < (dx0 - xMin), cw = Math.min(W0 - 40, (right ? xMax - dx0 : dx1 - xMin) + 2);
+  const c = (xMin + xMax) / 2, W = Math.max(it.w, cw + 60), xL = c - W / 2, xR = c + W / 2;
+  const sx = right ? xR0 => xR0 - cw : xL0 => xL0 + cw;                       // 主座和貴妃的分界
+  const s0 = right ? xMax - cw : xMin + cw, s1 = right ? xR - cw : xL + cw;
+  const k = right ? (s1 - xL) / (s0 - xMin) : (xR - s1) / (xMax - s0);        // 主座拉長的倍數
+  const f = right ? x => (x >= s0 ? x - xMax + xR : xL + (x - xMin) * k) : x => (x <= s0 ? x - xMin + xL : s1 + (x - s0) * k);
+  const inMain = right ? x => x < s0 : x => x > s0;
+  for (const o of meshes) {
+    const geo = o.geometry.clone(); M.multiplyMatrices(inv, o.matrixWorld); Mi.copy(M).invert(); geo.applyMatrix4(M);
+    const P = geo.attributes.position, N = geo.attributes.normal;
+    for (let i = 0; i < P.count; i++) {
+      const x = P.getX(i);
+      if (N && inMain(x)) { const nx = N.getX(i) / k, ny = N.getY(i), nz = N.getZ(i), l = Math.hypot(nx, ny, nz) || 1; N.setXYZ(i, nx / l, ny / l, nz / l); }   // 拉長的部分法線也要跟著修正，光影才不會怪
+      P.setX(i, f(x));
+    }
+    geo.applyMatrix4(Mi); P.needsUpdate = true; if (N) N.needsUpdate = true; geo.computeBoundingBox(); geo.computeBoundingSphere(); o.geometry = geo;
+  }
+  return true;
+}
+function buildItemModel(it) {
+  const T = PRODUCTS[it.type], mode = resizeMode(it);
+  if (mode === 'scale' && it.base && it.base.w) {                             // 等比例：照基準尺寸建模再整個縮放
+    const g = buildModel({ ...it, ...it.base }), k = it.w / it.base.w, wrap = new THREE.Group();
+    g.scale.setScalar(k); wrap.add(g); return wrap;
+  }
+  if (mode === 'chaise' && Math.abs(it.w - T.w) > 0.5) {                       // 貴妃不變：照原本寬度建模，再只拉主座
+    const g = buildModel({ ...it, w: T.w });
+    if (warpChaise(g, it)) return g;
+  }
+  return buildModel(it);
+}
 function makeObj(it) {
   const old = objs.get(it.id); if (old) { furnGroup.remove(old); dispose(old); }
-  const g = buildModel(it);
+  const g = buildItemModel(it);
   g.traverse(o => { o.userData.id = it.id; if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   g.position.set(it.x, it.elev || 0, it.z); g.rotation.y = -it.rot * deg; g.visible = !it.hidden;
   furnGroup.add(g); objs.set(it.id, g);
@@ -1044,13 +1103,26 @@ function rebuildAll() {
 }
 
 /* ================= 標示（選取框、紅框） ================= */
+// 家具腳下的圓角輪廓：選到的是藍色、有問題的是紅色
+function footprint(b, color, y, strong) {
+  const pad = 5, x0 = b.min.x - pad, x1 = b.max.x + pad, z0 = b.min.z - pad, z1 = b.max.z + pad, r = Math.min(14, (x1 - x0) / 4, (z1 - z0) / 4);
+  const sh = new THREE.Shape(); sh.moveTo(x0 + r, z0); sh.lineTo(x1 - r, z0); sh.quadraticCurveTo(x1, z0, x1, z0 + r); sh.lineTo(x1, z1 - r); sh.quadraticCurveTo(x1, z1, x1 - r, z1); sh.lineTo(x0 + r, z1); sh.quadraticCurveTo(x0, z1, x0, z1 - r); sh.lineTo(x0, z0 + r); sh.quadraticCurveTo(x0, z0, x0 + r, z0);
+  const g = new THREE.Group();
+  const fill = new THREE.Mesh(new THREE.ShapeGeometry(sh, 6), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: strong ? 0.14 : 0.1, depthWrite: false, side: THREE.DoubleSide }));
+  fill.rotation.x = Math.PI / 2; fill.position.y = y + 0.4; fill.renderOrder = 3; g.add(fill);
+  const pts = sh.getPoints(8).map(q => new THREE.Vector3(q.x, y + 0.6, q.y));
+  const line = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.95, depthTest: false }));
+  line.renderOrder = 4; g.add(line);
+  return g;
+}
 function refresh() {
   markGroup.clear(); renderSpaces();
   const bad = problems();
   for (const it of state.items) {
     const isSel = it.id === selId; if (!isSel && !bad.has(it.id)) continue;
-    const b = boxOf(it); b.max.y += 1;
-    markGroup.add(new THREE.Box3Helper(b, bad.has(it.id) ? 0xc23e4e : 0x00436a));
+    const b = boxOf(it), y = (it.elev || 0);
+    markGroup.add(footprint(b, bad.has(it.id) ? 0xc23e4e : 0x00436a, y, isSel));
+    if (isSel) { const top = new THREE.Box3Helper(b, bad.has(it.id) ? 0xc23e4e : 0x2d79a8); top.material.transparent = true; top.material.opacity = 0.35; markGroup.add(top); }   // 選到的再加一個很淡的外框
   }
   renderPlaced(bad); renderSel(bad);
 }
@@ -1148,7 +1220,7 @@ function buildSelPanel() {
   setTimeout(() => { try { syncMobile(); } catch (e) { } }, 0);   // 手機動作列跟著選取狀態（延後執行，啟動時也安全）
   const it = cur(); $('#sel').classList.toggle('on', !!it && panelOpen); if (!it) return;
   const T = PRODUCTS[it.type];
-  $('#s-name').textContent = T.name;
+  $('#s-name').textContent = T.name; renderResizeMode(it);
   $('#s-w').value = it.w; $('#s-d').value = it.d; $('#s-h').value = it.h;
   let h = '';
   for (const g of optsOf(T)) h += `<div class="opt"><label>${g.label}</label><select data-k="${g.key}">${g.list.map(o => `<option value="${o.id}" ${o.id === it[g.key] ? 'selected' : ''}>${o.name}</option>`).join('')}</select></div>`;
@@ -1176,7 +1248,22 @@ $('#s-opts').addEventListener('input', e => {             // 拖曳顏色時即�
 $('#s-opts').addEventListener('change', e => { if (e.target.type === 'color') { colorSnap = false; save(); } });
 for (const k of ['w', 'd', 'h']) $('#s-' + k).addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });   // 打完按 Enter 就套用
 for (const k of ['w', 'd', 'h']) $('#s-' + k).addEventListener('change', e => {
-  const v = clamp(Math.round(toNum(e.target.value)), 20, 600); editSel(it => { it[k] = v; }); e.target.value = v;
+  const v = clamp(Math.round(toNum(e.target.value)), 20, 600);
+  editSel(it => {
+    if (resizeMode(it) === 'scale') { const r = v / it[k]; for (const q of ['w', 'd', 'h']) it[q] = q === k ? v : Math.round(it[q] * r); }
+    else it[k] = v;
+  });
+  const it = cur(); if (it) for (const q of ['w', 'd', 'h']) $('#s-' + q).value = it[q];
+});
+function renderResizeMode(it) {
+  const T = PRODUCTS[it.type], m = resizeMode(it), first = hasChaise(T) ? ['chaise', '貴妃不變<br>只調一字型'] : ['free', '自由調整'];
+  $('#s-rmode').innerHTML = [first, ['scale', '等比例縮放']].map(([k, t]) => `<button data-m="${k}" class="${m === k ? 'on' : ''}">${t}</button>`).join('');
+}
+$('#s-rmode').addEventListener('click', e => {
+  const b = e.target.closest('[data-m]'); if (!b) return;
+  editSel(it => { it.resize = b.dataset.m; if (it.resize === 'scale') it.base = { w: it.w, d: it.d, h: it.h }; else delete it.base; });
+  const it = cur(); if (it) renderResizeMode(it);
+  toast(b.dataset.m === 'scale' ? '等比例縮放：改任一邊，其他兩邊一起變' : b.dataset.m === 'chaise' ? '貴妃不變：改寬度只會拉長或縮短主座' : '自由調整：寬、深、高各自改');
 });
 const rotate = () => editSel(it => { it.rot = (it.rot + 90) % 360; });
 const remove = () => { const it = cur(); if (!it || lockedMsg(it)) return; snapshot(); state.items = state.items.filter(i => i !== it); const g = objs.get(it.id); furnGroup.remove(g); dispose(g); objs.delete(it.id); select(null); save(); };
@@ -1219,7 +1306,7 @@ async function openAR(all = false) {
     await loadMV();
     const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
     const root = new THREE.Group(), set = new THREE.Group();
-    for (const x of list) { const g = buildModel({ ...x }); if (all) { g.position.set(x.x, x.elev || 0, x.z); g.rotation.y = -x.rot * deg; } set.add(g); }
+    for (const x of list) { const g = buildItemModel({ ...x }); if (all) { g.position.set(x.x, x.elev || 0, x.z); g.rotation.y = -x.rot * deg; } set.add(g); }
     if (all) {                                                  // 整組：以整組的中心當原點，放在地上
       set.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(set), c = bb.getCenter(new THREE.Vector3());
       set.position.set(-c.x, 0, -c.z); var size = bb.getSize(new THREE.Vector3());
@@ -1540,12 +1627,14 @@ function buildOverview() {
     for (const c of [...roomGroup.children]) g.add(c);
     for (const it of tmp.items) {
       const T = PRODUCTS[it.type]; if (!T || it.hidden || T.ceil || T.sub === '窗簾' || T.sub === '掛畫') continue;
-      try { const m = buildModel(withDefaults({ ...it })); m.position.set(it.x, it.elev || 0, it.z); m.rotation.y = -it.rot * deg; m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); g.add(m); } catch (e) { }
+      try { const m = buildItemModel(withDefaults({ ...it })); m.position.set(it.x, it.elev || 0, it.z); m.rotation.y = -it.rot * deg; m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); g.add(m); } catch (e) { }
     }
     g.traverse(o => { o.userData.spaceIdx = i; });
     const lab = labelSprite(sp.name, `${pingOf(sp)} 坪・家具 ${sp.items.length} 件`); lab.position.set(0, 175, 0); lab.userData.label = true; g.add(lab);
     g.position.set(sp.pos.x, 0, sp.pos.z); g.userData.spaceIdx = i; houseGroup.add(g);
   });
+  { const bb = new THREE.Box3().setFromObject(houseGroup), S = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z), lw = Math.max(80, Math.min(190, S * 0.13));   // 標籤大小跟著房子大小
+    houseGroup.traverse(o => { if (o.userData.label) o.scale.set(lw, lw * 0.344, 1); }); }
   state = keep; walls = []; zones = []; wallHidden.clear(); roomGroup.clear();
   const b = new THREE.Box3().setFromObject(houseGroup), c = b.getCenter(new THREE.Vector3()), S = Math.max(b.max.x - b.min.x, b.max.z - b.min.z);   // 整間的陽光
   sun.position.set(c.x - S * 0.3, 1400, c.z + S * 0.4); sun.target.position.copy(c).setY(0);
@@ -1900,7 +1989,11 @@ $('#clear').onclick = () => { if (!state.items.length) return; snapshot(); state
 $('#undo').onclick = undo;
 $('#v3d').onclick = () => setView('orbit'); $('#vtop').onclick = () => setView('top'); $('#veye').onclick = () => setView('eye');
 $('#shot').onclick = () => {
-  const a = document.createElement('a'); render(); a.href = canvas.toDataURL('image/png'); a.download = '莉凱空間配置.png'; a.click();
+  const a = document.createElement('a'); render();
+  const out = document.createElement('canvas'); out.width = canvas.width; out.height = canvas.height;
+  const ox = out.getContext('2d'), gr = ox.createRadialGradient(out.width / 2, out.height * 0.28, 0, out.width / 2, out.height * 0.28, Math.max(out.width, out.height));
+  gr.addColorStop(0, '#fbfdff'); gr.addColorStop(0.55, '#eaf1f7'); gr.addColorStop(1, '#d9e4ee'); ox.fillStyle = gr; ox.fillRect(0, 0, out.width, out.height); ox.drawImage(canvas, 0, 0);
+  a.href = out.toDataURL('image/png'); a.download = '莉凱空間配置.png'; a.click();
 };
 $('#share').onclick = async () => {
   const url = location.origin + location.pathname + '#p=' + encode();
@@ -1972,7 +2065,7 @@ load(); rememberProj(); renderProjects(); renderLib(); rebuildAll(); resize(); f
 if (project.started && state.room.setup && project.style && project.decor !== false && state.decorStyle !== project.style) { styleDecor(); refresh(); }   // 分享連結：補上風格軟裝
 if (!project.started) openQuick();               // 第一次來：先問坪數、幾房幾廳
 else if (!state.room.setup) { openSetup(); undoStack = []; $('#undo').disabled = true; }
-else enterOverview();                                 // 一打開先看整間房子
+else if (project.spaces.length > 1) enterOverview();   // 有兩個以上空間：一打開先看整間房子
 $('#loading').remove();
 makeThumbs();
 </script>
