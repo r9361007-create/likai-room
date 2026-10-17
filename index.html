@@ -192,6 +192,24 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 #mv{width:100%;height:46dvh;background:var(--surface);border-radius:12px;display:block}
 .ar-go{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:12px 22px;font-size:15px;box-shadow:var(--shadow)}
 #ar-msg{color:var(--ink);font-weight:600}
+/* ---------- 專案 ---------- */
+.proj-wrap{position:relative;flex:none}
+.projbtn{display:flex;align-items:center;gap:6px;max-width:220px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;border-radius:10px;padding:6px 10px;font-size:13px}
+.projbtn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.projbtn i{font-style:normal;color:var(--yellow);font-size:11px}
+.proj-menu{position:absolute;left:0;top:calc(100% + 6px);z-index:31;width:300px;max-width:calc(100vw - 20px);background:var(--panel);color:var(--ink);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;display:none;flex-direction:column;gap:6px}
+.proj-menu.on{display:flex}
+.proj-cur{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.proj-cur input,#q-name{width:100%;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;font-size:15px;color:var(--ink);background:#fff}
+.proj-list{display:flex;flex-direction:column;gap:4px;max-height:40dvh;overflow:auto;margin:4px 0}
+.proj-row{display:flex;align-items:center;gap:4px;border-radius:10px;background:var(--surface);padding:4px 4px 4px 10px}
+.proj-row.on{background:var(--accent-soft);outline:1.5px solid var(--accent)}
+.proj-row .pn{flex:1;min-width:0;border:0;background:none;text-align:left;padding:5px 0}
+.proj-row .pn b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-row .pn span{font-size:11px;color:var(--muted)}
+.proj-row button.ic{border:0;background:none;color:var(--muted);border-radius:7px;padding:6px 7px;font-size:12px;white-space:nowrap}
+.proj-row button.ic:hover{background:#fff;color:var(--accent)}
+.proj-row button.ic.danger{color:var(--danger)}
 /* ---------- 步驟列 ---------- */
 .steps{list-style:none;margin:0 0 12px;padding:0;display:flex;gap:4px;counter-reset:st}
 .steps li{flex:1;font-size:11px;color:#9fbcd1;border-top:3px solid rgba(255,255,255,.2);padding-top:5px;counter-increment:st;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -230,6 +248,8 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
   .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 52dvh minmax(0,1fr);grid-template-areas:"top" "main" "side"}
   .topbar{padding:0 10px;gap:10px}
   .brand{padding:8px 0}.brand b{display:none}
+  .projbtn{max-width:110px;padding:5px 8px;font-size:12px}
+  .proj-menu{position:fixed;left:10px;right:10px;top:56px;width:auto}
   .brand img{height:28px}
   .spaces{padding:9px 0}
   .sp-menu{left:auto;right:0}
@@ -274,6 +294,16 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 <div class="app">
   <header class="topbar">
     <div class="brand"><img src="data:image/png;base64,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" alt="Likai 莉凱家俱" width="150" height="82"><b>空間配置</b></div>
+    <div class="proj-wrap">
+      <button class="projbtn" id="proj-btn" aria-haspopup="true"><span id="proj-name">專案 1</span><i>▾</i></button>
+      <div class="proj-menu" id="proj-menu">
+        <label class="proj-cur">這個專案的名稱<input type="text" id="proj-rename" maxlength="20" placeholder="例如：王先生 信義路"></label>
+        <div class="proj-list" id="proj-list"></div>
+        <button class="btn pri wide" id="proj-new">＋ 新專案（新客人）</button>
+        <button class="btn wide" id="proj-new-tab">在新分頁開新專案</button>
+        <p class="hint">每個專案自動存在這台裝置。電腦上可以同時開好幾個分頁，各自編輯不同客人。</p>
+      </div>
+    </div>
     <div class="spaces-wrap"><div class="spaces" id="spaces"></div>
       <div class="sp-menu" id="sp-menu"><b>新增哪一種空間？</b>
         <button data-type="living">客廳</button><button data-type="dining">餐廳（含廚房）</button><button data-type="bedroom">臥室</button><button data-type="ld">客餐廳（開放式）</button>
@@ -329,6 +359,8 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
         <div class="setup-head"><ol class="steps"></ol><div><b>歡迎！先大概說說你的房子</b><div class="hint">輸入坪數和格局，我們幫你粗估每個空間的大小</div></div></div>
         <div class="setup-body quick-body">
           <div>
+            <h3>客人名稱（選填）</h3>
+            <input type="text" id="q-name" maxlength="20" placeholder="例如：王先生 信義路" autocomplete="off">
             <h3>室內坪數</h3>
             <div class="ping-row"><input type="text" inputmode="decimal" id="q-ping" value="25" autocomplete="off"><span>坪</span></div>
             <p class="hint">權狀坪數扣掉公設、陽台、車位，大約就是室內坪數。</p>
@@ -442,7 +474,27 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const toNum = v => parseFloat(String(v).replace(/[^\d.]/g, '')) || 0;   // 數字欄位都是打字輸入，只取裡面的數字
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const deg = Math.PI / 180;
-const STORE = 'likai-room-v1';
+/* 多專案：專案清單在 likai-room-projects；每個專案的內容各存一份（第一個專案沿用舊的 likai-room-v1）
+ * 目前開的是哪個專案記在這個瀏覽器分頁（sessionStorage），所以電腦上可以同時開好幾個分頁、各編各的客人 */
+const IDX_KEY = 'likai-room-projects';
+const keyOf = id => id === 'p1' ? 'likai-room-v1' : 'likai-room-' + id;
+function readIdx() { try { return JSON.parse(localStorage.getItem(IDX_KEY)); } catch (e) { return null; } }
+function writeIdx() { try { localStorage.setItem(IDX_KEY, JSON.stringify(projIdx)); } catch (e) { } }
+let projIdx = readIdx();
+if (!projIdx || !Array.isArray(projIdx.list) || !projIdx.list.length) { projIdx = { list: [{ id: 'p1', name: '專案 1', updated: Date.now() }] }; writeIdx(); }
+const newProjId = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+let projId = (() => {
+  const q = new URLSearchParams(location.search).get('proj');
+  let ses = null; try { ses = sessionStorage.getItem('likai-room-cur'); } catch (e) { }
+  return [q, ses, projIdx.last].find(id => id && projIdx.list.some(x => x.id === id)) || projIdx.list[0].id;
+})();
+let STORE = keyOf(projId);
+function rememberProj() {
+  try { sessionStorage.setItem('likai-room-cur', projId); } catch (e) { }
+  projIdx.last = projId; writeIdx();
+  const u = new URL(location.href); if (u.searchParams.has('proj')) { u.searchParams.delete('proj'); try { history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch (e) { } }
+}
+const projMeta = () => projIdx.list.find(x => x.id === projId);
 const WALL_T = 10, SNAP = 15;
 
 /* ================= 狀態 ================= */
@@ -468,11 +520,18 @@ function migrate(o) {
 }
 function load() {
   const h = location.hash.match(/^#p=(.+)$/);
-  if (h) try { project = migrate(decode(h[1])); history.replaceState(null, '', location.pathname + location.search); toast('已載入分享的配置'); state = project.spaces[project.cur]; return; } catch (e) { }
+  if (h) try {
+    project = migrate(decode(h[1])); history.replaceState(null, '', location.pathname + location.search);
+    projId = newProjId(); STORE = keyOf(projId); projIdx.list.unshift({ id: projId, name: '分享的配置', updated: Date.now() }); writeIdx();
+    toast('已另存成新專案「分享的配置」'); state = project.spaces[project.cur]; return;
+  } catch (e) { }
   try { const s = localStorage.getItem(STORE); if (s) project = migrate(JSON.parse(s)); } catch (e) { }
   state = project.spaces[project.cur];
 }
-function save() { try { localStorage.setItem(STORE, JSON.stringify(project)); } catch (e) { } }
+function save() {
+  try { localStorage.setItem(STORE, JSON.stringify(project)); } catch (e) { }
+  const m = projMeta(); if (m) { m.updated = Date.now(); writeIdx(); }
+}
 function setState(s) { project.spaces[project.cur] = state = s; }
 function snapshot() { undoStack.push(JSON.stringify(state)); if (undoStack.length > 50) undoStack.shift(); $('#undo').disabled = false; }
 function undo() {
@@ -1271,12 +1330,14 @@ function renderEstimate() {
 }
 $('#q-est').addEventListener('click', e => { const b = e.target.closest('button'); if (b) startProject(qSpaces(), +b.dataset.i); });   // 直接進那個空間
 function openQuick() {
+  { const m = projMeta(); $('#q-name').value = m && !/^專案 \d+$/.test(m.name) ? m.name : ''; }
   renderEstimate(); $('#quick').classList.add('on'); renderSteps(1);
   $('#q-back').style.display = project.started ? '' : 'none';             // 第一次來沒有上一頁
   if (project.started) pushPage('quick');
 }
 function closeQuick(byPop) { $('#quick').classList.remove('on'); if (!byPop) dropPage(); }
 function startProject(spaces, at = 0) {
+  const nm = ($('#q-name').value || '').trim(), m = projMeta(); if (nm && m) { m.name = nm; writeIdx(); renderProjects(); }
   project = { cur: at, started: true, spaces };
   closeQuick(true); switchSpace(at, 'quick');                               // 門窗設定頁會接手這一頁紀錄
 }
@@ -1288,6 +1349,53 @@ $('#q-ping').addEventListener('input', renderEstimate);
 $('#q-go').onclick = () => startProject(qSpaces());
 $('#q-manual').onclick = () => startProject(defaultProject().spaces);
 $('#restart').onclick = openQuick;
+
+/* ================= 專案 ================= */
+const fmtTime = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+function renderProjects() {
+  const m = projMeta(); $('#proj-name').textContent = m ? m.name : '專案';
+  document.title = (m ? m.name + '・' : '') + '莉凱空間配置';            // 開好幾個分頁時，分頁標題就看得出是哪位客人
+  $('#proj-rename').value = m ? m.name : '';
+  const list = [...projIdx.list].sort((a, b) => (b.updated || 0) - (a.updated || 0));
+  $('#proj-list').innerHTML = list.map(x => `<div class="proj-row ${x.id === projId ? 'on' : ''}" data-id="${x.id}">
+    <button class="pn" data-act="open"><b>${esc(x.name)}</b><span>${x.id === projId ? '目前開著・' : ''}${fmtTime(x.updated || Date.now())}</span></button>
+    ${x.id === projId ? '' : '<button class="ic" data-act="tab" title="在新分頁開啟">新分頁</button>'}
+    <button class="ic danger" data-act="del" title="刪除這個專案">刪除</button></div>`).join('');
+}
+function gotoProject(id, newTab) {
+  save();
+  const url = location.pathname + '?proj=' + encodeURIComponent(id);
+  if (newTab) { const w = window.open(url, '_blank'); if (!w) location.href = url; return; }
+  try { sessionStorage.setItem('likai-room-cur', id); } catch (e) { }
+  location.href = url;
+}
+function createProject(newTab) {
+  const n = projIdx.list.length + 1, id = newProjId();
+  projIdx.list.push({ id, name: `專案 ${n}`, updated: Date.now() }); writeIdx();
+  gotoProject(id, newTab);
+}
+$('#proj-btn').addEventListener('click', e => { e.stopPropagation(); renderProjects(); $('#proj-menu').classList.toggle('on'); });
+document.addEventListener('pointerdown', e => { if (!e.target.closest('.proj-wrap')) $('#proj-menu').classList.remove('on'); });
+$('#proj-rename').addEventListener('change', e => {
+  const m = projMeta(); if (!m) return; m.name = e.target.value.trim() || m.name; writeIdx(); renderProjects(); toast(`專案名稱：${m.name}`);
+});
+$('#proj-new').onclick = () => createProject(false);
+$('#proj-new-tab').onclick = () => createProject(true);
+let projDelArmed = null;
+$('#proj-list').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'), row = e.target.closest('.proj-row'); if (!b || !row) return;
+  const id = row.dataset.id, x = projIdx.list.find(p => p.id === id);
+  if (b.dataset.act === 'open') { if (id !== projId) gotoProject(id, false); else $('#proj-menu').classList.remove('on'); }
+  else if (b.dataset.act === 'tab') gotoProject(id, true);
+  else if (b.dataset.act === 'del') {
+    if (projDelArmed !== id) { projDelArmed = id; b.textContent = '再按一次'; setTimeout(() => { projDelArmed = null; renderProjects(); }, 3000); return; }
+    projIdx.list = projIdx.list.filter(p => p.id !== id);
+    try { localStorage.removeItem(keyOf(id)); } catch (e) { }
+    if (!projIdx.list.length) projIdx.list.push({ id: newProjId(), name: '專案 1', updated: Date.now() });
+    writeIdx(); toast(`已刪除「${x ? x.name : '專案'}」`);
+    if (id === projId) gotoProject(projIdx.list[0].id, false); else renderProjects();
+  }
+});
 
 /* ================= 空間頁籤 ================= */
 $('#spaces').addEventListener('click', e => {
@@ -1612,7 +1720,7 @@ function resize() {
 new ResizeObserver(resize).observe(canvas);
 renderer.setAnimationLoop(() => { if (gyro.on) gyroFrame(); else if (!topView) controls.update(); render(); });
 
-load(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary(); renderSpaces(); filterLib();
+load(); rememberProj(); renderProjects(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary(); renderSpaces(); filterLib();
 { const v = new URLSearchParams(location.search).get('view'); if (v === 'eye' || v === 'top') setView(v); }   // 網址加 ?view=eye 直接用人視角打開
 if (project.started && state.room.setup && project.style && project.decor !== false && state.decorStyle !== project.style) { styleDecor(); refresh(); }   // 分享連結：補上風格軟裝
 if (!project.started) openQuick();               // 第一次來：先問坪數、幾房幾廳
