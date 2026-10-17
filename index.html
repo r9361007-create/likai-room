@@ -810,7 +810,8 @@ function load() {
     project = migrate(decode(h[1])); history.replaceState(null, '', location.pathname + location.search);
     const nm = String(project.name || '分享的配置').slice(0, 20);   // 連結可以帶專案名稱（例如建商平面圖）
     projId = newProjId(); STORE = keyOf(projId); projIdx.list.unshift({ id: projId, name: nm, updated: Date.now() }); writeIdx();
-    if (START_Q.get('show') !== '1') toast(`已另存成新專案「${nm}」`);   // 客人看的連結不顯示 state = project.spaces[project.cur]; return;
+    if (START_Q.get('show') !== '1') toast(`已另存成新專案「${nm}」`);   // 客人看的連結不顯示
+    state = project.spaces[project.cur]; return;
   } catch (e) { }
   try { const s = localStorage.getItem(STORE); if (s) project = migrate(JSON.parse(s)); } catch (e) { }
   state = project.spaces[project.cur];
