@@ -196,6 +196,60 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden;b
 #mv{width:100%;height:46dvh;background:var(--surface);border-radius:12px;display:block}
 .ar-go{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:12px 22px;font-size:15px;box-shadow:var(--shadow)}
 #ar-msg{color:var(--ink);font-weight:600}
+/* ---------- 首頁：我的客人 ---------- */
+.home{position:fixed;inset:0;z-index:45;background:radial-gradient(120% 90% at 50% 0%,#fbfdff 0%,#eaf1f7 60%,#dbe6ef 100%);display:none;overflow:auto}
+.home.on{display:block}
+.home-in{max-width:980px;margin:0 auto;padding:28px max(16px,env(safe-area-inset-left,0px)) 40px max(16px,env(safe-area-inset-right,0px))}
+.home-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.home-head b{display:block;font-size:26px;letter-spacing:.04em;color:var(--brand)}
+.home-head span{color:var(--muted);font-size:13px}
+.home-new{width:100%;border:0;border-radius:18px;background:var(--brand);color:#fff;padding:20px 22px;text-align:left;display:flex;flex-direction:column;gap:4px;box-shadow:0 12px 30px rgba(0,67,106,.22);margin-bottom:22px}
+.home-new b{font-size:20px}.home-new span{color:#cfe0ec;font-size:13px}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.hc{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,67,106,.08);display:flex;flex-direction:column;cursor:pointer;border:2px solid transparent;transition:transform .15s}
+.hc:hover{transform:translateY(-2px)}
+.hc.cur{border-color:var(--yellow)}
+.hc .pic{aspect-ratio:16/10;background:radial-gradient(100% 90% at 50% 30%,#f7fafc,#e3ebf2) center/cover no-repeat;display:grid;place-items:center;color:#9fb6c8;font-size:34px;font-weight:700}
+.hc .meta{padding:10px 12px 4px}
+.hc .meta b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc .meta span{font-size:12px;color:var(--muted)}
+.hc .acts2{display:flex;gap:2px;padding:4px 8px 8px}
+.hc .acts2 button{border:0;background:none;color:var(--muted);font-size:12px;padding:6px 8px;border-radius:8px}
+.hc .acts2 button:hover{background:var(--surface);color:var(--accent)}
+.hc .acts2 .danger{color:var(--danger);margin-left:auto}
+.hc input{width:100%;font-size:15px;padding:6px 8px;border:1.5px solid var(--accent);border-radius:8px}
+/* ---------- 還沒設門窗的提示 ---------- */
+.setupchip{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:5;border:0;border-radius:999px;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--accent);font-size:13px;font-weight:600;padding:8px 16px;box-shadow:0 6px 18px rgba(0,67,106,.12);white-space:nowrap}
+.setupchip[hidden]{display:none}
+/* ---------- 給客人看（簡報模式） ---------- */
+.show-ui{display:none}
+body.show-mode .show-ui{display:block}
+body.show-mode .topbar,body.show-mode aside,body.show-mode .toolbar,body.show-mode .wallbtn,body.show-mode .gyrobtn,body.show-mode #sel,body.show-mode .mbar,body.show-mode .help,body.show-mode .setupchip,body.show-mode .more-menu{display:none!important}
+body.show-mode .app{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"main"}
+body.show-mode #vtop{display:none}
+.show-exit{position:absolute;top:14px;right:14px;z-index:6;border:0;border-radius:999px;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:8px 16px;font-size:13px;color:var(--muted);box-shadow:0 6px 18px rgba(0,67,106,.12)}
+body.show-locked .show-exit{display:none}
+.show-spaces{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:6;display:flex;gap:6px;padding:6px;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:999px;box-shadow:0 10px 30px rgba(0,67,106,.16);max-width:calc(100% - 32px);overflow-x:auto;scrollbar-width:none}
+.show-spaces button{flex:none;border:0;background:none;border-radius:999px;padding:9px 16px;font-size:14px;color:var(--ink)}
+.show-spaces button.on{background:var(--brand);color:#fff;font-weight:600}
+.show-ar{position:absolute;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:6;border:0;border-radius:999px;background:var(--yellow);color:var(--yellow-ink);font-weight:700;font-size:15px;padding:13px 20px;box-shadow:0 10px 26px rgba(0,67,106,.22)}
+.show-card{position:absolute;left:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:7;width:320px;max-width:calc(100% - 32px);background:var(--panel);border-radius:18px;box-shadow:var(--shadow);padding:14px 16px}
+.show-card[hidden]{display:none}
+.sc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+.sc-top b{display:block;font-size:18px}.sc-top span{font-size:12px;color:var(--muted)}
+body.show-mode .show-card:not([hidden]) ~ .show-ar{display:none}
+@media (max-width:760px){
+  .show-card{left:10px;right:10px;width:auto;max-width:none}
+  .show-ar{left:50%;right:auto;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .toolbar #share{display:none}
+  .home-in{padding-top:18px}
+  .home-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+}
+/* ---------- 商品庫：其他家具與佈置用品 ---------- */
+.morelib{width:100%;margin:16px 0 6px;border:1.5px dashed var(--line);background:#fff;border-radius:14px;padding:12px 14px;text-align:left;display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center}
+.morelib b{font-size:14px;color:var(--ink)}.morelib span{grid-column:1;font-size:12px;color:var(--muted)}
+.morelib i{grid-row:1/3;grid-column:2;font-style:normal;color:var(--accent);transition:transform .2s}
+.morelib.on i{transform:rotate(180deg)}
 /* ---------- 改尺寸方式 ---------- */
 .rmode{display:flex;gap:4px;margin:2px 0 6px;padding:3px;background:var(--surface);border-radius:10px}
 .rmode button{flex:1;border:0;background:none;border-radius:8px;padding:6px 4px;font-size:12px;color:var(--muted);line-height:1.3}
@@ -380,7 +434,8 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <button class="btn" id="step-back" aria-label="上一步：裝潢風格">←<span class="lbl"> 上一步</span></button>
       <button class="btn" id="undo" disabled>復原</button>
       <button class="btn" id="shot">存圖</button>
-      <button class="btn pri" id="share">分享</button>
+      <button class="btn pri" id="show-btn">給客人看</button>
+      <button class="btn" id="share">傳給客人</button>
       <button class="btn more-btn" id="more-btn" aria-label="更多功能" aria-haspopup="true">⋯</button>
     </div>
     <div class="more-menu" id="more-menu">
@@ -388,6 +443,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <button data-m="step">回上一步（裝潢風格）</button>
       <button data-m="glass">透明牆：<span id="mm-glass">關</span></button>
       <button data-m="gyro" id="mm-gyro">手機環視</button>
+      <button data-m="share">傳連結給客人</button>
       <button data-m="shot">存成圖片</button>
     </div>
     <div class="mbar" id="mbar" hidden>
@@ -428,6 +484,17 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
         <div id="s-opts"></div>
       </div>
     </div>
+    <button class="setupchip" id="setup-chip" hidden>這間還沒設定門窗・點這裡設定 ›</button>
+    <div class="show-ui" id="show-ui">
+      <button class="show-exit" id="show-exit">結束展示</button>
+      <div class="show-spaces" id="show-spaces"></div>
+      <div class="show-card" id="show-card" hidden>
+        <div class="sc-top"><div><b id="show-name"></b><span id="show-size"></span></div><button class="x" id="show-x" aria-label="關閉">×</button></div>
+        <div class="swatches" id="show-sw"></div>
+        <button class="btn pri wide" id="show-ar1">放進我家看看（AR）</button>
+      </div>
+      <button class="show-ar" id="show-ar">用相機看整組</button>
+    </div>
     <div class="toast" id="toast"></div>
     <div class="setup" id="quick">
       <div class="setup-box quick-box">
@@ -455,6 +522,14 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
           <button class="btn" id="q-manual">不知道，我自己輸入</button>
           <button class="btn pri" id="q-go">用這個開始</button>
         </div>
+      </div>
+    </div>
+    <div class="home" id="home">
+      <div class="home-in">
+        <div class="home-head"><div><b>我的客人</b><span>選一位客人繼續，或新增一位</span></div><button class="x" id="home-x" aria-label="關閉">×</button></div>
+        <button class="home-new" id="home-new"><b>＋ 新客人</b><span>輸入名字和坪數格局，馬上開始擺沙發</span></button>
+        <div class="home-grid" id="home-grid"></div>
+        <p class="hint">客人的配置都存在這台裝置。</p>
       </div>
     </div>
     <div class="stylesheet" id="style">
@@ -516,7 +591,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <button data-tab="room">房間</button>
       <button data-tab="placed">圖層 <span id="cnt">0</span></button>
     </div>
-    <div class="pane on" id="pane-lib"><div class="libbar"><b id="lib-for"></b><button class="link" id="lib-all">看全部</button></div><div class="catbar" id="catbar"></div><div id="lib"></div></div>
+    <div class="pane on" id="pane-lib"><div class="libbar"><b id="lib-for"></b><button class="link" id="lib-all">看全部</button></div><div class="catbar" id="catbar"></div><div id="lib"></div>
+      <button class="morelib" id="lib-more-btn"><b>其他家具與佈置用品</b><span>單椅、窗簾、燈、地毯、廚房、擺飾…（一般款）</span><i>▾</i></button>
+      <div id="lib-more" hidden></div></div>
     <div class="pane" id="pane-room">
       <h3>這個空間</h3>
       <div class="field"><label>名稱</label><input type="text" id="sp-name" maxlength="12"></div>
@@ -558,6 +635,7 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const deg = Math.PI / 180;
 /* 多專案：專案清單在 likai-room-projects；每個專案的內容各存一份（第一個專案沿用舊的 likai-room-v1）
  * 目前開的是哪個專案記在這個瀏覽器分頁（sessionStorage），所以電腦上可以同時開好幾個分頁、各編各的客人 */
+const START_Q = new URLSearchParams(location.search), START_SHARED = /^#p=/.test(location.hash);   // 網址原本的樣子（之後會被整理掉）
 const IDX_KEY = 'likai-room-projects';
 const keyOf = id => id === 'p1' ? 'likai-room-v1' : 'likai-room-' + id;
 function readIdx() { try { return JSON.parse(localStorage.getItem(IDX_KEY)); } catch (e) { return null; } }
@@ -606,7 +684,7 @@ function load() {
     project = migrate(decode(h[1])); history.replaceState(null, '', location.pathname + location.search);
     const nm = String(project.name || '分享的配置').slice(0, 20);   // 連結可以帶專案名稱（例如建商平面圖）
     projId = newProjId(); STORE = keyOf(projId); projIdx.list.unshift({ id: projId, name: nm, updated: Date.now() }); writeIdx();
-    toast(`已另存成新專案「${nm}」`); state = project.spaces[project.cur]; return;
+    if (START_Q.get('show') !== '1') toast(`已另存成新專案「${nm}」`);   // 客人看的連結不顯示 state = project.spaces[project.cur]; return;
   } catch (e) { }
   try { const s = localStorage.getItem(STORE); if (s) project = migrate(JSON.parse(s)); } catch (e) { }
   state = project.spaces[project.cur];
@@ -641,8 +719,8 @@ function switchSpace(i, origin) {
   const from = project.cur;
   project.cur = i; state = project.spaces[i]; selId = null; undoStack = []; $('#undo').disabled = true;
   rebuildAll(); buildSelPanel(); renderSpaces(); filterLib(); roomSummary(); setView(view === 'top' ? 'top' : view === 'eye' ? 'eye' : 'orbit'); save();
-  if (!state.room.setup) openSetup(origin || { space: from });
-  else if (project.style && state.decorStyle !== project.style && project.decor !== false) { styleDecor(); refresh(); save(); }
+  syncChip();                                                // 還沒設門窗：只顯示小提示，不強迫
+  if (project.style && state.decorStyle !== project.style && project.decor !== false) { styleDecor(); refresh(); save(); }
 }
 function renderSpaces() {
   $('#spaces').innerHTML = `<button class="sp ov ${overview ? 'on' : ''}" id="sp-ov">總覽</button>` + project.spaces.map((s, i) => `<button class="sp ${i === project.cur && !overview ? 'on' : ''}" data-i="${i}">${esc(s.name)}<span>${s.items.length}</span></button>`).join('')
@@ -1192,9 +1270,10 @@ const cur = () => state.items.find(i => i.id === selId);
 let panelOpen = false, tipShown = false;
 function select(id, open = false) {
   selId = id; panelOpen = !!id && open; buildSelPanel(); refresh();
-  if (isMob() && id && !open && document.body.dataset.sheet !== 'min') setSheet('min');   // 手機：選到家具就把抽屜收起來
+  if (isMob() && id && !open && !showMode && document.body.dataset.sheet !== 'min') setSheet('min');   // 手機：選到家具就把抽屜收起來
   if (typeof syncMobile === 'function') syncMobile();
-  if (id && !open && !tipShown && !isMob()) { tipShown = true; toast('點兩下家具可以修改尺寸、顏色'); }
+  if (typeof renderShowCard === 'function' && showMode) renderShowCard();
+  if (id && !open && !tipShown && !isMob() && !showMode) { tipShown = true; toast('點兩下家具可以修改尺寸、顏色'); }
 }
 // 常用色：窗簾、布料、木作都適用
 const SWATCHES = [['#f5f2ec', '米白'], ['#e8dfd0', '燕麥'], ['#d6c7b2', '奶茶'], ['#c3c7ca', '淺灰'], ['#7d8287', '深灰'],
@@ -1417,7 +1496,7 @@ canvas.addEventListener('pointerdown', e => {           // 要比 OrbitControls 
   const it = state.items.find(i => i.id === hit.object.userData.id); if (!it) return;
   dragPlane.constant = -hit.point.y; const p = dragPt(e); if (!p) return;
   controls.enabled = false;
-  drag = { it, dx: it.x - p.x, dz: it.z - p.z, moved: false, locked: !!it.locked, before: JSON.stringify(state) };
+  drag = { it, dx: it.x - p.x, dz: it.z - p.z, moved: false, locked: !!it.locked || showMode, warned: showMode, before: JSON.stringify(state) };
   canvas.setPointerCapture(e.pointerId);
   if (selId !== it.id) select(it.id);
 }, { capture: true });
@@ -1438,7 +1517,7 @@ canvas.addEventListener('pointerup', e => {
     if (drag.moved) { undoStack.push(drag.before); $('#undo').disabled = false; save(); }
     else {                                                // 沒拖動＝點一下；同一件 0.4 秒內再點一下＝點兩下，打開編輯面板
       const now = performance.now();
-      if (lastTap.id === drag.it.id && now - lastTap.t < 400) { select(drag.it.id, true); lastTap = {}; }
+      if (!showMode && lastTap.id === drag.it.id && now - lastTap.t < 400) { select(drag.it.id, true); lastTap = {}; }
       else lastTap = { id: drag.it.id, t: now };
     }
     drag = null; controls.enabled = !topView; return;
@@ -1449,25 +1528,31 @@ canvas.addEventListener('pointerup', e => {
 
 /* ================= 商品庫（縮圖自動產生） ================= */
 function renderLib() {
-  let h = '';
+  const card = k => { const T = PRODUCTS[k]; return `<button class="card" data-type="${k}"><div class="th" id="th-${k}"></div><b>${T.name}</b><span>${T.w}×${T.d}×${T.h}</span></button>`; };
+  let own = '', more = '';
   for (const s of SUBS) {
     const keys = Object.keys(PRODUCTS).filter(k => PRODUCTS[k].sub === s); if (!keys.length) continue;
-    h += `<section data-sub="${s}"><h3>${s}</h3><div class="grid">` + keys.map(k => { const T = PRODUCTS[k];
-      return `<button class="card" data-type="${k}"><div class="th" id="th-${k}"></div><b>${T.name}</b><span>${T.generic ? '<i class="tag">一般款</i>' : ''}${T.w}×${T.d}×${T.h}</span></button>`; }).join('') + '</div></section>';
+    const a = keys.filter(k => !PRODUCTS[k].generic), b = keys.filter(k => PRODUCTS[k].generic);
+    if (a.length) own += `<section data-sub="${s}"><h3>${s}</h3><div class="grid">${a.map(card).join('')}</div></section>`;
+    if (b.length) more += `<section data-sub="${s}"><h3>${s}</h3><div class="grid">${b.map(card).join('')}</div></section>`;
   }
-  $('#lib').innerHTML = h;
+  $('#lib').innerHTML = own; $('#lib-more').innerHTML = more;
 }
+$('#lib-more-btn').onclick = () => { const m = $('#lib-more'); m.hidden = !m.hidden; $('#lib-more-btn').classList.toggle('on', !m.hidden); };
 let libAll = false;
 function filterLib() {                          // 只列出適合目前空間的分類；按「看全部」列出所有
   const subs = SPACE_TYPES[state.type].subs;
-  document.querySelectorAll('#lib section').forEach(sec => { sec.style.display = libAll || subs.includes(sec.dataset.sub) ? '' : 'none'; });
+  document.querySelectorAll('#pane-lib section').forEach(sec => { sec.style.display = libAll || subs.includes(sec.dataset.sub) ? '' : 'none'; });
+  $('#lib-more-btn').hidden = ![...document.querySelectorAll('#lib-more section')].some(sec => sec.style.display !== 'none');
   $('#lib-for').textContent = libAll ? '全部商品' : `適合${SPACE_TYPES[state.type].name}的家具`;
   $('#lib-all').textContent = libAll ? `只看${SPACE_TYPES[state.type].name}` : '看全部';
-  $('#catbar').innerHTML = [...document.querySelectorAll('#lib section')].filter(sec => sec.style.display !== 'none').map(sec => `<button data-sub="${sec.dataset.sub}">${sec.dataset.sub}</button>`).join('');
+  $('#catbar').innerHTML = [...document.querySelectorAll('#lib section')].filter(sec => sec.style.display !== 'none').map(sec => `<button data-sub="${sec.dataset.sub}">${sec.dataset.sub}</button>`).join('')
+    + ($('#lib-more-btn').hidden ? '' : '<button data-sub="__more">其他家具與佈置</button>');
 }
 $('#catbar').addEventListener('click', e => {
   const b = e.target.closest('[data-sub]'); if (!b) return;
-  const sec = document.querySelector(`#lib section[data-sub="${b.dataset.sub}"]`), pane = $('#pane-lib');
+  if (b.dataset.sub === '__more') { $('#lib-more').hidden = false; $('#lib-more-btn').classList.add('on'); }
+  const sec = b.dataset.sub === '__more' ? $('#lib-more-btn') : document.querySelector(`#lib section[data-sub="${b.dataset.sub}"]`), pane = $('#pane-lib');
   if (sec) pane.scrollTo({ top: sec.offsetTop - $('#catbar').offsetHeight - 50, behavior: 'smooth' });
   if (isMob() && document.body.dataset.sheet === 'min') setSheet('half');
 });
@@ -1490,7 +1575,7 @@ async function makeThumbs() {
   }
   r.dispose();
 }
-$('#lib').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) addItem(c.dataset.type); });
+$('#pane-lib').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) addItem(c.dataset.type); });
 
 /* ================= 快速開始：坪數＋幾房幾廳 → 粗估每個空間 ================= */
 const PING = 33058;                              // 1 坪 = 3.3058 m² = 33058 cm²
@@ -1516,9 +1601,9 @@ function renderEstimate() {
   $('#q-est').innerHTML = estimate(qPing(), qVal('q-rooms'), qVal('q-halls'))
     .map((e, i) => `<li><button data-i="${i}"><b>${e.name}</b><span>約 ${e.ping} 坪・寬 ${e.w} × 深 ${e.d}</span><i>›</i></button></li>`).join('');
 }
-$('#q-est').addEventListener('click', e => { const b = e.target.closest('button'); if (b) startProject(qSpaces(), +b.dataset.i); });   // 直接進那個空間
+$('#q-est').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { startProject.direct = true; startProject(qSpaces(), +b.dataset.i); } });   // 直接進那個空間
 function openQuick() {
-  { const m = projMeta(); $('#q-name').value = m && !/^專案 \d+$/.test(m.name) ? m.name : ''; }
+  { const m = projMeta(); $('#q-name').value = m && !/^(專案|新客人) \d+$/.test(m.name) ? m.name : ''; }
   renderEstimate(); $('#quick').classList.add('on'); renderSteps(1);
   $('#q-back').style.display = project.started ? '' : 'none';             // 第一次來沒有上一頁
   if (project.started) pushPage('quick');
@@ -1526,8 +1611,10 @@ function openQuick() {
 function closeQuick(byPop) { $('#quick').classList.remove('on'); if (!byPop) dropPage(); }
 function startProject(spaces, at = 0) {
   const nm = ($('#q-name').value || '').trim(), m = projMeta(); if (nm && m) { m.name = nm; writeIdx(); renderProjects(); }
-  project = { cur: at, started: true, spaces };
-  closeQuick(true); switchSpace(at, 'quick');                               // 門窗設定頁會接手這一頁紀錄
+  project = { cur: at, started: true, styleAsked: true, spaces };           // 風格不再自動跳出，想要再到「房間」選
+  closeQuick(true); dropPage();
+  if (spaces.length > 1 && !startProject.direct) { switchSpace(at); enterOverview(); } else switchSpace(at);   // 直接開始擺：門窗之後想補再補
+  startProject.direct = false; toast('開始擺吧！門窗和裝潢風格之後想補再補');
 }
 for (const id of ['q-rooms', 'q-halls']) $('#' + id).addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -1547,7 +1634,8 @@ if (!document.body.dataset.sheet) document.body.dataset.sheet = 'half';
 function updateViewOffset() {
   const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
   let cover = 0;
-  if (isMob()) {
+  if (showMode) { const c = $('#show-card'); cover = c.hidden ? 70 : c.offsetHeight + 90; }
+  else if (isMob()) {
     const sel = $('#sel'), mbar = $('#mbar');
     cover = sel.classList.contains('on') ? sel.offsetHeight : document.querySelector('aside').offsetHeight;
     if (!mbar.hidden) cover = Math.max(cover, h + canvas.getBoundingClientRect().top - mbar.getBoundingClientRect().top);
@@ -1573,7 +1661,7 @@ MQ.addEventListener('change', () => { updateViewOffset(); syncMobile(); });
 document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { if (isMob() && document.body.dataset.sheet === 'min') setSheet('half'); }));
 // 點一下家具：下方出現「編輯・旋轉・複製・刪除」
 function syncMobile() {
-  const it = cur(), show = isMob() && !!it && !panelOpen && !overview;
+  const it = cur(), show = isMob() && !!it && !panelOpen && !overview && !showMode;
   $('#mbar').hidden = !show;
   if (it) $('#mbar-name').textContent = PRODUCTS[it.type].name;
   updateViewOffset();
@@ -1592,8 +1680,44 @@ $('#more-menu').addEventListener('click', e => {
   const b = e.target.closest('[data-m]'); if (!b) return;
   const m = b.dataset.m; $('#more-menu').classList.remove('on');
   if (m === 'undo') { if (undoStack.length) undo(); else toast('沒有可以復原的動作'); }
+  else if (m === 'share') $('#share').click();
   else if (m === 'step') $('#step-back').click(); else if (m === 'glass') $('#wall-mode').click(); else if (m === 'gyro') $('#gyro').click(); else if (m === 'shot') $('#shot').click();
 });
+
+/* ================= 給客人看（簡報模式） ================= */
+let showMode = false;
+function renderShowSpaces() {
+  $('#show-spaces').innerHTML = (project.spaces.length > 1 ? `<button data-i="ov" class="${overview ? 'on' : ''}">整間</button>` : '')
+    + project.spaces.map((sp, i) => `<button data-i="${i}" class="${!overview && i === project.cur ? 'on' : ''}">${esc(sp.name)}</button>`).join('');
+}
+function renderShowCard() {
+  const it = cur(); $('#show-card').hidden = !showMode || !it; if (!it) return;
+  const T = PRODUCTS[it.type];
+  $('#show-name').textContent = T.name; $('#show-size').textContent = `寬 ${it.w} × 深 ${it.d} × 高 ${it.h} 公分`;
+  const now = String(it.color || '').toLowerCase();
+  $('#show-sw').innerHTML = SWATCHES.map(([c, n]) => `<button class="${c === now ? 'on' : ''}" data-c="${c}" style="--c:${c}" title="${n}" aria-label="${n}"></button>`).join('');
+  setTimeout(updateViewOffset, 0);
+}
+function enterShow() {
+  showMode = true; document.body.classList.add('show-mode'); select(null);
+  $('#more-menu').classList.remove('on'); hideFlow();
+  if (view === 'top') setView('orbit'); else setView(view);
+  renderShowSpaces(); renderShowCard(); syncChip(); setTimeout(() => { resize(); fitCamera(); updateViewOffset(); }, 30);
+  if (!document.body.classList.contains('show-locked')) toast('展示中：客人點家具可以換顏色、用相機看');
+}
+function exitShow() {
+  showMode = false; document.body.classList.remove('show-mode'); $('#show-card').hidden = true;
+  renderSpaces(); syncChip(); setTimeout(() => { resize(); fitCamera(); updateViewOffset(); }, 30);
+}
+$('#show-btn').onclick = enterShow; $('#show-exit').onclick = exitShow; $('#show-x').onclick = () => select(null);
+$('#show-spaces').addEventListener('click', e => {
+  const b = e.target.closest('[data-i]'); if (!b) return;
+  if (b.dataset.i === 'ov') enterOverview(); else if (overview) exitOverview(+b.dataset.i); else switchSpace(+b.dataset.i);
+  renderShowSpaces(); renderShowCard(); setTimeout(fitCamera, 30);
+});
+$('#show-sw').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; editSel(it => { it.color = b.dataset.c; }); renderShowCard(); });
+$('#show-ar1').onclick = () => openAR(false);
+$('#show-ar').onclick = () => { if (overview) { toast('先選一個空間，再用相機看'); return; } openAR(true); };
 
 /* ================= 總覽 ================= */
 let overview = false;
@@ -1648,6 +1772,7 @@ function renderOverviewPanel() {
 $('#ov-list').addEventListener('click', e => { const b = e.target.closest('.ovc'); if (b) exitOverview(+b.dataset.i); });
 function enterOverview() {
   if (overview) return;
+  if (typeof showMode !== 'undefined' && showMode) setTimeout(renderShowSpaces, 0);
   overview = true; selId = null; buildSelPanel(); document.body.classList.add('ov-mode');
   roomGroup.visible = furnGroup.visible = markGroup.visible = false; houseGroup.visible = true;
   if (isMob()) setSheet('half');
@@ -1669,7 +1794,7 @@ function ovDown(e) {
   ovDrag = { i, dx: sp.pos.x - pt.x, dz: sp.pos.z - pt.z, x0: e.clientX, y0: e.clientY, moved: false };
 }
 function ovMove(e) {
-  if (!ovDrag) return;
+  if (!ovDrag || showMode) return;                          // 展示中不能拖房間
   if (!ovDrag.moved && Math.hypot(e.clientX - ovDrag.x0, e.clientY - ovDrag.y0) < 6) return;
   ovDrag.moved = true; const pt = dragPt(e); if (!pt) return;
   const sp = project.spaces[ovDrag.i]; sp.pos = { x: Math.round((pt.x + ovDrag.dx) / 5) * 5, z: Math.round((pt.z + ovDrag.dz) / 5) * 5 };
@@ -1695,7 +1820,7 @@ function renderProjects() {
     <button class="ic danger" data-act="del" title="刪除這個專案">刪除</button></div>`).join('');
 }
 function gotoProject(id, newTab) {
-  save();
+  save(); if (project.started) saveThumb();
   const url = location.pathname + '?proj=' + encodeURIComponent(id);
   if (newTab) { const w = window.open(url, '_blank'); if (!w) location.href = url; return; }
   try { sessionStorage.setItem('likai-room-cur', id); } catch (e) { }
@@ -1703,10 +1828,61 @@ function gotoProject(id, newTab) {
 }
 function createProject(newTab) {
   const n = projIdx.list.length + 1, id = newProjId();
-  projIdx.list.push({ id, name: `專案 ${n}`, updated: Date.now() }); writeIdx();
+  projIdx.list.push({ id, name: `新客人 ${n}`, updated: Date.now() }); writeIdx();
   gotoProject(id, newTab);
 }
-$('#proj-btn').addEventListener('click', e => { e.stopPropagation(); renderProjects(); $('#proj-menu').classList.toggle('on'); });
+$('#proj-btn').addEventListener('click', e => { e.stopPropagation(); openHome(); });   // 左上角＝回到「我的客人」
+/* ---------- 首頁：我的客人 ---------- */
+const THUMB = id => 'likai-room-thumb-' + id;
+function saveThumb() {                                  // 每位客人一張小縮圖，首頁用
+  try {
+    render(); const c = document.createElement('canvas'), W = 360, H = 225; c.width = W; c.height = H;
+    const x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#f7fafc'); g.addColorStop(1, '#e1eaf1'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    const s = Math.max(W / canvas.width, H / canvas.height), w = canvas.width * s, h = canvas.height * s; x.drawImage(canvas, (W - w) / 2, (H - h) / 2, w, h);
+    localStorage.setItem(THUMB(projId), c.toDataURL('image/jpeg', 0.72));
+  } catch (e) { }
+}
+addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && project.started) saveThumb(); });
+function projStats(id) {
+  try { const d = id === projId ? project : JSON.parse(localStorage.getItem(keyOf(id)) || 'null'); if (!d || !d.spaces) return '還沒開始';
+    return `${d.spaces.length} 個空間・家具 ${d.spaces.reduce((a, s) => a + (s.items || []).length, 0)} 件`; } catch (e) { return ''; }
+}
+function renderHome() {
+  const list = [...projIdx.list].sort((a, b) => (b.updated || 0) - (a.updated || 0));
+  $('#home-grid').innerHTML = list.map(x => {
+    let pic = ''; try { pic = localStorage.getItem(THUMB(x.id)) || ''; } catch (e) { }
+    return `<div class="hc ${x.id === projId ? 'cur' : ''}" data-id="${x.id}">
+      <div class="pic" style="${pic ? `background-image:url(${pic})` : ''}">${pic ? '' : esc(x.name.slice(0, 1))}</div>
+      <div class="meta"><b>${esc(x.name)}</b><span>${projStats(x.id)}・${fmtTime(x.updated || Date.now())}</span></div>
+      <div class="acts2"><button data-act="rename">改名</button><button data-act="tab">新分頁</button><button data-act="del" class="danger">刪除</button></div></div>`;
+  }).join('');
+}
+function openHome() { if (project.started) saveThumb(); renderHome(); $('#home-x').hidden = !project.started; $('#home').classList.add('on'); }
+function closeHome() { $('#home').classList.remove('on'); }
+$('#home-x').onclick = closeHome;
+$('#home-new').onclick = () => createProject(false);
+let homeDel = null;
+$('#home-grid').addEventListener('click', e => {
+  const card = e.target.closest('.hc'); if (!card) return;
+  const id = card.dataset.id, x = projIdx.list.find(q => q.id === id), b = e.target.closest('[data-act]');
+  if (e.target.closest('input')) return;
+  if (!b) { if (id === projId) closeHome(); else gotoProject(id, false); return; }
+  const act = b.dataset.act;
+  if (act === 'tab') gotoProject(id, true);
+  else if (act === 'rename') {
+    const meta = card.querySelector('.meta'); meta.innerHTML = `<input type="text" maxlength="20" value="${esc(x.name)}">`;
+    const inp = meta.querySelector('input'); inp.focus(); inp.select();
+    const done = () => { x.name = inp.value.trim() || x.name; writeIdx(); renderHome(); if (id === projId) renderProjects(); };
+    inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') inp.blur(); }); inp.addEventListener('blur', done);
+  } else if (act === 'del') {
+    if (homeDel !== id) { homeDel = id; b.textContent = '再按一次刪除'; setTimeout(() => { homeDel = null; renderHome(); }, 3000); return; }
+    projIdx.list = projIdx.list.filter(q => q.id !== id);
+    try { localStorage.removeItem(keyOf(id)); localStorage.removeItem(THUMB(id)); } catch (e) { }
+    if (!projIdx.list.length) projIdx.list.push({ id: newProjId(), name: '專案 1', updated: Date.now() });
+    writeIdx(); toast(`已刪除「${x ? x.name : ''}」`);
+    if (id === projId) gotoProject(projIdx.list[0].id, false); else renderHome();
+  }
+});
 document.addEventListener('pointerdown', e => { if (!e.target.closest('.proj-wrap')) $('#proj-menu').classList.remove('on'); });
 $('#proj-rename').addEventListener('change', e => {
   const m = projMeta(); if (!m) return; m.name = e.target.value.trim() || m.name; writeIdx(); renderProjects(); toast(`專案名稱：${m.name}`);
@@ -1790,12 +1966,14 @@ function openSetup(from = 'edit') {
   $('#setup-title').textContent = `設定${state.name}`; snapshot(); renderOps(); drawPlan(); $('#setup').classList.add('on'); pushPage('setup');
   $('#setup-done').textContent = project.style || project.styleAsked ? '完成，開始擺家具' : '下一步：選裝潢風格'; renderSteps(2);
 }
+function syncChip() { $('#setup-chip').hidden = overview || showMode || !!state.room.setup; }
+$('#setup-chip').onclick = () => openSetup('edit');
 function closeSetup() {
   const first = !state.room.setup;
   $('#setup').classList.remove('on'); state.room.setup = true;
   if (!project.style && !project.styleAsked) { save(); openStyle(); return; }   // 第一次：接著選裝潢風格（可跳過；跳過後不再自動跳出）
   if (first || state.decorStyle !== project.style) { styleDecor(); refresh(); }   // 新空間：放上風格軟裝
-  save(); roomSummary(); dropPage();
+  save(); roomSummary(); dropPage(); syncChip();
   setView(view === 'top' ? 'top' : 'orbit');
 }
 function setupBack(byPop) {
@@ -1996,13 +2174,14 @@ $('#shot').onclick = () => {
   a.href = out.toDataURL('image/png'); a.download = '莉凱空間配置.png'; a.click();
 };
 $('#share').onclick = async () => {
-  const url = location.origin + location.pathname + '#p=' + encode();
+  const url = location.origin + location.pathname + '?show=1#p=' + encode();   // 客人打開直接是展示畫面
   if (navigator.share && matchMedia('(pointer:coarse)').matches) { try { await navigator.share({ title: '莉凱家俱・空間配置', url }); return; } catch (e) { } }
-  try { await navigator.clipboard.writeText(url); toast('分享連結已複製'); } catch (e) { prompt('複製這個連結分享：', url); }
+  try { await navigator.clipboard.writeText(url); toast('已複製給客人的連結，貼到 LINE 傳給他'); } catch (e) { prompt('複製這個連結分享：', url); }
 };
 addEventListener('keydown', e => {
   if (e.target.matches('input,select')) return;
-  if ($('#quick').classList.contains('on') || $('#style').classList.contains('on') || $('#ar').classList.contains('on')) return;
+  if ($('#quick').classList.contains('on') || $('#style').classList.contains('on') || $('#ar').classList.contains('on') || $('#home').classList.contains('on')) return;
+  if (showMode) { if (e.key === 'Escape' && !document.body.classList.contains('show-locked')) exitShow(); return; }
   if ($('#setup').classList.contains('on')) { if (e.key === 'Escape') closeSetup(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
   else if (e.key === 'r' || e.key === 'R') rotate();
@@ -2064,8 +2243,13 @@ load(); rememberProj(); renderProjects(); renderLib(); rebuildAll(); resize(); f
 { const v = new URLSearchParams(location.search).get('view'); if (v === 'eye' || v === 'top') setView(v); }   // 網址加 ?view=eye 直接用人視角打開
 if (project.started && state.room.setup && project.style && project.decor !== false && state.decorStyle !== project.style) { styleDecor(); refresh(); }   // 分享連結：補上風格軟裝
 if (!project.started) openQuick();               // 第一次來：先問坪數、幾房幾廳
-else if (!state.room.setup) { openSetup(); undoStack = []; $('#undo').disabled = true; }
 else if (project.spaces.length > 1) enterOverview();   // 有兩個以上空間：一打開先看整間房子
+{
+  const q = START_Q, shared = START_SHARED || q.get('show') === '1';
+  syncChip();
+  if (q.get('show') === '1') { document.body.classList.add('show-locked'); enterShow(); }   // 客人打開的連結：只有展示畫面
+  else if (!q.get('proj') && !shared && (project.started || projIdx.list.length > 1)) openHome();   // 業務一打開：先看我的客人
+}
 $('#loading').remove();
 makeThumbs();
 </script>
