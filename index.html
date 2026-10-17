@@ -522,8 +522,9 @@ function load() {
   const h = location.hash.match(/^#p=(.+)$/);
   if (h) try {
     project = migrate(decode(h[1])); history.replaceState(null, '', location.pathname + location.search);
-    projId = newProjId(); STORE = keyOf(projId); projIdx.list.unshift({ id: projId, name: '分享的配置', updated: Date.now() }); writeIdx();
-    toast('已另存成新專案「分享的配置」'); state = project.spaces[project.cur]; return;
+    const nm = String(project.name || '分享的配置').slice(0, 20);   // 連結可以帶專案名稱（例如建商平面圖）
+    projId = newProjId(); STORE = keyOf(projId); projIdx.list.unshift({ id: projId, name: nm, updated: Date.now() }); writeIdx();
+    toast(`已另存成新專案「${nm}」`); state = project.spaces[project.cur]; return;
   } catch (e) { }
   try { const s = localStorage.getItem(STORE); if (s) project = migrate(JSON.parse(s)); } catch (e) { }
   state = project.spaces[project.cur];
