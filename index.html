@@ -2207,6 +2207,10 @@ function buildOverview(full) {                     // full：走進去逛用，�
     fl.rotation.x = -Math.PI / 2; fl.position.set((x0 + x1) / 2, -0.6, (z0 + z1) / 2); fl.receiveShadow = true; houseGroup.add(fl);
     const ce = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshStandardMaterial({ color: '#f7f5f0', roughness: 0.95 }));
     ce.rotation.x = Math.PI / 2; ce.position.set((x0 + x1) / 2, H, (z0 + z1) / 2); ce.userData.ceiling = true; houseGroup.add(ce);
+    const wm = new THREE.MeshStandardMaterial({ color: '#efece6', roughness: 0.9 });   // 外圍一圈牆：走道盡頭不會看到外面
+    for (const [cx, cz, sx, sz] of [[(x0 + x1) / 2, z0 - 5, x1 - x0 + 20, 10], [(x0 + x1) / 2, z1 + 5, x1 - x0 + 20, 10], [x0 - 5, (z0 + z1) / 2, 10, z1 - z0], [x1 + 5, (z0 + z1) / 2, 10, z1 - z0]]) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(sx, H, sz), wm); m.position.set(cx, H / 2, cz); houseGroup.add(m);
+    }
   }
   { const bb = new THREE.Box3().setFromObject(houseGroup), S = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z), lw = Math.max(80, Math.min(190, S * 0.13));   // 標籤大小跟著房子大小
     houseGroup.traverse(o => { if (o.userData.label) o.scale.set(lw, lw * 0.344, 1); }); }
