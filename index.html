@@ -192,6 +192,11 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 #mv{width:100%;height:46dvh;background:var(--surface);border-radius:12px;display:block}
 .ar-go{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:12px 22px;font-size:15px;box-shadow:var(--shadow)}
 #ar-msg{color:var(--ink);font-weight:600}
+/* ---------- 商品分類捷徑 ---------- */
+.catbar{display:flex;gap:6px;overflow-x:auto;padding:6px 0 4px;position:sticky;top:-8px;z-index:2;background:var(--panel);scrollbar-width:none}
+.catbar button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:13px;color:var(--ink)}
+.catbar button:active{background:var(--accent-soft)}
+.grabber,.mbar,.more-btn,.more-menu{display:none}
 /* ---------- 總覽 ---------- */
 .pane-ov{display:none;flex:1;overflow:auto;padding:12px 14px 24px}
 body.ov-mode .pane-ov{display:block}
@@ -259,7 +264,40 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 .addrow{grid-template-columns:repeat(auto-fit,minmax(96px,1fr))}
 /* ---------- 手機 ---------- */
 @media (max-width:760px){
-  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 52dvh minmax(0,1fr);grid-template-areas:"top" "main" "side"}
+  /* 手機：3D 全螢幕，商品／房間／圖層收在下方抽屜 */
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top" "main"}
+  aside{position:fixed;left:0;right:0;bottom:0;z-index:20;height:46dvh;border:0;border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(0,67,106,.18);transition:height .25s ease;padding-bottom:env(safe-area-inset-bottom,0px)}
+  body[data-sheet="min"] aside{height:calc(76px + env(safe-area-inset-bottom,0px))}
+  body[data-sheet="full"] aside{height:86dvh}
+  body.sheet-drag aside{transition:none}
+  .grabber{display:flex;justify-content:center;align-items:center;height:20px;flex:none;touch-action:none;cursor:grab}
+  .grabber i{width:40px;height:5px;border-radius:3px;background:#c9d6e2}
+  .tabs{margin:0 10px 4px}
+  .tabs button{padding:10px 0;font-size:14px}
+  .pane{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+  body[data-sheet="min"] .pane,body[data-sheet="min"] .pane-ov{visibility:hidden}
+  /* 次要按鈕收進「⋯」 */
+  .toolbar #undo,.toolbar #shot,.toolbar #step-back,.wallbtn,.gyrobtn{display:none!important}
+  .more-btn{display:inline-block;font-size:18px;line-height:1;padding:6px 13px}
+  .more-menu{position:fixed;top:104px;right:10px;z-index:32;background:var(--panel);border-radius:14px;box-shadow:var(--shadow);padding:6px;flex-direction:column;min-width:200px}
+  .more-menu.on{display:flex}
+  .more-menu button{border:0;background:none;text-align:left;padding:12px 14px;font-size:15px;border-radius:10px;color:var(--ink)}
+  .more-menu button:active{background:var(--accent-soft)}
+  /* 點一下家具就出現的動作列 */
+  .mbar{display:flex;position:fixed;left:10px;right:10px;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:21;background:var(--panel);border-radius:16px;box-shadow:var(--shadow);padding:8px 10px;align-items:center;gap:8px}
+  .mbar[hidden]{display:none}
+  .mbar b{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mbar-btns{display:flex;gap:6px;flex:none}
+  .mbar button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 11px;font-size:14px;color:var(--ink)}
+  .mbar button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .mbar button.del{color:var(--danger)}
+  /* 編輯面板：從下方升起的半屏 */
+  .sel-card{position:fixed;left:0;right:0;bottom:0;width:auto;max-height:58dvh;border-radius:18px 18px 0 0;z-index:24;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:4px solid var(--accent)}
+  .pad{grid-template-columns:repeat(3,40px);grid-template-rows:repeat(2,40px)}
+  .pad button{font-size:17px}
+  .swatches button,.sw-custom input{width:30px;height:30px}
+  .gaps input{font-size:16px}
+  .acts .btn{padding:11px 0;font-size:14px}
   .topbar{padding:0 10px;gap:10px}
   .brand{padding:8px 0}.brand b{display:none}
   .projbtn{max-width:110px;padding:5px 8px;font-size:12px}
@@ -277,7 +315,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
   .toolbar{top:10px;right:10px}
   .toolbar #undo{display:none}
   .btn{padding:6px 12px;font-size:13px}
-  .sel-card{left:8px;right:8px;bottom:8px;width:auto;max-height:calc(100% - 60px)}
+
   .setup{padding:0}
   .setup-box{border-radius:0;height:100%;max-height:none}
   .setup-body{grid-template-columns:1fr;gap:10px;padding:12px 14px}
@@ -335,6 +373,20 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <button class="btn" id="undo" disabled>復原</button>
       <button class="btn" id="shot">存圖</button>
       <button class="btn pri" id="share">分享</button>
+      <button class="btn more-btn" id="more-btn" aria-label="更多功能" aria-haspopup="true">⋯</button>
+    </div>
+    <div class="more-menu" id="more-menu">
+      <button data-m="undo">復原</button>
+      <button data-m="step">回上一步（裝潢風格）</button>
+      <button data-m="glass">透明牆：<span id="mm-glass">關</span></button>
+      <button data-m="gyro" id="mm-gyro">手機環視</button>
+      <button data-m="shot">存成圖片</button>
+    </div>
+    <div class="mbar" id="mbar" hidden>
+      <b id="mbar-name"></b>
+      <div class="mbar-btns">
+        <button data-a="edit" class="pri">編輯</button><button data-a="rot">旋轉</button><button data-a="dup">複製</button><button data-a="del" class="del">刪除</button>
+      </div>
     </div>
     <div class="sel-card" id="sel">
       <div class="top"><b id="s-name"></b><button class="x" id="s-close" aria-label="關閉">×</button></div>
@@ -443,6 +495,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
     <div class="loading" id="loading">載入 3D 模型中…</div>
   </main>
   <aside>
+    <div class="grabber" id="grabber" aria-label="拖拉調整高度"><i></i></div>
     <div class="pane-ov" id="pane-ov">
       <h3>整間房子總覽</h3>
       <p class="hint" id="ov-sum"></p>
@@ -454,7 +507,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <button data-tab="room">房間</button>
       <button data-tab="placed">圖層 <span id="cnt">0</span></button>
     </div>
-    <div class="pane on" id="pane-lib"><div class="libbar"><b id="lib-for"></b><button class="link" id="lib-all">看全部</button></div><div id="lib"></div></div>
+    <div class="pane on" id="pane-lib"><div class="libbar"><b id="lib-for"></b><button class="link" id="lib-all">看全部</button></div><div class="catbar" id="catbar"></div><div id="lib"></div></div>
     <div class="pane" id="pane-room">
       <h3>這個空間</h3>
       <div class="field"><label>名稱</label><input type="text" id="sp-name" maxlength="12"></div>
@@ -1067,7 +1120,9 @@ const cur = () => state.items.find(i => i.id === selId);
 let panelOpen = false, tipShown = false;
 function select(id, open = false) {
   selId = id; panelOpen = !!id && open; buildSelPanel(); refresh();
-  if (id && !open && !tipShown) { tipShown = true; toast('點兩下家具可以修改尺寸、顏色'); }
+  if (isMob() && id && !open && document.body.dataset.sheet !== 'min') setSheet('min');   // 手機：選到家具就把抽屜收起來
+  if (typeof syncMobile === 'function') syncMobile();
+  if (id && !open && !tipShown && !isMob()) { tipShown = true; toast('點兩下家具可以修改尺寸、顏色'); }
 }
 // 常用色：窗簾、布料、木作都適用
 const SWATCHES = [['#f5f2ec', '米白'], ['#e8dfd0', '燕麥'], ['#d6c7b2', '奶茶'], ['#c3c7ca', '淺灰'], ['#7d8287', '深灰'],
@@ -1090,6 +1145,7 @@ $('#s-sw').addEventListener('click', e => {
 });
 $('#s-sw').addEventListener('change', e => { if (e.target.id === 's-sw-custom') { editSel(it => { it.color = e.target.value; }); buildSelPanel(); } });
 function buildSelPanel() {
+  setTimeout(() => { try { syncMobile(); } catch (e) { } }, 0);   // 手機動作列跟著選取狀態（延後執行，啟動時也安全）
   const it = cur(); $('#sel').classList.toggle('on', !!it && panelOpen); if (!it) return;
   const T = PRODUCTS[it.type];
   $('#s-name').textContent = T.name;
@@ -1182,7 +1238,7 @@ async function openAR(all = false) {
 }
 function closeAR(byPop) { $('#ar').classList.remove('on'); if (!byPop) dropPage(); }
 $('#s-ar').onclick = () => openAR(false); $('#ar-all').onclick = () => openAR(true); $('#ar-x').onclick = () => closeAR(false);
-$('#s-rot').onclick = rotate; $('#s-del').onclick = remove; $('#s-dup').onclick = duplicate; $('#s-close').onclick = () => select(null);
+$('#s-rot').onclick = rotate; $('#s-del').onclick = remove; $('#s-dup').onclick = duplicate; $('#s-close').onclick = () => { if (isMob() && selId) { panelOpen = false; buildSelPanel(); syncMobile(); } else select(null); };   // 手機：關面板回到動作列
 
 /* ================= 手動移動：離牆距離打字、方向鍵 ================= */
 function moveSel(dx, dz, snap) {
@@ -1320,7 +1376,14 @@ function filterLib() {                          // 只列出適合目前空間�
   document.querySelectorAll('#lib section').forEach(sec => { sec.style.display = libAll || subs.includes(sec.dataset.sub) ? '' : 'none'; });
   $('#lib-for').textContent = libAll ? '全部商品' : `適合${SPACE_TYPES[state.type].name}的家具`;
   $('#lib-all').textContent = libAll ? `只看${SPACE_TYPES[state.type].name}` : '看全部';
+  $('#catbar').innerHTML = [...document.querySelectorAll('#lib section')].filter(sec => sec.style.display !== 'none').map(sec => `<button data-sub="${sec.dataset.sub}">${sec.dataset.sub}</button>`).join('');
 }
+$('#catbar').addEventListener('click', e => {
+  const b = e.target.closest('[data-sub]'); if (!b) return;
+  const sec = document.querySelector(`#lib section[data-sub="${b.dataset.sub}"]`), pane = $('#pane-lib');
+  if (sec) pane.scrollTo({ top: sec.offsetTop - $('#catbar').offsetHeight - 50, behavior: 'smooth' });
+  if (isMob() && document.body.dataset.sheet === 'min') setSheet('half');
+});
 async function makeThumbs() {
   const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
   r.setSize(240, 180); r.toneMapping = THREE.ACESFilmicToneMapping; r.outputColorSpace = THREE.SRGBColorSpace;
@@ -1388,6 +1451,63 @@ $('#q-go').onclick = () => startProject(qSpaces());
 $('#q-manual').onclick = () => startProject(defaultProject().spaces);
 $('#restart').onclick = openQuick;
 
+/* ================= 手機介面 ================= */
+const MQ = matchMedia('(max-width: 760px)'), isMob = () => MQ.matches;
+// 下方抽屜：min（只剩分頁）／half／full
+function setSheet(st) { document.body.dataset.sheet = st; setTimeout(updateViewOffset, 280); }
+if (!document.body.dataset.sheet) document.body.dataset.sheet = 'half';
+// 3D 畫面被抽屜或面板蓋住下半部時，把畫面往上推，家具才看得到
+function updateViewOffset() {
+  const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
+  let cover = 0;
+  if (isMob()) {
+    const sel = $('#sel'), mbar = $('#mbar');
+    cover = sel.classList.contains('on') ? sel.offsetHeight : document.querySelector('aside').offsetHeight;
+    if (!mbar.hidden) cover = Math.max(cover, h + canvas.getBoundingClientRect().top - mbar.getBoundingClientRect().top);
+  }
+  const off = Math.min(h * 0.4, Math.max(0, cover) / 2);
+  for (const c of [persp, ortho]) { if (off > 2) c.setViewOffset(w, h, 0, off, w, h); else c.clearViewOffset(); }
+}
+MQ.addEventListener('change', () => { updateViewOffset(); syncMobile(); });
+// 拖拉抽屜上方的小橫條調整高度，放開時停在最近的一段
+{
+  let st = null;
+  $('#grabber').addEventListener('pointerdown', e => { st = { y: e.clientY, h: document.querySelector('aside').offsetHeight, moved: false }; $('#grabber').setPointerCapture(e.pointerId); document.body.classList.add('sheet-drag'); });
+  $('#grabber').addEventListener('pointermove', e => { if (!st) return; const dy = st.y - e.clientY; if (Math.abs(dy) > 4) st.moved = true; document.querySelector('aside').style.height = Math.max(70, Math.min(innerHeight * 0.9, st.h + dy)) + 'px'; });
+  const end = e => {
+    if (!st) return; const a = document.querySelector('aside'), h = a.offsetHeight, vh = innerHeight; document.body.classList.remove('sheet-drag'); a.style.height = '';
+    const cur = document.body.dataset.sheet;
+    if (!st.moved) setSheet(cur === 'min' ? 'half' : 'min');                 // 點一下：收起／拉開
+    else setSheet(h < vh * 0.25 ? 'min' : h < vh * 0.66 ? 'half' : 'full');
+    st = null;
+  };
+  $('#grabber').addEventListener('pointerup', end); $('#grabber').addEventListener('pointercancel', end);
+}
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { if (isMob() && document.body.dataset.sheet === 'min') setSheet('half'); }));
+// 點一下家具：下方出現「編輯・旋轉・複製・刪除」
+function syncMobile() {
+  const it = cur(), show = isMob() && !!it && !panelOpen && !overview;
+  $('#mbar').hidden = !show;
+  if (it) $('#mbar-name').textContent = PRODUCTS[it.type].name;
+  updateViewOffset();
+}
+$('#mbar').addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if (!b || !cur()) return;
+  const a = b.dataset.a;
+  if (a === 'edit') select(selId, true); else if (a === 'rot') rotate(); else if (a === 'dup') duplicate(); else if (a === 'del') remove();
+  syncMobile();
+});
+// 「⋯」選單
+function syncMoreMenu() { $('#mm-glass').textContent = glassWalls ? '開' : '關'; $('#mm-gyro').hidden = $('#gyro').hidden; $('#mm-gyro').textContent = gyro.on ? '結束手機環視' : '手機環視'; }
+$('#more-btn').addEventListener('click', e => { e.stopPropagation(); syncMoreMenu(); $('#more-menu').classList.toggle('on'); });
+document.addEventListener('pointerdown', e => { if (!e.target.closest('#more-menu,#more-btn')) $('#more-menu').classList.remove('on'); });
+$('#more-menu').addEventListener('click', e => {
+  const b = e.target.closest('[data-m]'); if (!b) return;
+  const m = b.dataset.m; $('#more-menu').classList.remove('on');
+  if (m === 'undo') { if (undoStack.length) undo(); else toast('沒有可以復原的動作'); }
+  else if (m === 'step') $('#step-back').click(); else if (m === 'glass') $('#wall-mode').click(); else if (m === 'gyro') $('#gyro').click(); else if (m === 'shot') $('#shot').click();
+});
+
 /* ================= 總覽 ================= */
 let overview = false;
 const houseGroup = new THREE.Group(); houseGroup.visible = false; scene.add(houseGroup);
@@ -1441,6 +1561,7 @@ function enterOverview() {
   if (overview) return;
   overview = true; selId = null; buildSelPanel(); document.body.classList.add('ov-mode');
   roomGroup.visible = furnGroup.visible = markGroup.visible = false; houseGroup.visible = true;
+  if (isMob()) setSheet('half');
   buildOverview(); renderOverviewPanel(); renderSpaces(); setView(view === 'top' ? 'top' : 'orbit'); fitCamera(); save();
 }
 function exitOverview(i) {
@@ -1839,6 +1960,7 @@ function render() {
   renderer.render(scene, camera);
 }
 function resize() {
+  setTimeout(updateViewOffset, 0);
   const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
   renderer.setSize(w, h, false); persp.aspect = w / h; persp.updateProjectionMatrix(); sizeOrtho();
 }
