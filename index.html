@@ -192,6 +192,20 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
 #mv{width:100%;height:46dvh;background:var(--surface);border-radius:12px;display:block}
 .ar-go{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:12px 22px;font-size:15px;box-shadow:var(--shadow)}
 #ar-msg{color:var(--ink);font-weight:600}
+/* ---------- 總覽 ---------- */
+.pane-ov{display:none;flex:1;overflow:auto;padding:12px 14px 24px}
+body.ov-mode .pane-ov{display:block}
+body.ov-mode aside .tabs,body.ov-mode aside .pane{display:none!important}
+body.ov-mode #sel,body.ov-mode #veye{display:none!important}
+.ov-list{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.ovc{display:flex;align-items:center;gap:10px;border:0;border-radius:12px;background:var(--surface);padding:12px;text-align:left;width:100%}
+.ovc:hover{background:var(--accent-soft)}
+.ovc .t{flex:1;min-width:0}
+.ovc b{display:block;font-size:15px}
+.ovc span{font-size:12px;color:var(--muted)}
+.ovc i{font-style:normal;color:var(--accent);font-weight:700;white-space:nowrap;font-size:13px}
+.sp.ov{border-color:rgba(249,229,115,.6);color:var(--yellow);font-weight:600}
+.sp.ov.on{background:var(--yellow);color:var(--yellow-ink)}
 /* ---------- 專案 ---------- */
 .proj-wrap{position:relative;flex:none}
 .projbtn{display:flex;align-items:center;gap:6px;max-width:220px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;border-radius:10px;padding:6px 10px;font-size:13px}
@@ -429,6 +443,12 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden}
     <div class="loading" id="loading">載入 3D 模型中…</div>
   </main>
   <aside>
+    <div class="pane-ov" id="pane-ov">
+      <h3>整間房子總覽</h3>
+      <p class="hint" id="ov-sum"></p>
+      <div class="ov-list" id="ov-list"></div>
+      <p class="hint">點畫面上的房間或下面的按鈕，就能進去擺家具；按住房間拖曳可以調整位置。之後隨時按上方的「總覽」回來看整體。</p>
+    </div>
     <div class="tabs">
       <button data-tab="lib" class="on">商品</button>
       <button data-tab="room">房間</button>
@@ -536,7 +556,7 @@ function save() {
 function setState(s) { project.spaces[project.cur] = state = s; }
 function snapshot() { undoStack.push(JSON.stringify(state)); if (undoStack.length > 50) undoStack.shift(); $('#undo').disabled = false; }
 function undo() {
-  if (!undoStack.length) return;
+  if (overview || !undoStack.length) return;                 // 總覽時不復原（復原是針對某個空間）
   setState(JSON.parse(undoStack.pop())); $('#undo').disabled = !undoStack.length;
   if (!state.items.some(i => i.id === selId)) selId = null;
   rebuildAll(); buildSelPanel(); roomSummary(); save();
@@ -545,7 +565,7 @@ function undo() {
 const KEEP = ['type', 'x', 'z', 'rot'];
 function encode() {
   const slim = it => { const T = PRODUCTS[it.type], o = {}; for (const k of Object.keys(it)) if (k !== 'id' && (KEEP.includes(k) || it[k] !== (T[k] ?? (T.def && T.def[k])))) o[k] = it[k]; return o; };
-  const json = JSON.stringify({ cur: project.cur, spaces: project.spaces.map(s => ({ name: s.name, type: s.type, room: s.room, items: s.items.map(slim) })) });
+  const json = JSON.stringify({ cur: project.cur, spaces: project.spaces.map(s => ({ name: s.name, type: s.type, room: s.room, pos: s.pos, items: s.items.map(slim) })), name: (projMeta() || {}).name });
   return btoa(String.fromCharCode(...new TextEncoder().encode(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 function decode(s) {
@@ -563,7 +583,7 @@ function switchSpace(i, origin) {
   else if (project.style && state.decorStyle !== project.style && project.decor !== false) { styleDecor(); refresh(); save(); }
 }
 function renderSpaces() {
-  $('#spaces').innerHTML = project.spaces.map((s, i) => `<button class="sp ${i === project.cur ? 'on' : ''}" data-i="${i}">${esc(s.name)}<span>${s.items.length}</span></button>`).join('')
+  $('#spaces').innerHTML = `<button class="sp ov ${overview ? 'on' : ''}" id="sp-ov">總覽</button>` + project.spaces.map((s, i) => `<button class="sp ${i === project.cur && !overview ? 'on' : ''}" data-i="${i}">${esc(s.name)}<span>${s.items.length}</span></button>`).join('')
     + `<button class="sp add" id="sp-add" aria-label="新增空間">＋</button>`;
 }
 
@@ -789,6 +809,13 @@ function zoneBoxes() {
 /* ---------- 視角：3D 鳥瞰／平面／人視角 ---------- */
 let view = 'orbit';
 function fitCamera() {
+  if (overview) {                                            // 總覽：從斜上方看整間房子
+    const b = new THREE.Box3().setFromObject(houseGroup), c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3());
+    const a = canvas.clientWidth / Math.max(1, canvas.clientHeight), S = Math.max(sz.z, sz.x / Math.min(1.6, a) * 1.1) * 1.05;
+    persp.fov = 42; persp.updateProjectionMatrix(); controls.minDistance = 80; controls.maxPolarAngle = 88 * deg; controls.maxDistance = 8000;
+    persp.position.set(c.x + sz.x * 0.05, S * 1.1, c.z + sz.z / 2 + S * 0.75); controls.target.set(c.x, 0, c.z); controls.update();
+    sizeOrtho(); return;
+  }
   const { w, d } = state.room, a = canvas.clientWidth / Math.max(1, canvas.clientHeight);
   persp.fov = 42; persp.updateProjectionMatrix(); controls.minDistance = 80; controls.maxPolarAngle = 88 * deg;
   const S = Math.max(d, w / Math.min(1.6, a) * 1.1) * 1.15;          // 手機直式畫面比較窄：鏡頭要拉遠才看得到整個房間
@@ -801,6 +828,12 @@ function eyeCamera() {                          // 站在前牆邊、眼睛高�
   persp.position.set(0, 155, d / 2 - 25); controls.target.set(0, 120, d / 2 - 125); controls.update();
 }
 function sizeOrtho() {
+  if (overview) {
+    const b = new THREE.Box3().setFromObject(houseGroup), c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3()), a = canvas.clientWidth / Math.max(1, canvas.clientHeight);
+    let hh = (sz.z + 120) / 2; if ((sz.x + 120) / 2 > hh * a) hh = (sz.x + 120) / 2 / a;
+    Object.assign(ortho, { left: -hh * a, right: hh * a, top: hh, bottom: -hh });
+    ortho.position.set(c.x, 1500, c.z); ortho.up.set(0, 0, -1); ortho.lookAt(c.x, 0, c.z); ortho.updateProjectionMatrix(); return;
+  }
   const { w, d } = state.room, a = canvas.clientWidth / Math.max(1, canvas.clientHeight);
   const out = 80 + 2 * Math.max(0, ...(state.room.openings || []).filter(o => o.kind === 'balcony' || o.kind === 'bath').map(o => (o.depth || 150) + WALL_T));   // 牆外的陽台、衛浴也要看得到
   let hh = (d + out) / 2; if ((w + out) / 2 > hh * a) hh = (w + out) / 2 / a;
@@ -808,6 +841,7 @@ function sizeOrtho() {
   ortho.position.set(0, 1500, 0); ortho.up.set(0, 0, -1); ortho.lookAt(0, 0, 0); ortho.updateProjectionMatrix();
 }
 function setView(v) {
+  if (v === 'eye' && typeof overview !== 'undefined' && overview) v = 'orbit';   // 總覽沒有人視角
   if (v !== 'eye' && typeof gyro !== 'undefined' && gyro.on) { gyro.on = false; removeEventListener('deviceorientation', onOrient); $('#gyro').classList.remove('on'); $('#gyro span').textContent = '手機環視'; }
   view = v; topView = v === 'top'; camera = topView ? ortho : persp; controls.enabled = !topView;
   for (const [id, k] of [['#v3d', 'orbit'], ['#vtop', 'top'], ['#veye', 'eye']]) $(id).classList.toggle('on', v === k);
@@ -1231,6 +1265,7 @@ const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 function dragPt(e) { setNdc(e); const p = new THREE.Vector3(); return ray.ray.intersectPlane(dragPlane, p) ? p : null; }
 canvas.addEventListener('pointerdown', e => {           // 要比 OrbitControls 先註冊，按到家具時才能擋住視角旋轉
   down = { x: e.clientX, y: e.clientY };
+  if (overview) { ovDown(e); return; }
   if (gyro.on) { gyro.lastX = e.clientX; return; }          // 環視中：只走路、轉方向，不選家具
   setNdc(e);
   const shown = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };   // 被藏起來的窗簾不能點
@@ -1244,6 +1279,7 @@ canvas.addEventListener('pointerdown', e => {           // 要比 OrbitControls 
   if (selId !== it.id) select(it.id);
 }, { capture: true });
 canvas.addEventListener('pointermove', e => {
+  if (overview) { ovMove(e); return; }
   if (gyro.on && down && !drag) { gyro.offset += (e.clientX - (gyro.lastX ?? e.clientX)) * 0.006; gyro.lastX = e.clientX; return; }   // 手指左右滑：轉方向
   if (!drag) return;
   const p = dragPt(e); if (!p) return;
@@ -1254,6 +1290,7 @@ canvas.addEventListener('pointermove', e => {
 });
 let lastTap = {};
 canvas.addEventListener('pointerup', e => {
+  if (overview) { ovUp(); return; }
   if (drag) {
     if (drag.moved) { undoStack.push(drag.before); $('#undo').disabled = false; save(); }
     else {                                                // 沒拖動＝點一下；同一件 0.4 秒內再點一下＝點兩下，打開編輯面板
@@ -1351,6 +1388,90 @@ $('#q-go').onclick = () => startProject(qSpaces());
 $('#q-manual').onclick = () => startProject(defaultProject().spaces);
 $('#restart').onclick = openQuick;
 
+/* ================= 總覽 ================= */
+let overview = false;
+const houseGroup = new THREE.Group(); houseGroup.visible = false; scene.add(houseGroup);
+// 還沒有位置的空間：自動排成幾列（建商平面圖建的專案已經帶位置）
+function autoLayout() {
+  let x = 0, z = 0, rowD = 0; const maxW = 1500, gap = 60;
+  for (const sp of project.spaces) {
+    if (sp.pos) continue;
+    const w = sp.room.w + 2 * WALL_T, d = sp.room.d + 2 * WALL_T;
+    if (x > 0 && x + w > maxW) { x = 0; z += rowD + gap; rowD = 0; }
+    sp.pos = { x: Math.round(x + w / 2), z: Math.round(z + d / 2) }; x += w + gap; rowD = Math.max(rowD, d);
+  }
+}
+function labelSprite(name, sub) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 176; const x = c.getContext('2d');
+  x.fillStyle = 'rgba(0,67,106,.9)'; x.beginPath(); x.roundRect(6, 6, 500, 164, 36); x.fill();
+  x.textAlign = 'center'; x.fillStyle = '#fff'; x.font = 'bold 64px "PingFang TC","Microsoft JhengHei",sans-serif'; x.fillText(name, 256, 84);
+  x.fillStyle = '#F9E573'; x.font = '38px "PingFang TC","Microsoft JhengHei",sans-serif'; x.fillText(sub, 256, 142);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true })); sp.scale.set(150, 51.5, 1); sp.renderOrder = 10; return sp;
+}
+const pingOf = sp => (sp.room.w * sp.room.d / 33058).toFixed(1);
+function buildOverview() {
+  autoLayout();
+  houseGroup.clear(); const keep = state;
+  project.spaces.forEach((sp, i) => {
+    const tmp = JSON.parse(JSON.stringify(sp)); tmp.room.h = Math.min(tmp.room.h, 120);   // 牆切到 120 公分高，看得到每一間
+    state = tmp; buildRoom();
+    const g = new THREE.Group();
+    for (const c of [...roomGroup.children]) g.add(c);
+    for (const it of tmp.items) {
+      const T = PRODUCTS[it.type]; if (!T || it.hidden || T.ceil || T.sub === '窗簾' || T.sub === '掛畫') continue;
+      try { const m = buildModel(withDefaults({ ...it })); m.position.set(it.x, it.elev || 0, it.z); m.rotation.y = -it.rot * deg; m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); g.add(m); } catch (e) { }
+    }
+    g.traverse(o => { o.userData.spaceIdx = i; });
+    const lab = labelSprite(sp.name, `${pingOf(sp)} 坪・家具 ${sp.items.length} 件`); lab.position.set(0, 175, 0); lab.userData.label = true; g.add(lab);
+    g.position.set(sp.pos.x, 0, sp.pos.z); g.userData.spaceIdx = i; houseGroup.add(g);
+  });
+  state = keep; walls = []; zones = []; wallHidden.clear(); roomGroup.clear();
+  const b = new THREE.Box3().setFromObject(houseGroup), c = b.getCenter(new THREE.Vector3()), S = Math.max(b.max.x - b.min.x, b.max.z - b.min.z);   // 整間的陽光
+  sun.position.set(c.x - S * 0.3, 1400, c.z + S * 0.4); sun.target.position.copy(c).setY(0);
+  Object.assign(sun.shadow.camera, { left: -S, right: S, top: S, bottom: -S, near: 10, far: 6000 }); sun.shadow.camera.updateProjectionMatrix();
+}
+function renderOverviewPanel() {
+  const total = project.spaces.reduce((a, sp) => a + sp.room.w * sp.room.d, 0) / 33058;
+  $('#ov-sum').textContent = `共 ${project.spaces.length} 個空間，房間面積合計約 ${total.toFixed(1)} 坪`;
+  $('#ov-list').innerHTML = project.spaces.map((sp, i) => `<button class="ovc" data-i="${i}"><div class="t"><b>${esc(sp.name)}</b><span>寬 ${sp.room.w} × 深 ${sp.room.d}・約 ${pingOf(sp)} 坪・家具 ${sp.items.length} 件</span></div><i>進去擺設 ›</i></button>`).join('');
+}
+$('#ov-list').addEventListener('click', e => { const b = e.target.closest('.ovc'); if (b) exitOverview(+b.dataset.i); });
+function enterOverview() {
+  if (overview) return;
+  overview = true; selId = null; buildSelPanel(); document.body.classList.add('ov-mode');
+  roomGroup.visible = furnGroup.visible = markGroup.visible = false; houseGroup.visible = true;
+  buildOverview(); renderOverviewPanel(); renderSpaces(); setView(view === 'top' ? 'top' : 'orbit'); fitCamera(); save();
+}
+function exitOverview(i) {
+  overview = false; document.body.classList.remove('ov-mode');
+  houseGroup.visible = false; houseGroup.clear(); roomGroup.visible = furnGroup.visible = markGroup.visible = true;
+  switchSpace(i ?? project.cur);
+}
+// 總覽裡：點房間＝進去擺設，按住拖曳＝調整這間的位置
+let ovDrag = null;
+function ovDown(e) {
+  setNdc(e);
+  const h = ray.intersectObjects(houseGroup.children, true).find(h => h.object.userData.spaceIdx != null && !h.object.userData.label && !h.object.isSprite);
+  if (!h) return;
+  const i = h.object.userData.spaceIdx, sp = project.spaces[i]; dragPlane.constant = 0; const pt = dragPt(e); if (!pt) return;
+  controls.enabled = false; canvas.setPointerCapture(e.pointerId);
+  ovDrag = { i, dx: sp.pos.x - pt.x, dz: sp.pos.z - pt.z, x0: e.clientX, y0: e.clientY, moved: false };
+}
+function ovMove(e) {
+  if (!ovDrag) return;
+  if (!ovDrag.moved && Math.hypot(e.clientX - ovDrag.x0, e.clientY - ovDrag.y0) < 6) return;
+  ovDrag.moved = true; const pt = dragPt(e); if (!pt) return;
+  const sp = project.spaces[ovDrag.i]; sp.pos = { x: Math.round((pt.x + ovDrag.dx) / 5) * 5, z: Math.round((pt.z + ovDrag.dz) / 5) * 5 };
+  const g = houseGroup.children.find(c => c.userData.spaceIdx === ovDrag.i); if (g) g.position.set(sp.pos.x, 0, sp.pos.z);
+}
+function ovUp() {
+  if (!ovDrag) return false;
+  const d = ovDrag; ovDrag = null; controls.enabled = !topView;
+  if (d.moved) save(); else exitOverview(d.i);
+  return true;
+}
+
 /* ================= 專案 ================= */
 const fmtTime = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
 function renderProjects() {
@@ -1402,7 +1523,10 @@ $('#proj-list').addEventListener('click', e => {
 $('#spaces').addEventListener('click', e => {
   const b = e.target.closest('.sp'); if (!b) return;
   if (b.id === 'sp-add') { $('#sp-menu').classList.toggle('on'); return; }
-  $('#sp-menu').classList.remove('on'); if (+b.dataset.i !== project.cur) switchSpace(+b.dataset.i);
+  $('#sp-menu').classList.remove('on');
+  if (b.id === 'sp-ov') { if (!overview) enterOverview(); return; }
+  if (overview) { exitOverview(+b.dataset.i); return; }
+  if (+b.dataset.i !== project.cur) switchSpace(+b.dataset.i);
 });
 $('#sp-menu').addEventListener('click', e => {
   const b = e.target.closest('[data-type]'); if (!b) return;
@@ -1726,6 +1850,7 @@ load(); rememberProj(); renderProjects(); renderLib(); rebuildAll(); resize(); f
 if (project.started && state.room.setup && project.style && project.decor !== false && state.decorStyle !== project.style) { styleDecor(); refresh(); }   // 分享連結：補上風格軟裝
 if (!project.started) openQuick();               // 第一次來：先問坪數、幾房幾廳
 else if (!state.room.setup) { openSetup(); undoStack = []; $('#undo').disabled = true; }
+else enterOverview();                                 // 一打開先看整間房子
 $('#loading').remove();
 makeThumbs();
 </script>
