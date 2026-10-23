@@ -138,6 +138,8 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden;b
 .acts .del{color:var(--danger)}
 .toast{position:absolute;left:50%;top:64px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 18px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.on{opacity:.94}
+.toast.act{pointer-events:auto;top:118px;white-space:nowrap;max-width:calc(100% - 24px);display:flex;align-items:center;gap:12px;padding:7px 8px 7px 18px;z-index:30}
+.toast.act button{border:0;border-radius:999px;background:var(--yellow);color:var(--yellow-ink);font-weight:700;padding:6px 14px;font-size:13px}
 .loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);background:var(--bg)}
 /* ---------- 設定房間、快速開始視窗 ---------- */
 .setup{position:fixed;inset:0;background:rgba(14,44,69,.55);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
@@ -846,7 +848,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <button class="btn wide" id="change-style">更換裝潢風格</button>
       <h3>整間房子</h3>
       <button class="btn wide" id="orient-btn">座向與日照（東照・西曬）</button>
-      <button class="btn wide" id="restart">重新輸入坪數、幾房幾廳</button>
+      <button class="btn wide" id="restart">改室內坪數、幾房幾廳（家具和格局會保留）</button>
       <h3>操作方式</h3>
       <p class="hint">・點商品就會放進房間<br>・拖曳家具移動，靠近牆面會自動貼齊<br>・拖曳空白處旋轉視角，兩指或滾輪縮放<br>・紅框代表家具重疊或超出房間<br>・電腦鍵盤：R 旋轉、Delete 刪除、Ctrl+Z 復原</p>
       <h3>清空</h3>
@@ -2069,16 +2071,39 @@ function openQuick() {
   if (project.started) pushPage('quick');
 }
 function closeQuick(byPop) { $('#quick').classList.remove('on'); if (!byPop) dropPage(); }
+// 已經有配置的專案又回去改坪數：照類型把新的空間對到舊的空間，舊的家具、位置、門窗、名稱都留著，
+// 只有還沒自己設定過的房間才換成新的估算尺寸；多出來的新空間加進去；舊的有家具或衛浴的空間一定保留
+function mergeSpaces(oldS, newS) {
+  const used = new Set(), out = [];
+  for (const n of newS) {
+    const o = oldS.find(x => !used.has(x) && x.type === n.type && x.name === n.name) || oldS.find(x => !used.has(x) && x.type === n.type);
+    if (!o) { out.push(n); continue; }
+    used.add(o);
+    if (!o.room.setup) { o.room.w = n.room.w; o.room.d = n.room.d; for (const it of o.items || []) { it.x = clamp(it.x, -o.room.w / 2, o.room.w / 2); it.z = clamp(it.z, -o.room.d / 2, o.room.d / 2); } }
+    out.push(o);
+  }
+  for (const o of oldS) if (!used.has(o) && ((o.items || []).length || o.type === 'bath' || o.room.setup)) out.push(o);
+  return out;
+}
+const hasContent = pr => pr && pr.started && pr.spaces && pr.spaces.some(sp => (sp.items || []).length || sp.room.setup || (sp.room.openings || []).length);
 function startProject(spaces, at = 0) {
   const nm = ($('#q-name').value || '').trim(), m = projMeta(); if (nm && m) { m.name = nm; writeIdx(); renderProjects(); }
-  project = { cur: at, started: true, styleAsked: true, spaces };
+  const old = hasContent(project) ? project : null, fromPlanNew = spaces.every(sp => sp.pos);
+  if (old) backupProject(fromPlanNew ? '匯入平面圖之前' : '改坪數之前');
+  if (old && !fromPlanNew) spaces = mergeSpaces(old.spaces, spaces);
+  project = old ? { ...old, cur: Math.min(at, spaces.length - 1), started: true, styleAsked: true, spaces } : { cur: at, started: true, styleAsked: true, spaces };
   if (startProject.ping > 0) project.ping = startProject.ping; startProject.ping = 0;   // 記住室內坪數（50 坪以上主衛有浴缸）           // 風格不再自動跳出，想要再到「房間」選
   closeQuick(true); dropPage();
   if (overview) exitOverview(at);                                         // 原本停在總覽：先出來，下面才會用新的房間重建總覽
   const fromPlan = spaces.every(sp => sp.pos);                              // 匯入平面圖的已經排好位置
   if (spaces.length > 1 && !startProject.direct) { switchSpace(at); enterOverview(); } else switchSpace(at);   // 直接開始擺：門窗之後想補再補
   startProject.direct = false;
-  if (overview && !fromPlan) setTimeout(() => setArranging(true), 300);      // 自己排：一開始就能拖房間排出客人家的格局
+  if (old) {                                                                  // 改過坪數：原本的家具、格局都留著，也可以一鍵回到改之前
+    if (!fromPlanNew) { autoLayout(); } if (!fromPlanNew) for (let i = 0; i < project.spaces.length; i++) { const sp = project.spaces[i]; if (sp.pos) { const t = snapRoom(i, sp.pos.x, sp.pos.z); sp.pos = { x: t.x, z: t.z }; } }   // 房間變大了不要疊在一起
+    save(); if (overview) { buildOverview(); renderOverviewPanel(); fitCamera(); }
+    setTimeout(() => toastAct(fromPlanNew ? '已換成新的平面圖' : '已更新坪數，原本的家具和格局都保留', '復原', () => restoreBackup()), 350);
+  }
+  else if (overview && !fromPlan) setTimeout(() => setArranging(true), 300);   // 自己排：一開始就能拖房間排出客人家的格局
   else toast('開始擺吧！門窗和裝潢風格之後想補再補');
 }
 for (const id of ['q-rooms', 'q-halls']) $('#' + id).addEventListener('click', e => {
@@ -2591,18 +2616,15 @@ function snapRoom(i, x, z) {
     for (const cx of [b.x1 + T + hw, b.x0 - T - hw, b.x0 + hw, b.x1 - hw]) { const d = Math.abs(cx - x); if (d < ex) { ex = d; bx = cx; sx = true; } }
     for (const cz of [b.z1 + T + hd, b.z0 - T - hd, b.z0 + hd, b.z1 - hd]) { const d = Math.abs(cz - z); if (d < ez) { ez = d; bz = cz; sz = true; } }
   });
-  // 不能疊在別間上面：疊到了就往最近的一邊推開，剛好貼著（共用一道牆）
-  for (let pass = 0; pass < 3; pass++) {
-    let moved = false;
-    project.spaces.forEach((o, j) => {
-      if (j === i || !o.pos) return; const b = roomBox(o);
-      const ox = Math.min(bx + hw, b.x1 + T) - Math.max(bx - hw, b.x0 - T), oz = Math.min(bz + hd, b.z1 + T) - Math.max(bz - hd, b.z0 - T);
-      if (ox <= 0.5 || oz <= 0.5) return;
-      const cands = [[b.x1 + T + hw, bz], [b.x0 - T - hw, bz], [bx, b.z1 + T + hd], [bx, b.z0 - T - hd]];
-      cands.sort((p, q) => Math.hypot(p[0] - bx, p[1] - bz) - Math.hypot(q[0] - bx, q[1] - bz));
-      [bx, bz] = cands[0]; moved = true;
-    });
-    if (!moved) break;
+  // 不能疊在別間上面：疊到了就找最近、而且不會疊到任何一間的位置（貼著某間的四邊），找不到就放到最右邊
+  const others = project.spaces.map((o, j) => j !== i && o.pos ? roomBox(o) : null).filter(Boolean);
+  const hits = (x, z) => others.some(b => Math.min(x + hw, b.x1 + T) - Math.max(x - hw, b.x0 - T) > 0.5 && Math.min(z + hd, b.z1 + T) - Math.max(z - hd, b.z0 - T) > 0.5);
+  if (hits(bx, bz)) {
+    const cands = [];
+    for (const b of others) cands.push([b.x1 + T + hw, bz], [b.x0 - T - hw, bz], [bx, b.z1 + T + hd], [bx, b.z0 - T - hd],
+      [b.x1 + T + hw, b.z0 + hd], [b.x0 - T - hw, b.z0 + hd], [b.x0 + hw, b.z1 + T + hd], [b.x0 + hw, b.z0 - T - hd]);
+    const ok = cands.filter(([x, z]) => !hits(x, z)).sort((p, q) => Math.hypot(p[0] - bx, p[1] - bz) - Math.hypot(q[0] - bx, q[1] - bz))[0];
+    if (ok) [bx, bz] = ok; else { bx = Math.max(...others.map(b => b.x1)) + T + hw; }
   }
   return { x: Math.round(bx), z: Math.round(bz), snapped: sx || sz };
 }
@@ -2898,7 +2920,7 @@ function renderHome() {
     return `<div class="hc ${x.id === projId ? 'cur' : ''}" data-id="${x.id}">
       <div class="pic" style="${pic ? `background-image:url(${pic})` : ''}">${pic ? '' : esc(x.name.slice(0, 1))}</div>
       <div class="meta"><b>${esc(x.name)}</b><span>${projStats(x.id)}・${fmtTime(x.updated || Date.now())}</span></div>
-      <div class="acts2"><button data-act="rename">改名</button><button data-act="tab">新分頁</button><button data-act="del" class="danger">刪除</button></div></div>`;
+      <div class="acts2"><button data-act="rename">改名</button>${hasBackup(x.id) ? '<button data-act="restore">復原上一版</button>' : ''}<button data-act="tab">新分頁</button><button data-act="del" class="danger">刪除</button></div></div>`;
   }).join('');
 }
 function openHome() { if (project.started) saveThumb(); renderHome(); $('#home-x').hidden = !project.started; $('#home').classList.add('on'); }
@@ -2913,6 +2935,10 @@ $('#home-grid').addEventListener('click', e => {
   if (!b) { if (id === projId) closeHome(); else gotoProject(id, false); return; }
   const act = b.dataset.act;
   if (act === 'tab') gotoProject(id, true);
+  else if (act === 'restore') {
+    if (homeDel !== 'r' + id) { homeDel = 'r' + id; b.textContent = '再按一次確定復原'; setTimeout(() => { homeDel = null; renderHome(); }, 3000); return; }
+    restoreBackup(id);
+  }
   else if (act === 'rename') {
     const meta = card.querySelector('.meta'); meta.innerHTML = `<input type="text" maxlength="20" value="${esc(x.name)}">`;
     const inp = meta.querySelector('input'); inp.focus(); inp.select();
@@ -2971,14 +2997,37 @@ let delArmed = 0;
 $('#sp-del').onclick = () => {                   // 按兩次才刪，避免誤刪
   if (project.spaces.length === 1) { toast('至少要留一個空間'); return; }
   if (Date.now() - delArmed > 3000) { delArmed = Date.now(); $('#sp-del').textContent = `再按一次，刪除「${state.name}」`; setTimeout(() => { $('#sp-del').textContent = '刪除這個空間'; }, 3000); return; }
+  backupProject('刪除空間之前');
   const name = state.name; project.spaces.splice(project.cur, 1); delArmed = 0; $('#sp-del').textContent = '刪除這個空間';
-  switchSpace(Math.max(0, project.cur - 1)); toast(`已刪除「${name}」`);
+  switchSpace(Math.max(0, project.cur - 1)); toastAct(`已刪除「${name}」`, '復原', () => restoreBackup());
 };
 $('#lib-all').onclick = () => { libAll = !libAll; filterLib(); };
 
 /* ================= 介面 ================= */
 let toastT;
-function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.remove('act'); el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
+// 有按鈕的提示（例如「復原」），停久一點
+function toastAct(t, label, fn) {
+  const el = $('#toast'); el.innerHTML = `<span>${esc(t)}</span><button>${esc(label)}</button>`; el.classList.add('on', 'act'); clearTimeout(toastT);
+  el.querySelector('button').onclick = () => { el.classList.remove('on', 'act'); fn(); };
+  toastT = setTimeout(() => el.classList.remove('on', 'act'), 9000);
+}
+/* ---------- 備份：大改之前（改坪數、匯入平面圖、清空、刪空間）先存一份，可以一鍵復原 ---------- */
+const BAK = id => 'likai-room-bak-' + id;
+function backupProject(why) {
+  try { if (!project.started) return; localStorage.setItem(BAK(projId), JSON.stringify({ t: Date.now(), why, data: project })); } catch (e) { }
+}
+function hasBackup(id) { try { return !!localStorage.getItem(BAK(id)); } catch (e) { return false; } }
+function restoreBackup(id = projId) {
+  try {
+    const b = JSON.parse(localStorage.getItem(BAK(id)) || 'null'); if (!b) { toast('沒有可以復原的版本'); return; }
+    const cur = localStorage.getItem(keyOf(id));                          // 現在這版也存起來：復原後反悔還能再換回來
+    localStorage.setItem(keyOf(id), JSON.stringify(b.data));
+    if (cur) localStorage.setItem(BAK(id), JSON.stringify({ t: Date.now(), why: '復原前的版本', data: JSON.parse(cur) }));
+    if (id === projId) { project = migrate(b.data); try { sessionStorage.setItem('likai-room-cur', id); } catch (e) { } location.reload(); }
+    else { toast('已復原上一版'); renderHome(); }
+  } catch (e) { toast('復原失敗'); }
+}
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + b.dataset.tab));
@@ -3208,7 +3257,7 @@ function drawPlan() {
   h += lw(0, -d / 2 - o2, `後牆 ${w}`) + lw(0, d / 2 + o2, `前牆 ${w}`) + lw(-w / 2 - o2, 0, `左牆 ${d}`, -90) + lw(w / 2 + o2, 0, `右牆 ${d}`, 90);
   el.innerHTML = h;
 }
-$('#clear').onclick = () => { if (!state.items.length) return; snapshot(); state.items = []; selId = null; rebuildAll(); buildSelPanel(); save(); toast('已清空，可以按「復原」找回'); };
+$('#clear').onclick = () => { if (!state.items.length) return; backupProject('清空家具之前'); snapshot(); state.items = []; selId = null; rebuildAll(); buildSelPanel(); save(); toast('已清空，可以按「復原」找回'); };
 $('#undo').onclick = undo;
 $('#v3d').onclick = () => setView('orbit'); $('#vtop').onclick = () => setView('top'); $('#veye').onclick = () => setView('eye');
 $('#shot').onclick = () => {
