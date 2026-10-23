@@ -276,6 +276,34 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden;b
   #plan .quick-foot{flex-direction:row}
   #plan .quick-foot .btn{padding:10px 14px}
 }
+/* ---------- 座向與日照 ---------- */
+.compass{position:absolute;left:14px;bottom:52px;z-index:5;border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:4px}
+.cp-dial{position:relative;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 6px 18px rgba(0,67,106,.16);display:block}
+.cp-dial i{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;font-style:normal;font-size:11px;font-weight:700;color:var(--muted);display:flex;align-items:center;justify-content:center;line-height:1}
+.cp-dial i[data-d="0"]{color:#c23e4e}
+.cp-dial i.sun{border-radius:50%}
+.compass.sun-am .cp-dial i.am{background:#ffb703;color:#fff;box-shadow:0 0 10px #ffb703}
+.compass.sun-pm .cp-dial i.pm{background:#f3722c;color:#fff;box-shadow:0 0 10px #f3722c}
+.cp-needle{position:absolute;left:50%;top:50%;width:4px;height:22px;margin:-22px 0 0 -2px;border-radius:2px;background:linear-gradient(#c23e4e 0 50%,transparent 50%);transform-origin:50% 100%}
+.cp-label{font-size:11px;font-weight:600;color:var(--brand);background:rgba(255,255,255,.88);border-radius:999px;padding:2px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,67,106,.1)}
+.compass.unset .cp-dial{opacity:.75}
+body.walk-mode .compass{left:auto;right:14px;top:14px;bottom:auto;display:flex!important}
+body.show-mode .compass{left:16px;top:16px;bottom:auto}
+.orient-box{width:min(560px,100%)}
+.orient-box .setup-head>div{flex:1;min-width:0}
+.orient-body{padding:14px 20px;overflow:auto;min-height:0}
+.orient-body h3 small{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+.or-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.or-grid button{font-size:13px;line-height:1.35}
+.or-mid{display:flex;align-items:center;justify-content:center}
+.or-sum{margin-top:12px;background:var(--surface);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.7}
+.or-sum b{color:var(--brand)}
+.or-sum .w{color:#d1495b;font-weight:700}.or-sum .e{color:#c98a00;font-weight:700}
+@media (max-width:760px){
+  .compass{left:10px;top:10px;bottom:auto}
+  .cp-dial{width:54px;height:54px}
+  #orient .setup-box{height:100%;max-height:100%;border-radius:0}
+}
 /* ---------- 走進去逛 ---------- */
 .walkbtn{display:none;position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:5;align-items:center;gap:8px;border:0;border-radius:999px;background:var(--yellow);color:var(--yellow-ink);font-weight:700;font-size:15px;padding:11px 22px;box-shadow:0 10px 26px rgba(0,67,106,.22);white-space:nowrap}
 body.ov-mode .walkbtn{display:flex}
@@ -299,7 +327,7 @@ body.walk-mode main{cursor:grab}
 .walk-pad button{border:0;border-radius:14px;background:rgba(255,255,255,.85);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:20px;color:var(--brand);box-shadow:0 6px 18px rgba(0,67,106,.14);touch-action:none;user-select:none;-webkit-user-select:none}
 .walk-pad button:active{background:var(--brand);color:#fff}
 .walk-pad [data-w="f"]{grid-column:2;grid-row:1}.walk-pad [data-w="l"]{grid-column:1;grid-row:2}.walk-pad [data-w="b"]{grid-column:2;grid-row:2}.walk-pad [data-w="r"]{grid-column:3;grid-row:2}
-@media (max-width:760px){ .walk-tip{top:62px;font-size:12px} }
+@media (max-width:760px){ .walk-tip{top:84px;font-size:12px;white-space:normal;text-align:center;width:max-content;max-width:calc(100% - 40px);border-radius:14px} }
 /* ---------- 給客人看（簡報模式） ---------- */
 .show-ui{display:none}
 body.show-mode .show-ui{display:block}
@@ -410,6 +438,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
   aside{position:fixed;left:0;right:0;bottom:0;z-index:20;height:46dvh;border:0;border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(0,67,106,.18);transition:height .25s ease;padding-bottom:env(safe-area-inset-bottom,0px)}
   body[data-sheet="min"] aside{height:calc(76px + env(safe-area-inset-bottom,0px))}
   body[data-sheet="full"] aside{height:86dvh}
+  body.ov-mode[data-sheet="half"] aside{height:34dvh}       /* 總覽：清單矮一點，房子看大一點 */
   body.sheet-drag aside{transition:none}
   .grabber{display:flex;justify-content:center;align-items:center;height:20px;flex:none;touch-action:none;cursor:grab}
   .grabber i{width:40px;height:5px;border-radius:3px;background:#c9d6e2}
@@ -450,7 +479,16 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
   .tabs{margin:10px 10px 2px}
   .grid{grid-template-columns:repeat(3,1fr);gap:8px}
   .help{display:none}
-  .seg{top:10px;left:10px}.seg button{padding:5px 10px}
+  .seg,.setupchip{display:none!important}
+  [data-act="tab"],#proj-new-tab{display:none!important}           /* 手機沒有分頁：不顯示「新分頁」 */                 /* 手機：視角切換、門窗提示收進「⋯」 */
+  .more-menu{max-height:70dvh;overflow:auto}
+  /* 歡迎畫面：整頁、主按鈕最大，其他兩個並排變小 */
+  #quick .setup-box{height:100%;max-height:100%;border-radius:0;width:100%}
+  #quick .steps{display:none}
+  #quick .quick-foot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #quick .quick-foot #q-go{grid-column:1/-1;order:-1;padding:14px;font-size:16px}
+  #quick .quick-foot #q-back{grid-column:1/-1}
+  #quick .quick-foot .btn{padding:10px 4px;font-size:14px;margin:0}
   .wallbtn{top:54px;left:10px;padding:5px 11px 5px 8px;font-size:12px}
   .gyrobtn{top:92px;left:10px;padding:6px 12px;font-size:12px}
   .toolbar{top:10px;right:10px}
@@ -519,6 +557,10 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
     </div>
     <div class="more-menu" id="more-menu">
       <button data-m="undo">復原</button>
+      <button data-m="view" id="mm-view">看平面圖</button>
+      <button data-m="eye">人視角</button>
+      <button data-m="setup">設定這間的門窗</button>
+      <button data-m="orient">座向與日照</button>
       <button data-m="step">回上一步（裝潢風格）</button>
       <button data-m="glass">透明牆：<span id="mm-glass">關</span></button>
       <button data-m="gyro" id="mm-gyro">手機環視</button>
@@ -571,6 +613,10 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <div class="walk-rooms" id="walk-rooms"></div>
       <div class="walk-pad" id="walk-pad"><button data-w="f" aria-label="往前走">▲</button><button data-w="l" aria-label="往左轉">⟲</button><button data-w="b" aria-label="往後退">▼</button><button data-w="r" aria-label="往右轉">⟳</button></div>
     </div>
+    <button class="compass" id="compass" aria-label="座向與日照">
+      <span class="cp-dial" id="cp-dial"><i data-d="0">北</i><i data-d="90" class="sun am">東</i><i data-d="180">南</i><i data-d="270" class="sun pm">西</i><b class="cp-needle" id="cp-needle"></b></span>
+      <span class="cp-label" id="cp-label">設定座向</span>
+    </button>
     <button class="setupchip" id="setup-chip" hidden>這間還沒設定門窗・點這裡設定 ›</button>
     <div class="show-ui" id="show-ui">
       <button class="show-exit" id="show-exit">結束展示</button>
@@ -651,6 +697,25 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
         </div>
       </div>
     </div>
+    <div class="setup" id="orient">
+      <div class="setup-box orient-box">
+        <div class="setup-head"><div><b>座向與日照</b><div class="hint">設定房子的座向，就能看到早上東邊、下午西邊照進來的陽光</div></div><button class="x" id="or-x" aria-label="關閉">×</button></div>
+        <div class="orient-body">
+          <h3>房子座向 <small>朝＝大門、陽台、主要大窗面對的方向</small></h3>
+          <div class="chips or-grid" id="or-face">
+            <button data-b="315">座東南<br>朝西北</button><button data-b="0">座南<br>朝北</button><button data-b="45">座西南<br>朝東北</button>
+            <button data-b="270">座東<br>朝西</button><span class="or-mid" id="or-mini"></span><button data-b="90">座西<br>朝東</button>
+            <button data-b="225">座東北<br>朝西南</button><button data-b="180">座北<br>朝南</button><button data-b="135">座西北<br>朝東南</button>
+          </div>
+          <h3>大門／陽台在平面圖的哪一邊？</h3>
+          <div class="chips" id="or-side"><button data-s="180">下方</button><button data-s="0">上方</button><button data-s="270">左邊</button><button data-s="90">右邊</button></div>
+          <h3>日照</h3>
+          <div class="chips" id="or-sun"><button data-m="off">不顯示</button><button data-m="am">早上・東照</button><button data-m="pm">下午・西曬</button></div>
+          <div class="or-sum" id="or-sum"></div>
+        </div>
+        <div class="setup-foot back-foot"><button class="btn" id="or-clear">清除座向</button><button class="btn pri" id="or-done">完成</button></div>
+      </div>
+    </div>
     <div class="home" id="home">
       <div class="home-in">
         <div class="home-head"><div><b>我的客人</b><span>選一位客人繼續，或新增一位</span></div><button class="x" id="home-x" aria-label="關閉">×</button></div>
@@ -718,6 +783,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <h3>整間房子總覽</h3>
       <p class="hint" id="ov-sum"></p>
       <div class="ov-list" id="ov-list"></div>
+      <button class="btn wide" id="ov-orient" style="margin-top:8px">座向與日照（東照・西曬）</button>
       <p class="hint">點畫面上的房間或下面的按鈕，就能進去擺家具。之後隨時按上方的「總覽」回來看整體。</p>
     </div>
     <div class="tabs">
@@ -738,6 +804,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <p class="hint" id="style-sum"></p>
       <button class="btn wide" id="change-style">更換裝潢風格</button>
       <h3>整間房子</h3>
+      <button class="btn wide" id="orient-btn">座向與日照（東照・西曬）</button>
       <button class="btn wide" id="restart">重新輸入坪數、幾房幾廳</button>
       <h3>操作方式</h3>
       <p class="hint">・點商品就會放進房間<br>・拖曳家具移動，靠近牆面會自動貼齊<br>・拖曳空白處旋轉視角，兩指或滾輪縮放<br>・紅框代表家具重疊或超出房間<br>・電腦鍵盤：R 旋轉、Delete 刪除、Ctrl+Z 復原</p>
@@ -842,7 +909,7 @@ function undo() {
 const KEEP = ['type', 'x', 'z', 'rot'];
 function encode() {
   const slim = it => { const T = PRODUCTS[it.type], o = {}; for (const k of Object.keys(it)) if (k !== 'id' && (KEEP.includes(k) || it[k] !== (T[k] ?? (T.def && T.def[k])))) o[k] = it[k]; return o; };
-  const json = JSON.stringify({ cur: project.cur, spaces: project.spaces.map(s => ({ name: s.name, type: s.type, room: s.room, pos: s.pos, items: s.items.map(slim) })), name: (projMeta() || {}).name });
+  const json = JSON.stringify({ cur: project.cur, spaces: project.spaces.map(s => ({ name: s.name, type: s.type, room: s.room, pos: s.pos, items: s.items.map(slim) })), name: (projMeta() || {}).name, orient: project.orient });
   return btoa(String.fromCharCode(...new TextEncoder().encode(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 function decode(s) {
@@ -1072,6 +1139,9 @@ function buildRoom() {
   sun.target.position.set(0, 0, 0);
   Object.assign(sun.shadow.camera, { left: -S, right: S, top: S, bottom: -S, near: 10, far: h * 8 + S * 3 });
   sun.shadow.camera.updateProjectionMatrix();
+  sun.color.set('#fff3e2'); keepSunBase();
+  if (project.orient && sunMode !== 'off') for (const g of walls) g.traverse(o => { if (o.isMesh) o.castShadow = true; });   // 開日照：牆要擋光，陽光只從窗戶進來
+  applySun();
   wallHidden.clear();
 }
 // 門口、陽台出入口前面不能放家具的範圍（世界座標的盒子）
@@ -1085,21 +1155,98 @@ function zoneBoxes() {
 }
 
 /* ---------- 視角：3D 鳥瞰／平面／人視角 ---------- */
-let view = 'orbit';
+let view = 'orbit', viewCover = 0;             // viewCover：畫面下方被抽屜／面板蓋住的高度
 const walk = { col: [], ty: 0, tp: 0, v: 0, av: 0, wq: 0, ring: null, room: -1, on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
 if (location.search.includes("debug")) window.__dbg = { walk, get cam() { return persp; } };   // 除錯用
+/* ---------- 座向：project.orient = { face: 朝向的方位角（北0 東90 南180 西270）, side: 大門在平面圖的哪邊（上0 右90 下180 左270） } ---------- */
+const DIR8 = ['北', '東北', '東', '東南', '南', '西南', '西', '西北'];
+const dirName = b => DIR8[Math.round((((b % 360) + 360) % 360) / 45) % 8];
+const orientLabel = o => o ? `座${dirName(o.face + 180)}朝${dirName(o.face)}` : '';
+// 方位角 → 世界座標的水平方向（平面圖上方是 -z、右邊是 +x）
+function worldDir(bearing, o = project.orient) {
+  const a = (o.side + bearing - o.face) * deg; return new THREE.Vector3(Math.sin(a), 0, -Math.cos(a));
+}
+// 某面牆往外看是哪個方位
+const WALL_ANG = { N: 0, E: 90, S: 180, W: 270 };
+const wallBearing = (k, o = project.orient) => ((WALL_ANG[k] - o.side + o.face) % 360 + 360) % 360;
+let sunMode = 'off';                                 // off／am（早上東照）／pm（下午西曬）
+let sunBase = null;                                  // 沒開日照時原本的打光，關掉時還原
+function keepSunBase() { sunBase = { p: sun.position.clone(), t: sun.target.position.clone(), i: sun.intensity, c: sun.color.getHex(), h: hemi.intensity, e: 0.62 }; }   // 環境光固定用預設值（避免開著日照時又存一次變得更暗）
+// 依座向把太陽放到東邊（早上）或西邊（下午），斜斜地從窗戶照進來
+function applySun() {
+  if (!sunBase) keepSunBase();
+  const b = sunBase;
+  if (!project.orient || sunMode === 'off') { sun.position.copy(b.p); sun.target.position.copy(b.t); sun.intensity = b.i; sun.color.setHex(b.c); hemi.intensity = b.h; scene.environmentIntensity = b.e; return; }
+  const am = sunMode === 'am', dir = worldDir(am ? 105 : 255), c = b.t, R = 900, elev = (am ? 24 : 20) * deg;
+  sun.position.copy(c).addScaledVector(dir, R * Math.cos(elev)).setY(c.y + R * Math.sin(elev));
+  sun.target.position.copy(c); sun.color.set(am ? '#fff0d0' : '#ffc07a'); sun.intensity = am ? 5.5 : 6; hemi.intensity = 0.32; scene.environmentIntensity = b.e * 0.55;   // 室內暗一點，陽光照到的地方才明顯
+  const S = Math.max(sun.shadow.camera.right, 600); Object.assign(sun.shadow.camera, { left: -S, right: S, top: S, bottom: -S, near: 10, far: R * 2 + S * 2 }); sun.shadow.camera.updateProjectionMatrix();
+}
+// 羅盤：北方在畫面上的角度跟著鏡頭轉
+let cpLast = null;
+function syncCompass() {
+  const el = $('#compass'), o = project.orient;
+  el.classList.toggle('unset', !o); el.classList.toggle('sun-am', !!o && sunMode === 'am'); el.classList.toggle('sun-pm', !!o && sunMode === 'pm');
+  $('#cp-label').textContent = o ? orientLabel(o) + (sunMode === 'am' ? '・早上' : sunMode === 'pm' ? '・下午' : '') : '設定座向';
+  let ang = 0;
+  if (o) {
+    const n = worldDir(0, o), f = new THREE.Vector3();
+    if (topView) f.set(0, 0, -1); else { camera.getWorldDirection(f); f.y = 0; if (f.lengthSq() < 1e-6) f.set(0, 0, -1); f.normalize(); }
+    const r = new THREE.Vector3(-f.z, 0, f.x); ang = Math.atan2(n.dot(r), n.dot(f)) / deg;
+  }
+  if (cpLast !== null && Math.abs(ang - cpLast) < 0.5) return; cpLast = ang;
+  const R = $('#cp-dial').offsetWidth / 2 - 10;
+  for (const i of $('#cp-dial').querySelectorAll('i')) { const a = (ang + +i.dataset.d) * deg; i.style.left = (R + 10 + Math.sin(a) * R) + 'px'; i.style.top = (R + 10 - Math.cos(a) * R) + 'px'; }
+  $('#cp-needle').style.transform = `rotate(${ang}deg)`;
+}
+function openOrient() { $('#orient').classList.add('on'); renderOrient(); }
+function closeOrient() { $('#orient').classList.remove('on'); }
+function renderOrient() {
+  const o = project.orient;
+  $('#or-face').querySelectorAll('[data-b]').forEach(b => b.classList.toggle('on', !!o && +b.dataset.b === o.face));
+  $('#or-side').querySelectorAll('[data-s]').forEach(b => b.classList.toggle('on', +b.dataset.s === (o ? o.side : 180)));
+  $('#or-sun').querySelectorAll('[data-m]').forEach(b => { b.classList.toggle('on', b.dataset.m === sunMode); b.disabled = !o && b.dataset.m !== 'off'; });
+  $('#or-mini').innerHTML = o ? `<svg viewBox="-40 -40 80 80" width="70" height="70"><rect x="-22" y="-22" width="44" height="44" rx="4" fill="#eef3f7" stroke="#00436a" stroke-width="2"/>${(() => { const a = o.side * deg, x = Math.sin(a) * 22, y = -Math.cos(a) * 22; return `<circle cx="${x}" cy="${y}" r="5" fill="#F9E573" stroke="#00436a"/>`; })()}${[0, 90, 180, 270].map(b => { const d = worldDir(b, o), x = d.x * 34, y = d.z * 34; return `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="11" font-weight="700" fill="${b === 0 ? '#c23e4e' : b === 90 ? '#c98a00' : b === 270 ? '#d1495b' : '#5b6b78'}">${DIR8[b / 45]}</text>`; }).join('')}</svg>` : '<span class="hint">先選座向</span>';
+  if (!o) { $('#or-sum').innerHTML = '選好座向，就能看出哪些窗戶早上有東照、下午會西曬。'; return; }
+  // 每個空間的窗戶：面向哪個方位、會不會西曬
+  const west = [], east = [];
+  for (const sp of project.spaces) for (const op of sp.room.openings || []) {
+    if (isDoor(op.kind)) continue; const b = wallBearing(op.wall, o), nm = `${sp.name}${OPEN_KINDS[op.kind].name}`;
+    if (b >= 225 && b <= 315) west.push(nm); else if (b >= 45 && b <= 135) east.push(nm);
+  }
+  $('#or-sum').innerHTML = `<b>${orientLabel(o)}</b>（平面圖上方是${dirName(o.face - o.side)}方）<br>`
+    + `<span class="e">早上東照</span>：${east.length ? esc(east.join('、')) : '沒有朝東的窗'}<br>`
+    + `<span class="w">下午西曬</span>：${west.length ? esc(west.join('、')) + '（建議遮光窗簾、隔熱）' : '沒有朝西的窗，不怕西曬'}`;
+}
+$('#compass').onclick = openOrient; $('#or-x').onclick = $('#or-done').onclick = closeOrient;
+$('#or-face').addEventListener('click', e => {
+  const b = e.target.closest('[data-b]'); if (!b) return;
+  project.orient = { face: +b.dataset.b, side: project.orient ? project.orient.side : 180 };
+  if (sunMode === 'off') sunMode = 'pm';            // 選了座向就先看下午西曬（業務最常被問）
+  orientChanged();
+});
+$('#or-side').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (!b) return; project.orient = { face: project.orient ? project.orient.face : 180, side: +b.dataset.s }; orientChanged(); });
+$('#or-sun').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b || b.disabled) return; sunMode = b.dataset.m; orientChanged(); });
+$('#or-clear').onclick = () => { delete project.orient; sunMode = 'off'; orientChanged(); };
+function orientChanged() { if (project.orient) project.orient.sun = sunMode; save(); applySun(); cpLast = null; syncCompass(); renderOrient(); }
+const visFrac = () => { const h = canvas.clientHeight || 1; let c = viewCover; try { c = Math.min(h * 0.6, coverNow() + topNow()); } catch (e) { } return clamp((h - c) / h, 0.45, 1); };   // 畫面還看得到的比例
 function fitCamera() {
+  try { updateViewOffset(); } catch (e) { }             // 先把畫面往上推的量算好
   if (overview) {                                            // 總覽：從斜上方看整間房子
     const b = new THREE.Box3().setFromObject(houseGroup), c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3());
-    const a = canvas.clientWidth / Math.max(1, canvas.clientHeight), S = Math.max(sz.z, sz.x / Math.min(1.6, a) * 1.1) * 1.05;
+    const a = canvas.clientWidth / Math.max(1, canvas.clientHeight), f = visFrac(), side = a < 1 && sz.x > sz.z * 1.15;   // 直式手機、房子是橫長的：從側面看，長邊變成上下
+    const [L, W2] = side ? [sz.x, sz.z] : [sz.z, sz.x], S = Math.max(L / f, W2 / Math.min(1.6, a) * 1.1) * 1.05;
     persp.fov = 42; persp.updateProjectionMatrix(); controls.minDistance = 80; controls.maxPolarAngle = 88 * deg; controls.maxDistance = 8000;
-    persp.position.set(c.x + sz.x * 0.05, S * 1.1, c.z + sz.z / 2 + S * 0.75); controls.target.set(c.x, 0, c.z); controls.update();
+    if (side) persp.position.set(c.x + sz.x / 2 + S * 0.75, S * 1.1, c.z - sz.z * 0.05); else persp.position.set(c.x + sz.x * 0.05, S * 1.1, c.z + sz.z / 2 + S * 0.75);
+    controls.target.set(c.x, 0, c.z); controls.update();
     sizeOrtho(); return;
   }
   const { w, d } = state.room, a = canvas.clientWidth / Math.max(1, canvas.clientHeight);
   persp.fov = 42; persp.updateProjectionMatrix(); controls.minDistance = 80; controls.maxPolarAngle = 88 * deg;
-  const S = Math.max(d, w / Math.min(1.6, a) * 1.1) * 1.15;          // 手機直式畫面比較窄：鏡頭要拉遠才看得到整個房間
-  persp.position.set(w * 0.05, S * 1.05, d / 2 + S * 0.95); controls.target.set(0, 40, 0); controls.update();
+  const S = Math.max(d / visFrac(), w / Math.min(1.6, a) * 1.1) * 1.15;          // 手機直式畫面比較窄：鏡頭要拉遠才看得到整個房間；被面板蓋住的部分不算
+  if (a < 0.8) persp.position.set(w * 0.04, S * 1.3, d / 2 + S * 0.5);   // 直式手機：從比較高的地方往下看，房間的深度用到上下的空間
+  else persp.position.set(w * 0.05, S * 1.05, d / 2 + S * 0.95);
+  controls.target.set(0, 40, 0); controls.update();
   sizeOrtho();
 }
 function eyeCamera() {                          // 站在前牆邊、眼睛高度 155cm 往房內看
@@ -2033,16 +2180,22 @@ $('#pl-go').onclick = () => {
   });
   closePlan(true, true); startProject.direct = false; startProject(spaces);
 };
-$('#restart').onclick = openQuick;
+$('#restart').onclick = openQuick; $('#orient-btn').onclick = () => openOrient();
 
 /* ================= 手機介面 ================= */
 const MQ = matchMedia('(max-width: 760px)'), isMob = () => MQ.matches;
 // 下方抽屜：min（只剩分頁）／half／full
-function setSheet(st) { document.body.dataset.sheet = st; setTimeout(updateViewOffset, 280); }
+function setSheet(st) {
+  const was = document.body.dataset.sheet; document.body.dataset.sheet = st;
+  setTimeout(() => { updateViewOffset(); if (st !== was && view === 'orbit' && !walk.on && !gyro.on && !drag) fitCamera(); }, 280);
+}
 if (!document.body.dataset.sheet) document.body.dataset.sheet = 'half';
 // 3D 畫面被抽屜或面板蓋住下半部時，把畫面往上推，家具才看得到
-function updateViewOffset() {
-  const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
+// 手機上方浮著的按鈕擋住多少（總覽還有「走進去逛逛」）
+const topNow = () => { try { return isMob() && !walk.on && !showMode ? (overview ? 104 : 56) : 0; } catch (e) { return 0; } };
+// 畫面下方被蓋住多少（抽屜、編輯面板、動作列、展示卡片）
+function coverNow() {
+  const h = canvas.clientHeight; if (!h) return 0;
   let cover = 0;
   if (walk.on) cover = 0;
   else if (showMode) { const c = $('#show-card'); cover = c.hidden ? 70 : c.offsetHeight + 90; }
@@ -2051,8 +2204,14 @@ function updateViewOffset() {
     cover = sel.classList.contains('on') ? sel.offsetHeight : document.querySelector('aside').offsetHeight;
     if (!mbar.hidden) cover = Math.max(cover, h + canvas.getBoundingClientRect().top - mbar.getBoundingClientRect().top);
   }
-  const off = Math.min(h * 0.4, Math.max(0, cover) / 2);
-  for (const c of [persp, ortho]) { if (off > 2) c.setViewOffset(w, h, 0, off, w, h); else c.clearViewOffset(); }
+  return Math.max(0, cover);
+}
+function updateViewOffset() {
+  const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
+  const cover = coverNow(), top = topNow();
+  viewCover = Math.min(h * 0.6, cover + top);
+  const off = clamp((cover - top) / 2, -h * 0.2, h * 0.4);       // 下面蓋住的往上推、上面按鈕擋住的往下推
+  for (const c of [persp, ortho]) { if (Math.abs(off) > 2) c.setViewOffset(w, h, 0, off, w, h); else c.clearViewOffset(); }
 }
 MQ.addEventListener('change', () => { updateViewOffset(); syncMobile(); });
 // 拖拉抽屜上方的小橫條調整高度，放開時停在最近的一段
@@ -2084,7 +2243,11 @@ $('#mbar').addEventListener('click', e => {
   syncMobile();
 });
 // 「⋯」選單
-function syncMoreMenu() { $('#mm-glass').textContent = glassWalls ? '開' : '關'; $('#mm-gyro').hidden = $('#gyro').hidden; $('#mm-gyro').textContent = gyro.on ? '結束手機環視' : '手機環視'; }
+function syncMoreMenu() {
+  $('#mm-view').textContent = view === 'top' ? '回到 3D' : '看平面圖';
+  $('#more-menu [data-m="eye"]').textContent = view === 'eye' ? '回到 3D' : '人視角';
+  $('#more-menu [data-m="eye"]').hidden = $('#more-menu [data-m="setup"]').hidden = !!overview;
+  $('#mm-glass').textContent = glassWalls ? '開' : '關'; $('#mm-gyro').hidden = $('#gyro').hidden; $('#mm-gyro').textContent = gyro.on ? '結束手機環視' : '手機環視'; }
 $('#more-btn').addEventListener('click', e => { e.stopPropagation(); syncMoreMenu(); $('#more-menu').classList.toggle('on'); });
 document.addEventListener('pointerdown', e => { if (!e.target.closest('#more-menu,#more-btn')) $('#more-menu').classList.remove('on'); });
 $('#more-menu').addEventListener('click', e => {
@@ -2092,6 +2255,8 @@ $('#more-menu').addEventListener('click', e => {
   const m = b.dataset.m; $('#more-menu').classList.remove('on');
   if (m === 'undo') { if (undoStack.length) undo(); else toast('沒有可以復原的動作'); }
   else if (m === 'share') $('#share').click();
+  else if (m === 'view') setView(view === 'top' ? 'orbit' : 'top'); else if (m === 'eye') setView(view === 'eye' ? 'orbit' : 'eye');
+  else if (m === 'setup') openSetup(); else if (m === 'orient') openOrient();
   else if (m === 'step') $('#step-back').click(); else if (m === 'glass') $('#wall-mode').click(); else if (m === 'gyro') $('#gyro').click(); else if (m === 'shot') $('#shot').click();
 });
 
@@ -2219,12 +2384,14 @@ function buildOverview(full) {                     // full：走進去逛用，�
   const b = new THREE.Box3().setFromObject(houseGroup), c = b.getCenter(new THREE.Vector3()), S = Math.max(b.max.x - b.min.x, b.max.z - b.min.z);   // 整間的陽光
   sun.position.set(c.x - S * 0.3, 1400, c.z + S * 0.4); sun.target.position.copy(c).setY(0);
   Object.assign(sun.shadow.camera, { left: -S, right: S, top: S, bottom: -S, near: 10, far: 6000 }); sun.shadow.camera.updateProjectionMatrix();
+  sun.color.set('#fff3e2'); keepSunBase(); applySun();
 }
 function renderOverviewPanel() {
   const total = project.spaces.reduce((a, sp) => a + sp.room.w * sp.room.d, 0) / 33058;
   $('#ov-sum').textContent = `共 ${project.spaces.length} 個空間，房間面積合計約 ${total.toFixed(1)} 坪`;
   $('#ov-list').innerHTML = project.spaces.map((sp, i) => `<button class="ovc" data-i="${i}"><div class="t"><b>${esc(sp.name)}</b><span>寬 ${sp.room.w} × 深 ${sp.room.d}・約 ${pingOf(sp)} 坪・家具 ${sp.items.length} 件</span></div><i>進去擺設 ›</i></button>`).join('');
 }
+$('#ov-orient').onclick = () => openOrient();
 $('#ov-list').addEventListener('click', e => { const b = e.target.closest('.ovc'); if (b) exitOverview(+b.dataset.i); });
 function enterOverview() {
   if (overview) return;
@@ -2470,7 +2637,8 @@ function saveThumb() {                                  // 每位客人一張小
   try {
     render(); const c = document.createElement('canvas'), W = 360, H = 225; c.width = W; c.height = H;
     const x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#f7fafc'); g.addColorStop(1, '#e1eaf1'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-    const s = Math.max(W / canvas.width, H / canvas.height), w = canvas.width * s, h = canvas.height * s; x.drawImage(canvas, (W - w) / 2, (H - h) / 2, w, h);
+    const vis = clamp(1 - viewCover / (canvas.clientHeight || 1), 0.4, 1), cw = canvas.width, ch = canvas.height, cy = ch * vis / 2;   // 手機：房間在面板上方那一塊，以那塊的中心裁
+    const s = Math.max(W / cw, H / (ch * vis)), w = cw * s, h = ch * s; x.drawImage(canvas, (W - w) / 2, H / 2 - cy * s, w, h);
     localStorage.setItem(THUMB(projId), c.toDataURL('image/jpeg', 0.72));
   } catch (e) { }
 }
@@ -2716,7 +2884,7 @@ function renderOps() {
   const num = (k, label, v) => `<label>${label}<input type="text" inputmode="decimal" autocomplete="off" data-k="${k}" value="${v}"></label>`;
   $('#ops').innerHTML = ops.map((o, i) => {
     cnt[o.kind] = (cnt[o.kind] || 0) + 1;
-    let h = `<label>在哪面牆<select data-k="wall">${Object.entries(WALL_NAMES).map(([k, n]) => `<option value="${k}" ${k === o.wall ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`
+    let h = `<label>在哪面牆<select data-k="wall">${Object.entries(WALL_NAMES).map(([k, n]) => `<option value="${k}" ${k === o.wall ? 'selected' : ''}>${n}${project.orient ? '（' + dirName(wallBearing(k)) + (isDoor(o.kind) ? '' : wallBearing(k) >= 225 && wallBearing(k) <= 315 ? '・西曬' : wallBearing(k) >= 45 && wallBearing(k) <= 135 ? '・東照' : '') + '）' : ''}</option>`).join('')}</select></label>`
       + num('off', '距左邊牆角', o.off) + num('w', '寬', o.w) + num('h', '高', o.h);
     if (o.kind === 'window') h += num('sill', '離地高', o.sill);
     if (o.kind === 'balcony') h += num('depth', '陽台深', o.depth);
@@ -2845,6 +3013,7 @@ $('#wall-mode').onclick = () => {
 };
 syncWallBtn();
 function render() {
+  try { syncCompass(); } catch (e) { }
   // 3D 視角時，擋在鏡頭前的牆藏起來（像娃娃屋）；藏起來的牆仍然會擋陽光
   for (const g of walls) {
     const n = g.userData.n; tmp.copy(camera.position).sub(g.position);
@@ -2873,7 +3042,7 @@ function resize() {
 new ResizeObserver(resize).observe(canvas);
 renderer.setAnimationLoop(() => { if (walk.on) walkFrame(); else if (gyro.on) gyroFrame(); else if (!topView) controls.update(); render(); });
 
-load(); rememberProj(); renderProjects(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary(); renderSpaces(); filterLib();
+load(); sunMode = (project.orient && project.orient.sun) || 'off'; rememberProj(); renderProjects(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary(); renderSpaces(); filterLib();
 { const v = new URLSearchParams(location.search).get('view'); if (v === 'eye' || v === 'top') setView(v); }   // 網址加 ?view=eye 直接用人視角打開
 if (project.started && state.room.setup && project.style && project.decor !== false && state.decorStyle !== project.style) { styleDecor(); refresh(); }   // 分享連結：補上風格軟裝
 if (!project.started) openQuick();               // 第一次來：先問坪數、幾房幾廳
