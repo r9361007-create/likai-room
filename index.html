@@ -315,6 +315,10 @@ body.arranging .arrange-bar{display:flex}
 body.arranging .walkbtn{display:none!important}
 body.arranging main{cursor:grab}
 @media (max-width:760px){ .arrange-bar{top:74px;font-size:12px} }
+/* ---------- 茶几形狀篩選 ---------- */
+.formbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 10px;padding-bottom:2px}
+.formbar button{flex:none;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;font-size:13px;color:var(--ink)}
+.formbar button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 /* ---------- 走進去逛 ---------- */
 .walkbtn{display:none;position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:5;align-items:center;gap:8px;border:0;border-radius:999px;background:var(--yellow);color:var(--yellow-ink);font-weight:700;font-size:15px;padding:11px 22px;box-shadow:0 10px 26px rgba(0,67,106,.22);white-space:nowrap}
 body.ov-mode .walkbtn{display:flex}
@@ -1927,16 +1931,26 @@ canvas.addEventListener('pointerup', e => {
 
 /* ================= 商品庫（縮圖自動產生） ================= */
 function renderLib() {
-  const card = k => { const T = PRODUCTS[k]; return `<button class="card" data-type="${k}"><div class="th" id="th-${k}"></div><b>${T.name}</b><span>${T.w}×${T.d}×${T.h}</span></button>`; };
+  const card = k => { const T = PRODUCTS[k]; return `<button class="card" data-type="${k}"${T.form ? ` data-form="${T.form}"` : ''}><div class="th" id="th-${k}"></div><b>${T.name}</b><span>${T.w}×${T.d}×${T.h}</span></button>`; };
   let own = '', more = '';
+  const PROMOTE = new Set(['茶几']);                  // 茶几一般款也很常用：直接列在上面，不收進「其他」
+  const FORMS = [['all', '全部'], ['round', '圓形'], ['rect', '長方形'], ['square', '正方形'], ['free', '異形'], ['nest', '大小套几']];
   for (const s of SUBS) {
     const keys = Object.keys(PRODUCTS).filter(k => PRODUCTS[k].sub === s); if (!keys.length) continue;
-    const a = keys.filter(k => !PRODUCTS[k].generic), b = keys.filter(k => PRODUCTS[k].generic);
-    if (a.length) own += `<section data-sub="${s}"><h3>${s}</h3><div class="grid">${a.map(card).join('')}</div></section>`;
+    const a = PROMOTE.has(s) ? keys.sort((x, y) => (PRODUCTS[x].generic ? 1 : 0) - (PRODUCTS[y].generic ? 1 : 0)) : keys.filter(k => !PRODUCTS[k].generic), b = PROMOTE.has(s) ? [] : keys.filter(k => PRODUCTS[k].generic);
+    const chips = s === '茶几' ? `<div class="formbar" data-forms>${FORMS.filter(([f]) => f === 'all' || a.some(k => PRODUCTS[k].form === f)).map(([f, n]) => `<button data-form="${f}" class="${f === 'all' ? 'on' : ''}">${n}</button>`).join('')}</div>` : '';
+    if (a.length) own += `<section data-sub="${s}"><h3>${s}</h3>${chips}<div class="grid">${a.map(card).join('')}</div></section>`;
     if (b.length) more += `<section data-sub="${s}"><h3>${s}</h3><div class="grid">${b.map(card).join('')}</div></section>`;
   }
   $('#lib').innerHTML = own; $('#lib-more').innerHTML = more;
 }
+// 茶几形狀篩選
+$('#lib').addEventListener('click', e => {
+  const b = e.target.closest('.formbar [data-form]'); if (!b) return; e.stopPropagation();
+  const sec = b.closest('section'), f = b.dataset.form;
+  sec.querySelectorAll('.formbar button').forEach(x => x.classList.toggle('on', x === b));
+  sec.querySelectorAll('.grid .card').forEach(c => { c.style.display = f === 'all' || c.dataset.form === f ? '' : 'none'; });
+}, true);
 $('#lib-more-btn').onclick = () => { const m = $('#lib-more'); m.hidden = !m.hidden; $('#lib-more-btn').classList.toggle('on', !m.hidden); };
 let libAll = false;
 function filterLib() {                          // 只列出適合目前空間的分類；按「看全部」列出所有
