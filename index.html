@@ -304,6 +304,14 @@ body.show-mode .compass{left:16px;top:16px;bottom:auto}
   .cp-dial{width:54px;height:54px}
   #orient .setup-box{height:100%;max-height:100%;border-radius:0}
 }
+/* ---------- 移動房間位置 ---------- */
+.arrange-bar{display:none;position:absolute;left:50%;top:62px;transform:translateX(-50%);z-index:6;align-items:center;gap:10px;background:var(--brand);color:#fff;border-radius:999px;padding:6px 6px 6px 16px;box-shadow:0 10px 26px rgba(0,67,106,.25);font-size:13px;white-space:nowrap;max-width:calc(100% - 24px)}
+.arrange-bar span{overflow:hidden;text-overflow:ellipsis}
+.arrange-bar .btn{background:var(--yellow);color:var(--yellow-ink);border:0;border-radius:999px;padding:7px 18px;font-weight:700}
+body.arranging .arrange-bar{display:flex}
+body.arranging .walkbtn{display:none!important}
+body.arranging main{cursor:grab}
+@media (max-width:760px){ .arrange-bar{top:74px;font-size:12px} }
 /* ---------- 走進去逛 ---------- */
 .walkbtn{display:none;position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:5;align-items:center;gap:8px;border:0;border-radius:999px;background:var(--yellow);color:var(--yellow-ink);font-weight:700;font-size:15px;padding:11px 22px;box-shadow:0 10px 26px rgba(0,67,106,.22);white-space:nowrap}
 body.ov-mode .walkbtn{display:flex}
@@ -605,6 +613,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
         <div id="s-opts"></div>
       </div>
     </div>
+    <div class="arrange-bar" id="arrange-bar"><span>拖曳房間排出格局，靠近別間會自動對齊</span><button class="btn pri" id="arrange-done">完成</button></div>
     <button class="walkbtn" id="walk-btn"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="13" cy="4" r="2" fill="currentColor"/><path d="M10 21l2-6 3 3v3M8 12l2-4h4l3 4M12 8l-1 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>走進去逛逛</button>
     <div class="walk-ui" id="walk-ui">
       <button class="walk-exit" id="walk-exit">← 回總覽</button>
@@ -782,6 +791,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
     <div class="pane-ov" id="pane-ov">
       <h3>整間房子總覽</h3>
       <p class="hint" id="ov-sum"></p>
+      <button class="btn pri wide" id="ov-arrange" style="margin:4px 0 10px">移動房間位置（自己排出客人家的格局）</button>
       <div class="ov-list" id="ov-list"></div>
       <button class="btn wide" id="ov-orient" style="margin-top:8px">座向與日照（東照・西曬）</button>
       <p class="hint">點畫面上的房間或下面的按鈕，就能進去擺家具。之後隨時按上方的「總覽」回來看整體。</p>
@@ -799,6 +809,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <div class="field"><label>名稱</label><input type="text" id="sp-name" maxlength="12"></div>
       <p class="hint" id="room-sum"></p>
       <button class="btn pri wide" id="edit-room">編輯房間尺寸與門窗</button>
+      <button class="btn wide" id="add-bath">＋ 幫這間加一間衛浴（門、馬桶、洗手台、乾濕分離淋浴）</button>
       <button class="btn wide danger" id="sp-del">刪除這個空間</button>
       <h3>裝潢風格</h3>
       <p class="hint" id="style-sum"></p>
@@ -840,7 +851,22 @@ const START_Q = new URLSearchParams(location.search), START_SHARED = /^#p=/.test
 const IDX_KEY = 'likai-room-projects';
 const keyOf = id => id === 'p1' ? 'likai-room-v1' : 'likai-room-' + id;
 function readIdx() { try { return JSON.parse(localStorage.getItem(IDX_KEY)); } catch (e) { return null; } }
-function writeIdx() { try { localStorage.setItem(IDX_KEY, JSON.stringify(projIdx)); } catch (e) { } }
+// 好幾個分頁同時開：存清單前先把別的分頁新增的客人合併進來（不然會互相蓋掉）
+const deletedIds = new Set();
+function mergeIdx() {
+  const st = readIdx(); if (!st || !Array.isArray(st.list)) return;
+  for (const x of st.list) {
+    if (deletedIds.has(x.id)) continue;
+    const mine = projIdx.list.find(y => y.id === x.id);
+    if (!mine) projIdx.list.push(x);
+    else if ((x.updated || 0) > (mine.updated || 0)) Object.assign(mine, x);
+  }
+  // 刪掉的客人也要記在共用清單裡，別的分頁才不會又把它加回來
+  const del = new Set([...(projIdx.deleted || []), ...(st.deleted || []), ...deletedIds]);
+  if (del.size) { projIdx.deleted = [...del].slice(-300); const keep = projIdx.list.filter(x => !del.has(x.id) || x.id === projId); if (keep.length) projIdx.list = keep; }
+}
+function writeIdx() { try { mergeIdx(); localStorage.setItem(IDX_KEY, JSON.stringify(projIdx)); } catch (e) { } }
+addEventListener('storage', e => { if (e.key !== IDX_KEY) return; mergeIdx(); try { renderProjects(); if ($('#home').classList.contains('on')) renderHome(); } catch (er) { } });
 let projIdx = readIdx();
 if (!projIdx || !Array.isArray(projIdx.list) || !projIdx.list.length) { projIdx = { list: [{ id: 'p1', name: '專案 1', updated: Date.now() }] }; writeIdx(); }
 const newProjId = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
@@ -1025,9 +1051,11 @@ function bathArea(g, op) {
   const T = WALL_T, cx = op.off + op.w / 2, x0 = cx - op.bw / 2, x1 = cx + op.bw / 2, z0 = -T, z1 = -T - op.depth;
   lbox(g, x0, x1, -2, -0.4, z0, z1, BATH.tile);
   for (const [a, b, c, d] of [[x0, x0 + 4, z0, z1], [x1 - 4, x1, z0, z1], [x0, x1, z1 + 4, z1]]) lbox(g, a, b, -0.4, 8, c, d, BATH.curb);
-  for (const [type, x, z] of [['toilet', x0 + 32, z1 + 40], ['basin', x1 - 46, z1 + 30]]) {
-    const it = withDefaults({ type }), m = buildModel(it);
-    m.position.set(x, 0, z); m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); g.add(m);
+  // 最裡面：玻璃隔間的淋浴（濕區）；靠門：馬桶、洗手台（乾區）
+  const sw = Math.max(80, op.bw - 8), sd = Math.min(95, op.depth * 0.42);
+  for (const [type, x, z, ry, ex] of [['shower', (x0 + x1) / 2, z1 + 2 + sd / 2, 0, { w: sw, d: sd }], ['toilet', x0 + 4 + 35, z1 + sd + 48, Math.PI / 2], ['basin', x1 - 4 - 24, z1 + sd + 62, -Math.PI / 2, { w: 70 }]]) {
+    const it = withDefaults({ type, ...(ex || {}) }), m = buildModel(it);
+    m.position.set(x, 0, z); m.rotation.y = ry; m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); g.add(m);
   }
 }
 function buildOpening(g, op) {
@@ -1157,7 +1185,7 @@ function zoneBoxes() {
 /* ---------- 視角：3D 鳥瞰／平面／人視角 ---------- */
 let view = 'orbit', viewCover = 0;             // viewCover：畫面下方被抽屜／面板蓋住的高度
 const walk = { col: [], ty: 0, tp: 0, v: 0, av: 0, wq: 0, ring: null, room: -1, on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
-if (location.search.includes("debug")) window.__dbg = { walk, get cam() { return persp; } };   // 除錯用
+if (location.search.includes("debug")) window.__dbg = { walk, get cam() { return persp; }, get project() { return project; }, get state() { return state; }, addBathFor: i => addBathFor(i) };   // 除錯用
 /* ---------- 座向：project.orient = { face: 朝向的方位角（北0 東90 南180 西270）, side: 大門在平面圖的哪邊（上0 右90 下180 左270） } ---------- */
 const DIR8 = ['北', '東北', '東', '東南', '南', '西南', '西', '西北'];
 const dirName = b => DIR8[Math.round((((b % 360) + 360) % 360) / 45) % 8];
@@ -1887,6 +1915,7 @@ function filterLib() {                          // 只列出適合目前空間�
   const subs = SPACE_TYPES[state.type].subs;
   document.querySelectorAll('#pane-lib section').forEach(sec => { sec.style.display = libAll || subs.includes(sec.dataset.sub) ? '' : 'none'; });
   $('#lib-more-btn').hidden = ![...document.querySelectorAll('#lib-more section')].some(sec => sec.style.display !== 'none');
+  if (state.type === 'bath') { $('#lib-more').hidden = false; $('#lib-more-btn').classList.add('on'); }   // 衛浴：馬桶、洗手台、淋浴、浴缸都在一般款，直接打開
   $('#lib-for').textContent = libAll ? '全部商品' : `適合${SPACE_TYPES[state.type].name}的家具`;
   $('#lib-all').textContent = libAll ? `只看${SPACE_TYPES[state.type].name}` : '看全部';
   $('#catbar').innerHTML = [...document.querySelectorAll('#lib section')].filter(sec => sec.style.display !== 'none').map(sec => `<button data-sub="${sec.dataset.sub}">${sec.dataset.sub}</button>`).join('')
@@ -1944,7 +1973,7 @@ function renderEstimate() {
   $('#q-est').innerHTML = estimate(qPing(), qVal('q-rooms'), qVal('q-halls'))
     .map((e, i) => `<li><button data-i="${i}"><b>${e.name}</b><span>約 ${e.ping} 坪・寬 ${e.w} × 深 ${e.d}</span><i>›</i></button></li>`).join('');
 }
-$('#q-est').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { startProject.direct = true; startProject(qSpaces(), +b.dataset.i); } });   // 直接進那個空間
+$('#q-est').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { startProject.direct = true; startProject.ping = qPing(); startProject(qSpaces(), +b.dataset.i); } });   // 直接進那個空間
 function openQuick() {
   { const m = projMeta(); $('#q-name').value = m && !/^(專案|新客人) \d+$/.test(m.name) ? m.name : ''; }
   renderEstimate(); $('#quick').classList.add('on'); renderSteps(1);
@@ -1954,7 +1983,8 @@ function openQuick() {
 function closeQuick(byPop) { $('#quick').classList.remove('on'); if (!byPop) dropPage(); }
 function startProject(spaces, at = 0) {
   const nm = ($('#q-name').value || '').trim(), m = projMeta(); if (nm && m) { m.name = nm; writeIdx(); renderProjects(); }
-  project = { cur: at, started: true, styleAsked: true, spaces };           // 風格不再自動跳出，想要再到「房間」選
+  project = { cur: at, started: true, styleAsked: true, spaces };
+  if (startProject.ping > 0) project.ping = startProject.ping; startProject.ping = 0;   // 記住室內坪數（50 坪以上主衛有浴缸）           // 風格不再自動跳出，想要再到「房間」選
   closeQuick(true); dropPage();
   if (overview) exitOverview(at);                                         // 原本停在總覽：先出來，下面才會用新的房間重建總覽
   if (spaces.length > 1 && !startProject.direct) { switchSpace(at); enterOverview(); } else switchSpace(at);   // 直接開始擺：門窗之後想補再補
@@ -1965,7 +1995,7 @@ for (const id of ['q-rooms', 'q-halls']) $('#' + id).addEventListener('click', e
   $('#' + id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderEstimate();
 });
 $('#q-ping').addEventListener('input', renderEstimate);
-$('#q-go').onclick = () => startProject(qSpaces());
+$('#q-go').onclick = () => { startProject.ping = qPing(); startProject(qSpaces()); };
 $('#q-manual').onclick = () => startProject(defaultProject().spaces);
 
 /* ================= 匯入平面圖 ================= */
@@ -2179,7 +2209,9 @@ $('#pl-go').onclick = () => {
     return { name: r.name, type: r.type, room: { w, d, h: 280, setup: true, openings }, items: [],
       pos: { x: Math.round(((r.x0 + r.x1) / 2 - mx) * sc), z: Math.round(((r.y0 + r.y1) / 2 - my) * sc) } };
   });
-  closePlan(true, true); startProject.direct = false; startProject(spaces);
+  closePlan(true, true); startProject.direct = false;
+  startProject.ping = toNum($('#pl-ping').value) || Math.round(spaces.reduce((a, sp) => a + sp.room.w * sp.room.d, 0) / PING * 1.25);
+  startProject(spaces);
 };
 $('#restart').onclick = openQuick; $('#orient-btn').onclick = () => openOrient();
 
@@ -2276,6 +2308,7 @@ function renderShowCard() {
   setTimeout(updateViewOffset, 0);
 }
 function enterShow() {
+  if (arranging) setArranging(false);
   showMode = true; document.body.classList.add('show-mode'); select(null);
   $('#more-menu').classList.remove('on'); hideFlow();
   if (view === 'top') setView('orbit'); else setView(view);
@@ -2322,6 +2355,53 @@ const pingOf = sp => (sp.room.w * sp.room.d / 33058).toFixed(1);
 // 每間房的世界座標範圍（室內）
 const roomBox = sp => ({ x0: sp.pos.x - sp.room.w / 2, x1: sp.pos.x + sp.room.w / 2, z0: sp.pos.z - sp.room.d / 2, z1: sp.pos.z + sp.room.d / 2 });
 // A 房的門正對 B 房的牆（兩道牆幾乎貼在一起）→ 幫 B 那道牆開一樣的門洞，兩間才走得通
+/* ---------- 幫房間加一間衛浴 ----------
+ * 在房間旁邊（右、左、後、前，哪邊空就放哪邊）長出一間 170×220 的衛浴，兩間共用一道牆，牆上開門。
+ * 衛浴裡：最裡面是玻璃隔間淋浴（濕區），靠門左右是馬桶和洗手台（乾區）。 */
+function addBathFor(i) {
+  autoLayout();
+  const A = project.spaces[i]; if (!A || A.type === 'bath') { toast('衛浴裡不能再加衛浴'); return; }
+  // 室內 50 坪以上、而且是主臥：主衛大一點，有小浴缸
+  const ping = project.ping || project.spaces.reduce((s2, sp) => s2 + sp.room.w * sp.room.d, 0) / PING * 1.25;
+  const master = /主臥/.test(A.name) || (A.type === 'bedroom' && project.spaces.findIndex(sp => sp.type === 'bedroom') === i), tub = master && ping >= 50;
+  const a = roomBox(A), T = WALL_T, L = tub ? 240 : 170, D = tub ? 250 : 220;            // L：有門那面牆的長度；D：從門往裡的深度
+  const tries = [
+    { side: 'E', door: 'W', w: D, d: L, x: a.x1 + T + D / 2, z: a.z0 + L / 2 },
+    { side: 'W', door: 'E', w: D, d: L, x: a.x0 - T - D / 2, z: a.z0 + L / 2 },
+    { side: 'N', door: 'S', w: L, d: D, x: a.x1 - L / 2, z: a.z0 - T - D / 2 },
+    { side: 'S', door: 'N', w: L, d: D, x: a.x1 - L / 2, z: a.z1 + T + D / 2 },
+  ];
+  const free = t => project.spaces.every((o, j) => { if (j === i) return true; const b = roomBox(o);
+    return t.x + t.w / 2 + T <= b.x0 || t.x - t.w / 2 - T >= b.x1 || t.z + t.d / 2 + T <= b.z0 || t.z - t.d / 2 - T >= b.z1; });
+  const t = tries.find(free) || tries[0];
+  // 衛浴裡的位置：a＝沿著門那面牆（左右）、v＝從門往裡走多遠；換成房間座標
+  const P = (u, v) => t.door === 'S' ? [u, D / 2 - v] : t.door === 'N' ? [-u, -D / 2 + v] : t.door === 'W' ? [-D / 2 + v, u] : [D / 2 - v, -u];
+  const rotOf = (du, dv) => { const [fx, fz] = P(du, dv), [ox, oz] = P(0, 0), x = fx - ox, z = fz - oz; return Math.round(((-Math.atan2(x, z) / deg) % 360 + 360) % 360); };
+  const item = (type, u, v, du, dv, ex = {}) => { const [x, z] = P(u, v); return { type, x: Math.round(x), z: Math.round(z), rot: rotOf(du, dv), elev: 0, ...ex }; };
+  const used = project.spaces.filter(sp => sp.type === 'bath').length;
+  const bath = {
+    name: /臥$/.test(A.name.replace(/室$/, '')) ? A.name.replace(/室$/, '') + '衛浴' : used ? '衛浴 ' + (used + 1) : '衛浴', type: 'bath', pos: { x: Math.round(t.x), z: Math.round(t.z) },   // 主臥室 → 主臥衛浴
+    room: { w: t.w, d: t.d, h: 230, setup: true, openings: [{ kind: 'door', wall: t.door, w: 75, h: 205, sill: 0, off: Math.round((L - 75) / 2), hinge: 'left', swing: 'out' }] },
+    items: tub ? [
+      item('bathtub', -L / 2 + 72, D - 39, 0, -1),                              // 濕區：左邊小浴缸
+      item('shower', L / 2 - 47, D - 46, 0, -1, { w: 90, d: 90 }),              // 濕區：右邊玻璃隔間淋浴
+      item('toilet', -L / 2 + 36, 100, 1, 0),                                   // 乾區：左邊馬桶
+      item('basin', L / 2 - 25, 80, -1, 0, { w: 90 }),                          // 乾區：右邊洗手台
+    ] : [
+      item('shower', 0, D - 46, 0, -1, { w: L - 4, d: 90 }),                 // 濕區：最裡面整面玻璃隔間淋浴
+      item('toilet', -L / 2 + 36, 98, 1, 0),                                    // 乾區：左邊馬桶
+      item('basin', L / 2 - 25, 70, -1, 0, { w: 70 }),                          // 乾區：右邊洗手台
+    ],
+  };
+  const extra = linkDoors([bath, A])[1];                                       // 原本的房間也在同一個位置開門
+  if (extra.length) { const d = extra[0]; d.swing = 'in'; (A.room.openings ||= []).push(d); }
+  project.spaces.splice(i + 1, 0, bath);
+  if (project.cur > i) project.cur++;
+  save(); renderSpaces();
+  if (state === A) { buildRoom(); refresh(); }
+  toast(`已在「${A.name}」${{ E: '右邊', W: '左邊', N: '後面', S: '前面' }[t.side]}加一間「${bath.name}」${tub ? '（50 坪以上，主衛有小浴缸）' : ''}，到總覽可以拖曳調整位置`);
+}
+$('#add-bath').onclick = () => { if (overview) return; addBathFor(project.cur); };
 function linkDoors(spaces) {
   const extra = spaces.map(() => []);
   spaces.forEach((A, ia) => {
@@ -2404,24 +2484,73 @@ function enterOverview() {
 }
 function exitOverview(i) {
   if (walk.on) exitWalk();
+  if (arranging) setArranging(false);
   overview = false; document.body.classList.remove('ov-mode');
   houseGroup.visible = false; houseGroup.clear(); roomGroup.visible = furnGroup.visible = markGroup.visible = true;
   switchSpace(i ?? project.cur);
 }
 // 總覽裡：點房間＝進去擺設，按住拖曳＝調整這間的位置
-let ovDrag = null;
+let ovDrag = null, arranging = false;
+// 房間中心要放哪：靠近別間的牆就貼齊（兩間共用一道牆），左右、上下對齊；其他時候 5 公分一格
+function snapRoom(i, x, z) {
+  const me = project.spaces[i], hw = me.room.w / 2, hd = me.room.d / 2, T = WALL_T, tol = 35;
+  let bx = Math.round(x / 5) * 5, bz = Math.round(z / 5) * 5, ex = tol, ez = tol, sx = false, sz = false;
+  project.spaces.forEach((o, j) => {
+    if (j === i || !o.pos) return; const b = roomBox(o);
+    for (const cx of [b.x1 + T + hw, b.x0 - T - hw, b.x0 + hw, b.x1 - hw]) { const d = Math.abs(cx - x); if (d < ex) { ex = d; bx = cx; sx = true; } }
+    for (const cz of [b.z1 + T + hd, b.z0 - T - hd, b.z0 + hd, b.z1 - hd]) { const d = Math.abs(cz - z); if (d < ez) { ez = d; bz = cz; sz = true; } }
+  });
+  // 不能疊在別間上面：疊到了就往最近的一邊推開，剛好貼著（共用一道牆）
+  for (let pass = 0; pass < 3; pass++) {
+    let moved = false;
+    project.spaces.forEach((o, j) => {
+      if (j === i || !o.pos) return; const b = roomBox(o);
+      const ox = Math.min(bx + hw, b.x1 + T) - Math.max(bx - hw, b.x0 - T), oz = Math.min(bz + hd, b.z1 + T) - Math.max(bz - hd, b.z0 - T);
+      if (ox <= 0.5 || oz <= 0.5) return;
+      const cands = [[b.x1 + T + hw, bz], [b.x0 - T - hw, bz], [bx, b.z1 + T + hd], [bx, b.z0 - T - hd]];
+      cands.sort((p, q) => Math.hypot(p[0] - bx, p[1] - bz) - Math.hypot(q[0] - bx, q[1] - bz));
+      [bx, bz] = cands[0]; moved = true;
+    });
+    if (!moved) break;
+  }
+  return { x: Math.round(bx), z: Math.round(bz), snapped: sx || sz };
+}
+function setArranging(on) {
+  arranging = on && overview && !showMode;
+  document.body.classList.toggle('arranging', arranging);
+  $('#ov-arrange').textContent = arranging ? '完成排列' : '移動房間位置（自己排出客人家的格局）';
+  if (arranging) { if (isMob()) setSheet('min'); toast('拖曳房間排位置；點「完成」結束'); }
+}
+$('#ov-arrange').onclick = () => setArranging(!arranging);
+$('#arrange-done').onclick = () => setArranging(false);
 // 總覽：房間照平面圖固定（不能拖）。點一下＝進去擺設；拖曳＝轉動視角（交給 OrbitControls）
 function ovDown(e) {
   setNdc(e);
   const h = ray.intersectObjects(houseGroup.children, true).find(h => h.object.userData.spaceIdx != null && !h.object.userData.label && !h.object.isSprite);
   ovDrag = h ? { i: h.object.userData.spaceIdx, x0: e.clientX, y0: e.clientY, moved: false } : null;
+  if (ovDrag && arranging) {                        // 排列模式：抓住房間拖（不轉視角）
+    const sp = project.spaces[ovDrag.i], q = floorPt(e), g = houseGroup.children.find(c => c.userData.spaceIdx === ovDrag.i && c.isGroup);
+    if (!q || !g) { ovDrag = null; return; }
+    Object.assign(ovDrag, { arr: true, g, dx: sp.pos.x - q.x, dz: sp.pos.z - q.z, at: { ...sp.pos } });
+    controls.enabled = false; canvas.setPointerCapture(e.pointerId);
+  }
 }
 function ovMove(e) {
   if (ovDrag && !ovDrag.moved && Math.hypot(e.clientX - ovDrag.x0, e.clientY - ovDrag.y0) > 6) ovDrag.moved = true;   // 有拖動就不算點房間
+  if (ovDrag && ovDrag.arr && ovDrag.moved) {
+    const q = floorPt(e); if (!q) return;
+    const t = snapRoom(ovDrag.i, q.x + ovDrag.dx, q.z + ovDrag.dz); ovDrag.at = { x: t.x, z: t.z }; ovDrag.g.position.set(t.x, 0, t.z);
+  }
 }
 function ovUp() {
   if (!ovDrag) return false;
   const d = ovDrag; ovDrag = null;
+  if (d.arr) {                                      // 放開：存新位置，重畫總覽（相鄰房間的門會自動相通）
+    controls.enabled = !topView;
+    if (d.moved) { project.spaces[d.i].pos = d.at; save(); buildOverview(); }
+    return true;
+  }
+  if (arranging) return true;                       // 排列模式點一下不進房間
   if (!d.moved) exitOverview(d.i);
   return true;
 }
@@ -2450,6 +2579,7 @@ function walkStep(dx, dz) {
 }
 function enterWalk() {
   if (!overview || walk.on) return;
+  if (arranging) setArranging(false);
   select(null); if (topView) setView('orbit');
   walk.on = true; walk.go = null; walk.key = {}; walk.room = -1; document.body.classList.add('walk-mode');
   buildOverview(true);
@@ -2677,7 +2807,7 @@ $('#home-grid').addEventListener('click', e => {
     inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') inp.blur(); }); inp.addEventListener('blur', done);
   } else if (act === 'del') {
     if (homeDel !== id) { homeDel = id; b.textContent = '再按一次刪除'; setTimeout(() => { homeDel = null; renderHome(); }, 3000); return; }
-    projIdx.list = projIdx.list.filter(q => q.id !== id);
+    deletedIds.add(id); projIdx.list = projIdx.list.filter(q => q.id !== id);
     try { localStorage.removeItem(keyOf(id)); localStorage.removeItem(THUMB(id)); } catch (e) { }
     if (!projIdx.list.length) projIdx.list.push({ id: newProjId(), name: '專案 1', updated: Date.now() });
     writeIdx(); toast(`已刪除「${x ? x.name : ''}」`);
@@ -2698,7 +2828,7 @@ $('#proj-list').addEventListener('click', e => {
   else if (b.dataset.act === 'tab') gotoProject(id, true);
   else if (b.dataset.act === 'del') {
     if (projDelArmed !== id) { projDelArmed = id; b.textContent = '再按一次'; setTimeout(() => { projDelArmed = null; renderProjects(); }, 3000); return; }
-    projIdx.list = projIdx.list.filter(p => p.id !== id);
+    deletedIds.add(id); projIdx.list = projIdx.list.filter(p => p.id !== id);
     try { localStorage.removeItem(keyOf(id)); } catch (e) { }
     if (!projIdx.list.length) projIdx.list.push({ id: newProjId(), name: '專案 1', updated: Date.now() });
     writeIdx(); toast(`已刪除「${x ? x.name : '專案'}」`);

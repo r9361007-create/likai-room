@@ -51,7 +51,23 @@ function buildPassage(it) {
   return g;
 }
 
+// 小浴缸：圓角白色缸體、裡面淺一點的凹槽、一端有龍頭（主臥衛浴用，室內 50 坪以上會自動放）
+function buildBathtub(it) {
+  const g = new THREE.Group(), { w, d, h } = it;
+  const shell = mat(it.color, { roughness: 0.25 }), inner = mat(new THREE.Color(it.color).multiplyScalar(0.93), { roughness: 0.2 }), chrome = mat(it.color2 || '#c0c4c8', { roughness: 0.2, metalness: 0.9 });
+  rbox(g, w, h, d, 0, h / 2, 0, shell, 8);                                          // 缸體
+  const iw = w - 14, id = d - 14;                                                   // 內槽：上緣往下凹的淺色面
+  const sh = new THREE.Shape(), rr = Math.min(18, id / 2 - 1);
+  sh.moveTo(-iw / 2 + rr, -id / 2); sh.lineTo(iw / 2 - rr, -id / 2); sh.quadraticCurveTo(iw / 2, -id / 2, iw / 2, -id / 2 + rr); sh.lineTo(iw / 2, id / 2 - rr); sh.quadraticCurveTo(iw / 2, id / 2, iw / 2 - rr, id / 2);
+  sh.lineTo(-iw / 2 + rr, id / 2); sh.quadraticCurveTo(-iw / 2, id / 2, -iw / 2, id / 2 - rr); sh.lineTo(-iw / 2, -id / 2 + rr); sh.quadraticCurveTo(-iw / 2, -id / 2, -iw / 2 + rr, -id / 2);
+  const top = new THREE.Mesh(new THREE.ShapeGeometry(sh, 8), mat('#d6e4ec', { roughness: 0.08 })); top.rotation.x = -Math.PI / 2; top.position.y = h + 0.3; g.add(top);   // 缸面：淺藍白，看起來是凹進去裝水的地方
+  const rim = new THREE.Mesh(new THREE.ShapeGeometry(sh, 8), inner); rim.rotation.x = -Math.PI / 2; rim.scale.set(1.04, 1.06, 1); rim.position.y = h + 0.15; g.add(rim);
+  const spout = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 16, 12), chrome); spout.rotation.z = Math.PI / 2; spout.position.set(-w / 2 + 14, h + 6, -d / 2 + 8); g.add(spout);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 10, 12), chrome); post.position.set(-w / 2 + 6, h + 2, -d / 2 + 8); g.add(post);
+  return g;
+}
 export const EXTRA_PRODUCTS = {
+  bathtub: { sub: '衛浴', generic: true, name: '小浴缸', w: 140, d: 75, h: 55, color: '#ffffff', color2: '#c0c4c8', c1: '缸體', c2: '龍頭', build: buildBathtub, wall: true },
   honeycomb: {
     sub: '窗簾', generic: true, name: '蜂巢簾', w: 150, d: 6, h: 150, elev: 80, color: '#ece6da', color2: '#f1ebe1', c1: '簾布顏色', c2: '上下軌顏色',
     build: buildHoneycomb, opts: [{ key: 'open', label: '開合', list: [opt('closed', '全放下'), opt('half', '拉起一半'), opt('topdown', '上下雙開')] }], noHit: true,
