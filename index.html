@@ -296,6 +296,9 @@ body.show-mode .compass{left:16px;top:16px;bottom:auto}
 .or-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .or-grid button{font-size:13px;line-height:1.35}
 .or-mid{display:flex;align-items:center;justify-content:center}
+.or-sun{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.or-sun button small{display:block;font-size:11px}
+#or-auto{margin:6px 0 0;color:var(--accent);font-weight:600}
 .or-sum{margin-top:12px;background:var(--surface);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.7}
 .or-sum b{color:var(--brand)}
 .or-sum .w{color:#d1495b;font-weight:700}.or-sum .e{color:#c98a00;font-weight:700}
@@ -718,8 +721,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
           </div>
           <h3>大門／陽台在平面圖的哪一邊？</h3>
           <div class="chips" id="or-side"><button data-s="180">下方</button><button data-s="0">上方</button><button data-s="270">左邊</button><button data-s="90">右邊</button></div>
-          <h3>日照</h3>
-          <div class="chips" id="or-sun"><button data-m="off">不顯示</button><button data-m="am">早上・東照</button><button data-m="pm">下午・西曬</button></div>
+          <h3>日照 <small>選好座向會自動判定，也可以自己切換</small></h3>
+          <div class="chips or-sun" id="or-sun"><button data-m="am">早上<small>東照</small></button><button data-m="noon">中午<small>南向</small></button><button data-m="pm">下午<small>西曬</small></button><button data-m="off">不顯示</button></div>
+          <p class="hint" id="or-auto"></p>
           <div class="or-sum" id="or-sum"></div>
         </div>
         <div class="setup-foot back-foot"><button class="btn" id="or-clear">清除座向</button><button class="btn pri" id="or-done">完成</button></div>
@@ -1205,9 +1209,9 @@ function applySun() {
   if (!sunBase) keepSunBase();
   const b = sunBase;
   if (!project.orient || sunMode === 'off') { sun.position.copy(b.p); sun.target.position.copy(b.t); sun.intensity = b.i; sun.color.setHex(b.c); hemi.intensity = b.h; scene.environmentIntensity = b.e; return; }
-  const am = sunMode === 'am', dir = worldDir(am ? 105 : 255), c = b.t, R = 900, elev = (am ? 24 : 20) * deg;
+  const am = sunMode === 'am', noon = sunMode === 'noon', dir = worldDir(am ? 105 : noon ? 180 : 255), c = b.t, R = 900, elev = (am ? 24 : noon ? 48 : 20) * deg;
   sun.position.copy(c).addScaledVector(dir, R * Math.cos(elev)).setY(c.y + R * Math.sin(elev));
-  sun.target.position.copy(c); sun.color.set(am ? '#fff0d0' : '#ffc07a'); sun.intensity = am ? 5.5 : 6; hemi.intensity = 0.32; scene.environmentIntensity = b.e * 0.55;   // 室內暗一點，陽光照到的地方才明顯
+  sun.target.position.copy(c); sun.color.set(am ? '#fff0d0' : noon ? '#fffaf0' : '#ffc07a'); sun.intensity = am ? 5.5 : noon ? 5 : 6; hemi.intensity = 0.32; scene.environmentIntensity = b.e * 0.55;   // 室內暗一點，陽光照到的地方才明顯
   const S = Math.max(sun.shadow.camera.right, 600); Object.assign(sun.shadow.camera, { left: -S, right: S, top: S, bottom: -S, near: 10, far: R * 2 + S * 2 }); sun.shadow.camera.updateProjectionMatrix();
 }
 // 羅盤：北方在畫面上的角度跟著鏡頭轉
@@ -1215,7 +1219,7 @@ let cpLast = null;
 function syncCompass() {
   const el = $('#compass'), o = project.orient;
   el.classList.toggle('unset', !o); el.classList.toggle('sun-am', !!o && sunMode === 'am'); el.classList.toggle('sun-pm', !!o && sunMode === 'pm');
-  $('#cp-label').textContent = o ? orientLabel(o) + (sunMode === 'am' ? '・早上' : sunMode === 'pm' ? '・下午' : '') : '設定座向';
+  $('#cp-label').textContent = o ? orientLabel(o) + (sunMode === 'am' ? '・早上' : sunMode === 'noon' ? '・中午' : sunMode === 'pm' ? '・下午' : '') : '設定座向';
   let ang = 0;
   if (o) {
     const n = worldDir(0, o), f = new THREE.Vector3();
@@ -1227,6 +1231,33 @@ function syncCompass() {
   for (const i of $('#cp-dial').querySelectorAll('i')) { const a = (ang + +i.dataset.d) * deg; i.style.left = (R + 10 + Math.sin(a) * R) + 'px'; i.style.top = (R + 10 - Math.cos(a) * R) + 'px'; }
   $('#cp-needle').style.transform = `rotate(${ang}deg)`;
 }
+// 每扇窗面向哪個方位（朝東、朝西、朝南…）
+function windowsByDir(o) {
+  const r = { east: [], west: [], south: [], north: [] };
+  for (const sp of project.spaces) for (const op of sp.room.openings || []) {
+    if (isDoor(op.kind)) continue; const b = wallBearing(op.wall, o), nm = `${sp.name}${OPEN_KINDS[op.kind].name}`;
+    if (b >= 225 && b <= 315) r.west.push(nm); else if (b >= 45 && b <= 135) r.east.push(nm); else if (b > 135 && b < 225) r.south.push(nm); else r.north.push(nm);
+  }
+  return r;
+}
+// 自動判定要顯示哪個時段的陽光：有西曬就看下午（最常被問），再來早上東照、中午南向
+function autoSun(o) {
+  const w = windowsByDir(o);
+  if (w.west.length) return 'pm'; if (w.east.length) return 'am'; if (w.south.length) return 'noon';
+  const f = ((o.face % 360) + 360) % 360;                       // 還沒設窗：照房子朝向猜
+  return f >= 225 && f <= 315 ? 'pm' : f >= 45 && f <= 135 ? 'am' : 'noon';
+}
+// 房子朝向的一句話評語（台灣常見說法）
+const FACE_NOTE = {
+  0: '朝北：直射陽光少、夏天涼爽，冬天較冷、容易潮濕',
+  45: '朝東北：早上有一點陽光，整體偏涼爽',
+  90: '朝東：早上陽光充足、下午涼爽，適合早起的家庭',
+  135: '朝東南：早上到中午採光好，冬暖夏涼，很受歡迎',
+  180: '朝南：冬暖夏涼、採光最穩定，台灣最受歡迎的座向',
+  225: '朝西南：中午後陽光強，夏天下午偏熱，要注意西曬',
+  270: '朝西：下午西曬明顯、夏天較熱，建議遮光窗簾、隔熱玻璃',
+  315: '朝西北：下午有西曬，冬天迎東北季風',
+};
 function openOrient() { $('#orient').classList.add('on'); renderOrient(); }
 function closeOrient() { $('#orient').classList.remove('on'); }
 function renderOrient() {
@@ -1235,14 +1266,11 @@ function renderOrient() {
   $('#or-side').querySelectorAll('[data-s]').forEach(b => b.classList.toggle('on', +b.dataset.s === (o ? o.side : 180)));
   $('#or-sun').querySelectorAll('[data-m]').forEach(b => { b.classList.toggle('on', b.dataset.m === sunMode); b.disabled = !o && b.dataset.m !== 'off'; });
   $('#or-mini').innerHTML = o ? `<svg viewBox="-40 -40 80 80" width="70" height="70"><rect x="-22" y="-22" width="44" height="44" rx="4" fill="#eef3f7" stroke="#00436a" stroke-width="2"/>${(() => { const a = o.side * deg, x = Math.sin(a) * 22, y = -Math.cos(a) * 22; return `<circle cx="${x}" cy="${y}" r="5" fill="#F9E573" stroke="#00436a"/>`; })()}${[0, 90, 180, 270].map(b => { const d = worldDir(b, o), x = d.x * 34, y = d.z * 34; return `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="11" font-weight="700" fill="${b === 0 ? '#c23e4e' : b === 90 ? '#c98a00' : b === 270 ? '#d1495b' : '#5b6b78'}">${DIR8[b / 45]}</text>`; }).join('')}</svg>` : '<span class="hint">先選座向</span>';
-  if (!o) { $('#or-sum').innerHTML = '選好座向，就能看出哪些窗戶早上有東照、下午會西曬。'; return; }
-  // 每個空間的窗戶：面向哪個方位、會不會西曬
-  const west = [], east = [];
-  for (const sp of project.spaces) for (const op of sp.room.openings || []) {
-    if (isDoor(op.kind)) continue; const b = wallBearing(op.wall, o), nm = `${sp.name}${OPEN_KINDS[op.kind].name}`;
-    if (b >= 225 && b <= 315) west.push(nm); else if (b >= 45 && b <= 135) east.push(nm);
-  }
-  $('#or-sum').innerHTML = `<b>${orientLabel(o)}</b>（平面圖上方是${dirName(o.face - o.side)}方）<br>`
+  if (!o) { $('#or-sum').innerHTML = '選好座向，系統會自動判定哪些窗戶早上東照、下午西曬，並顯示陽光。'; $('#or-auto').textContent = ''; return; }
+  const { west, east, south } = windowsByDir(o), auto = autoSun(o);
+  $('#or-auto').textContent = `系統判定：${{ am: '早上東照最明顯', noon: '中午南向採光最明顯', pm: '下午會西曬' }[auto]}${sunMode === auto ? '（畫面已顯示）' : '，按「' + { am: '早上', noon: '中午', pm: '下午' }[auto] + '」可以看'}`;
+  $('#or-sum').innerHTML = `<b>${orientLabel(o)}</b>（平面圖上方是${dirName(o.face - o.side)}方）<br>${FACE_NOTE[((Math.round(o.face / 45) * 45) % 360 + 360) % 360]}<br>`
+    + `<span class="e">中午南向</span>：${south.length ? esc(south.join('、')) : '沒有朝南的窗'}<br>`
     + `<span class="e">早上東照</span>：${east.length ? esc(east.join('、')) : '沒有朝東的窗'}<br>`
     + `<span class="w">下午西曬</span>：${west.length ? esc(west.join('、')) + '（建議遮光窗簾、隔熱）' : '沒有朝西的窗，不怕西曬'}`;
 }
@@ -1250,10 +1278,10 @@ $('#compass').onclick = openOrient; $('#or-x').onclick = $('#or-done').onclick =
 $('#or-face').addEventListener('click', e => {
   const b = e.target.closest('[data-b]'); if (!b) return;
   project.orient = { face: +b.dataset.b, side: project.orient ? project.orient.side : 180 };
-  if (sunMode === 'off') sunMode = 'pm';            // 選了座向就先看下午西曬（業務最常被問）
+  sunMode = autoSun(project.orient);                 // 自動判定要看哪個時段的陽光
   orientChanged();
 });
-$('#or-side').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (!b) return; project.orient = { face: project.orient ? project.orient.face : 180, side: +b.dataset.s }; orientChanged(); });
+$('#or-side').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (!b) return; project.orient = { face: project.orient ? project.orient.face : 180, side: +b.dataset.s }; sunMode = autoSun(project.orient); orientChanged(); });
 $('#or-sun').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b || b.disabled) return; sunMode = b.dataset.m; orientChanged(); });
 $('#or-clear').onclick = () => { delete project.orient; sunMode = 'off'; orientChanged(); };
 function orientChanged() { if (project.orient) project.orient.sun = sunMode; save(); applySun(); cpLast = null; syncCompass(); renderOrient(); }
