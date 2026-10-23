@@ -625,6 +625,116 @@ Object.assign(EXTRA_PRODUCTS, {
   basketSide: { ...SIDE, name: '金屬線籃邊几', w: 45, d: 45, h: 48, color: '#7a5236', color2: '#1f1f1f', c1: '桌面木色', c2: null, build: buildBasketSide },
   ringSide: { ...SIDE, name: '環形腳邊几', w: 45, d: 45, h: 52, color: '#e6e2dc', color2: '#2a2a2a', c1: '石面顏色', c2: '腳的顏色', build: buildRingSide },
 });
+/* ---------- 餐桌：中柱腳、四支腳、其他造型 ---------- */
+const woodM = (c, r = 0.55) => mat(c, { roughness: r });
+function topSlab(g, it, M, t = 2.5) {        // 餐桌桌面：圓（w=d）、橢圓或長方（圓角一點）
+  const { w, d, h } = it;
+  if (it.shape === 'round') return cyl(g, w / 2, w / 2, t, 0, h - t / 2, 0, M, 64);
+  if (it.shape === 'oval') { const c = cyl(g, d / 2, d / 2, t, 0, h - t / 2, 0, M, 64); c.scale.x = w / d; return c; }
+  return prism(g, rrShape(w, d, 3), h - t, t, M, 0.4);
+}
+// 中柱腳
+function buildTulip(it) {                 // 鬱金香腳：一支往下張開的白色中柱＋圓盤底
+  const g = new THREE.Group(), { h } = it, B = mat(it.color2, { roughness: 0.35 });
+  topSlab(g, it, marbMat(it.color, '#9a948c', 0.25));
+  const prof = []; for (let i = 0; i <= 16; i++) { const t = i / 16, y = 2 + t * (h - 4.5); prof.push(new THREE.Vector2(6 + 22 * Math.pow(1 - t, 3) + 10 * Math.pow(t, 6), y)); }
+  const lathe = new THREE.Mesh(new THREE.LatheGeometry([new THREE.Vector2(0, 2), ...prof, new THREE.Vector2(0, h - 2.5)], 48), B); lathe.castShadow = true; g.add(lathe);
+  cyl(g, 30, 30, 2, 0, 1, 0, B, 48);
+  return g;
+}
+function buildConePed(it) {               // 圓錐中柱：上細下粗的圓錐
+  const g = new THREE.Group(), { h } = it, B = mat(it.color2, { roughness: 0.4, metalness: 0.3 });
+  topSlab(g, it, marbMat(it.color, '#c9c3ba', 0.25)); cyl(g, 9, it.w * 0.24, h - 2.5, 0, (h - 2.5) / 2, 0, B, 48);
+  return g;
+}
+function buildCrossPed(it) {              // 實木中柱＋十字外八腳
+  const g = new THREE.Group(), { w, h } = it, W = woodM(it.color2);
+  topSlab(g, it, woodM(it.color, 0.5), 3.5); cyl(g, 6, 8, h - 9.5, 0, 6 + (h - 9.5) / 2, 0, W, 24);
+  for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2 + Math.PI / 4, l = box(g, w * 0.34, 6, 8, Math.cos(a) * w * 0.17, 3, Math.sin(a) * w * 0.17, W); l.rotation.y = -a; }   // 地上四支往外伸的腳
+  return g;
+}
+function buildRectPed(it) {               // 岩板長桌＋中間一支扁橢圓中柱＋橢圓底盤
+  const g = new THREE.Group(), { w, d, h } = it, B = mat(it.color2, { roughness: 0.4, metalness: 0.4 });
+  topSlab(g, it, marbMat(it.color, '#8a857e', 0.25));
+  const col = cyl(g, 8, 10, h - 4.5, 0, 2 + (h - 4.5) / 2, 0, B, 40); col.scale.x = 3.2;
+  const base = cyl(g, 22, 22, 2, 0, 1, 0, B, 48); base.scale.x = w / d * 0.9;
+  box(g, w * 0.6, 4, 10, 0, h - 4.5, 0, B);                              // 桌面下的支撐樑
+  return g;
+}
+function buildOvalPed(it) {               // 大理石橢圓桌＋雕塑感的雙曲中柱
+  const g = new THREE.Group(), { w, d, h } = it, B = travMat(it.color2);
+  topSlab(g, it, marbMat(it.color, '#7d7368', 0.22), 3);
+  const prof = []; for (let i = 0; i <= 14; i++) { const t = i / 14, y = t * (h - 3); prof.push(new THREE.Vector2(16 + 14 * Math.pow(Math.abs(t - 0.5) * 2, 2), y)); }
+  const c = new THREE.Mesh(new THREE.LatheGeometry([new THREE.Vector2(0, 0), ...prof, new THREE.Vector2(0, h - 3)], 48), B); c.scale.x = Math.min(2.4, w / d * 1.2); c.castShadow = true; g.add(c);
+  return g;
+}
+function buildLazySusan(it) {             // 轉盤圓桌：大圓桌＋中間的玻璃轉盤＋粗中柱
+  const g = new THREE.Group(), { w, h } = it, W = woodM(it.color, 0.45), B = woodM(it.color2);
+  topSlab(g, it, W, 3.5);
+  cyl(g, w * 0.3, w * 0.3, 1.2, 0, h + 1.2, 0, new THREE.MeshPhysicalMaterial({ color: '#e8f2f2', transparent: true, opacity: 0.5, roughness: 0.05 }), 64);
+  cyl(g, 10, 10, 1, 0, h + 0.3, 0, mat('#888', { metalness: 0.7, roughness: 0.3 }), 24);
+  cyl(g, 10, 12, h - 6, 0, 3 + (h - 6) / 2, 0, B, 32); cyl(g, 32, 34, 3, 0, 1.5, 0, B, 48);
+  return g;
+}
+// 四支腳
+function legs4(g, it, inset, legFn) { const { w, d } = it; for (const sx of [-1, 1]) for (const sz of [-1, 1]) legFn(sx * (w / 2 - inset), sz * (d / 2 - inset), sx, sz); }
+function buildNordicLong(it) {            // 北歐實木長桌：方錐腳＋牙板
+  const g = new THREE.Group(), { w, d, h } = it, W = woodM(it.color, 0.5), L = woodM(it.color2);
+  topSlab(g, it, W, 3); const lh = h - 3;
+  legs4(g, it, 8, (x, z) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 2.2, lh, 4), L); l.rotation.y = Math.PI / 4; l.position.set(x, lh / 2, z); l.castShadow = true; g.add(l); });
+  for (const sz of [-1, 1]) box(g, w - 22, 7, 2, 0, lh - 3.5, sz * (d / 2 - 8), L); for (const sx of [-1, 1]) box(g, 2, 7, d - 22, sx * (w / 2 - 8), lh - 3.5, 0, L);
+  return g;
+}
+function buildSplayLong(it) {             // 胡桃木圓角長桌＋外八斜腳（中古風）
+  const g = new THREE.Group(), { h } = it, W = woodM(it.color, 0.45);
+  prism(g, rrShape(it.w, it.d, it.d * 0.22), h - 3, 3, W, 0.8); const lh = h - 3;
+  legs4(g, it, 16, (x, z, sx, sz) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 1.6, lh + 3, 16), W); l.position.set(x, lh / 2, z); l.rotation.set(sz * 0.14, 0, -sx * 0.14); l.castShadow = true; g.add(l); });
+  return g;
+}
+function buildSlimMetal(it) {             // 岩板長桌＋細黑鐵方腳
+  const g = new THREE.Group(), { w, d, h } = it, F = dark('#1d1d1d');
+  topSlab(g, it, marbMat(it.color, '#8a857e', 0.25), 1.2); const lh = h - 1.2;
+  legs4(g, it, 6, (x, z) => box(g, 3, lh, 3, x, lh / 2, z, F));
+  for (const sz of [-1, 1]) box(g, w - 12, 3, 2, 0, lh - 1.5, sz * (d / 2 - 6), F); for (const sx of [-1, 1]) box(g, 2, 3, d - 12, sx * (w / 2 - 6), lh - 1.5, 0, F);
+  return g;
+}
+function buildRoundLegs(it) {             // 實木四腳圓桌（北歐）
+  const g = new THREE.Group(), { w, h } = it, W = woodM(it.color, 0.5), L = woodM(it.color2);
+  topSlab(g, it, W, 3); const lh = h - 3, r = w / 2 * 0.62;
+  for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2 + Math.PI / 4, l = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 1.8, lh + 2, 16), L); l.position.set(Math.cos(a) * r, lh / 2, Math.sin(a) * r); l.rotation.set(Math.sin(a) * 0.1, 0, -Math.cos(a) * 0.1); l.castShadow = true; g.add(l); }
+  cyl(g, r * 0.95, r * 0.95, 6, 0, lh - 3, 0, L, 32);
+  return g;
+}
+function buildExtendable(it) {            // 伸縮岩板餐桌：桌面中間有一條接縫、兩端可拉出（四支腳）
+  const g = new THREE.Group(), { w, d, h } = it, S = marbMat(it.color, '#8a857e', 0.25), F = mat(it.color2, { roughness: 0.4, metalness: 0.4 });
+  topSlab(g, it, S, 2); box(g, 0.6, 2.2, d - 0.5, 0, h - 1, 0, dark('#555'));      // 中間的接縫
+  box(g, w - 30, 6, d - 20, 0, h - 5, 0, F);                                         // 拉軌外框
+  legs4(g, it, 12, (x, z) => box(g, 5, h - 2, 5, x, (h - 2) / 2, z, F));
+  return g;
+}
+// 其他造型
+function buildXBase(it) {                 // 實木長桌＋兩端 X 型腳、中間一根橫樑
+  const g = new THREE.Group(), { w, d, h } = it, W = woodM(it.color, 0.5), L = woodM(it.color2);
+  topSlab(g, it, W, 4); const lh = h - 4, ln = Math.hypot(lh, d * 0.7);
+  for (const sx of [-1, 1]) for (const k of [-1, 1]) { const b = box(g, 6, ln, 6, sx * (w / 2 - 20), lh / 2, 0, L); b.rotation.x = k * Math.atan2(d * 0.7, lh); }
+  box(g, w - 40, 6, 6, 0, lh * 0.45, 0, L);
+  return g;
+}
+const DT = { sub: '餐桌', generic: true, c1: '桌面', c2: '桌腳' };
+Object.assign(EXTRA_PRODUCTS, {
+  dtTulip: { ...DT, form: 'pedestal', name: '鬱金香腳岩板圓桌', w: 120, d: 120, h: 75, def: { shape: 'round' }, color: '#f0ede8', color2: '#f4f2ee', c1: '岩板顏色', c2: '腳的顏色', build: buildTulip },
+  dtCone: { ...DT, form: 'pedestal', name: '圓錐中柱圓桌', w: 130, d: 130, h: 75, def: { shape: 'round' }, color: '#2b2a29', color2: '#1f1f1f', c1: '桌面顏色', c2: '中柱顏色', build: buildConePed },
+  dtCross: { ...DT, form: 'pedestal', name: '十字腳實木圓桌', w: 120, d: 120, h: 75, def: { shape: 'round' }, color: '#c49a6c', color2: '#a87a4f', c1: '桌面木色', c2: '腳的木色', build: buildCrossPed },
+  dtRectPed: { ...DT, form: 'pedestal', name: '中柱岩板長桌', w: 180, d: 90, h: 75, def: { shape: 'rect' }, color: '#e6e2dc', color2: '#2a2a2a', c1: '岩板顏色', c2: '中柱顏色', build: buildRectPed },
+  dtOvalPed: { ...DT, form: 'pedestal', name: '中柱大理石橢圓桌', w: 200, d: 100, h: 75, def: { shape: 'oval' }, color: '#ece8e1', color2: '#e3d3b8', c1: '石面顏色', c2: '洞石中柱', build: buildOvalPed },
+  dtSusan: { ...DT, form: 'pedestal', name: '轉盤圓桌', w: 135, d: 135, h: 76, def: { shape: 'round' }, color: '#8a6440', color2: '#6b4630', c1: '桌面木色', c2: '中柱木色', build: buildLazySusan },
+  dtNordic: { ...DT, form: 'legs', name: '北歐實木長桌', w: 180, d: 90, h: 75, def: { shape: 'rect' }, color: '#d9b98f', color2: '#c9a87c', c1: '桌面木色', c2: '腳的木色', build: buildNordicLong },
+  dtSplay: { ...DT, form: 'legs', name: '胡桃木外八腳長桌', w: 160, d: 85, h: 75, def: { shape: 'rect' }, color: '#6b4630', color2: '#6b4630', c1: '木頭顏色', c2: null, build: buildSplayLong },
+  dtSlim: { ...DT, form: 'legs', name: '細鐵腳岩板長桌', w: 160, d: 80, h: 75, def: { shape: 'rect' }, color: '#f0ede8', color2: '#1d1d1d', c1: '岩板顏色', c2: null, build: buildSlimMetal },
+  dtRoundLegs: { ...DT, form: 'legs', name: '實木四腳圓桌', w: 110, d: 110, h: 75, def: { shape: 'round' }, color: '#d9b98f', color2: '#c9a87c', c1: '桌面木色', c2: '腳的木色', build: buildRoundLegs },
+  dtExtend: { ...DT, form: 'legs', name: '伸縮岩板餐桌', w: 160, d: 90, h: 75, def: { shape: 'rect' }, color: '#e9e6e1', color2: '#2a2a2a', c1: '岩板顏色', c2: '腳的顏色', build: buildExtendable },
+  dtXBase: { ...DT, form: 'other', name: 'X 型腳實木長桌', w: 200, d: 95, h: 75, def: { shape: 'rect' }, color: '#c49a6c', color2: '#8a6440', c1: '桌面木色', c2: '腳的木色', build: buildXBase },
+});
 const CHAIR = { sub: '單椅', generic: true };
 Object.assign(EXTRA_PRODUCTS, {
   tubBoucle: { ...CHAIR, name: '泰迪絨圓弧椅（低背）', w: 78, d: 76, h: 72, color: '#efe9df', color2: '#b98a5e', c1: '布料顏色', c2: '椅腳顏色', build: buildTub,
@@ -656,6 +766,7 @@ export function registerExtras(PRODUCTS) {
     coffeeOval: preset('橢圓茶几', 130, 70, 40, '#d9c3a3', '#b98a5e', { shape: 'oval', base: 'legs', legmat: 'wood' }),
   });
   // 茶几只留 15 款（使用者 2026-10-23：同性質的不要重複）：莉凱自家 3 款＋下面 12 款；其他款不列在商品庫（舊專案用到的還是畫得出來）
+  for (const [k, f] of [['ownDanish', 'legs'], ['ownPencil', 'legs'], ['ownHeart', 'other']]) if (PRODUCTS[k]) PRODUCTS[k].form = f;   // 餐桌腳型
   const COFFEE_KEEP = new Set(['marbleCross', 'cageRound', 'travRound', 'plinthLong', 'ironDrawerLong', 'walnutShelf', 'floatSquare', 'leatherSquare', 'travPill', 'pebble', 'trayNest', 'slabNestLong']);
   for (const [k, T] of Object.entries(PRODUCTS)) if (T.sub === '茶几' && T.generic && !COFFEE_KEEP.has(k)) T.libHide = true;
   // 茶几形狀：圓形 round／長方形 rect／正方形 square／異形 free／套几 nest（沒標的照名字和尺寸判斷）

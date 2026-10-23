@@ -1960,12 +1960,13 @@ canvas.addEventListener('pointerup', e => {
 function renderLib() {
   const card = k => { const T = PRODUCTS[k]; return `<button class="card" data-type="${k}"${T.form ? ` data-form="${T.form}"` : ''}><div class="th" id="th-${k}"></div><b>${T.name}</b><span>${T.w}×${T.d}×${T.h}</span></button>`; };
   let own = '', more = '';
-  const PROMOTE = new Set(['茶几', '邊几']);                  // 茶几一般款也很常用：直接列在上面，不收進「其他」
+  const PROMOTE = new Set(['茶几', '邊几', '餐桌']);                  // 茶几一般款也很常用：直接列在上面，不收進「其他」
   const FORMS = [['all', '全部'], ['round', '圓形'], ['rect', '長方形'], ['square', '正方形'], ['free', '異形'], ['nest', '大小套几']];
   for (const s of SUBS) {
     const keys = Object.keys(PRODUCTS).filter(k => PRODUCTS[k].sub === s && !PRODUCTS[k].libHide); if (!keys.length) continue;   // libHide：不列在商品庫
     const a = PROMOTE.has(s) ? keys.sort((x, y) => (PRODUCTS[x].generic ? 1 : 0) - (PRODUCTS[y].generic ? 1 : 0)) : keys.filter(k => !PRODUCTS[k].generic), b = PROMOTE.has(s) ? [] : keys.filter(k => PRODUCTS[k].generic);
-    const chips = s === '茶几' ? `<div class="formbar" data-forms>${FORMS.filter(([f]) => f === 'all' || a.some(k => PRODUCTS[k].form === f)).map(([f, n]) => `<button data-form="${f}" class="${f === 'all' ? 'on' : ''}">${n}</button>`).join('')}</div>` : '';
+    const F2 = s === '餐桌' ? [['all', '全部'], ['pedestal', '中柱腳'], ['legs', '四支腳'], ['other', '其他造型']] : FORMS;
+    const chips = s === '茶几' || s === '餐桌' ? `<div class="formbar" data-forms>${F2.filter(([f]) => f === 'all' || a.some(k => PRODUCTS[k].form === f)).map(([f, n]) => `<button data-form="${f}" class="${f === 'all' ? 'on' : ''}">${n}</button>`).join('')}</div>` : '';
     if (a.length) own += `<section data-sub="${s}"><h3>${s}</h3>${chips}<div class="grid">${a.map(card).join('')}</div></section>`;
     if (b.length) more += `<section data-sub="${s}"><h3>${s}</h3><div class="grid">${b.map(card).join('')}</div></section>`;
   }
