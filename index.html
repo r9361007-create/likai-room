@@ -201,6 +201,10 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden;b
 .ar-steps strong{color:var(--brand)}
 .ar-go{padding:14px 0!important;font-size:16px!important;margin-top:0!important}
 .ar-go:disabled{opacity:.55}
+.ar-go.ready{animation:arPulse 1.6s ease-in-out infinite}
+@keyframes arPulse{0%,100%{box-shadow:0 0 0 0 rgba(0,67,106,.35)}50%{box-shadow:0 0 0 10px rgba(0,67,106,0)}}
+.ar-spin{display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border:2px solid #c9d6e2;border-top-color:var(--brand);border-radius:50%;animation:arSpin .8s linear infinite}
+@keyframes arSpin{to{transform:rotate(360deg)}}
 .ar-warn{background:#fff6d6;border:1px solid #f1d978;color:#5c4a00;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.6}
 .ar-warn[hidden]{display:none}
 @media (max-width:760px){ #mv{height:30dvh} .ar-body{padding:10px 14px calc(16px + env(safe-area-inset-bottom,0px))} }
@@ -1193,7 +1197,7 @@ function zoneBoxes() {
 /* ---------- 視角：3D 鳥瞰／平面／人視角 ---------- */
 let view = 'orbit', viewCover = 0;             // viewCover：畫面下方被抽屜／面板蓋住的高度
 const walk = { col: [], ty: 0, tp: 0, v: 0, av: 0, wq: 0, ring: null, room: -1, on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
-if (location.search.includes("debug")) window.__dbg = { walk, get cam() { return persp; }, get project() { return project; }, get state() { return state; }, addBathFor: i => addBathFor(i) };   // 除錯用
+if (location.search.includes("debug")) window.__dbg = { walk, get cam() { return persp; }, get project() { return project; }, get state() { return state; }, addBathFor: i => addBathFor(i), usdzTest: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); const t0 = performance.now(), u = await makeUSDZ(root), b = await (await fetch(u)).blob(); return [type, b.size, Math.round(performance.now() - t0) + "ms"]; } };   // 除錯用
 /* ---------- 座向：project.orient = { face: 朝向的方位角（北0 東90 南180 西270）, side: 大門在平面圖的哪邊（上0 右90 下180 左270） } ---------- */
 const DIR8 = ['北', '東北', '東', '東南', '南', '西南', '西', '西北'];
 const dirName = b => DIR8[Math.round((((b % 360) + 360) % 360) / 45) % 8];
@@ -1728,6 +1732,14 @@ const AR_SKIP = T => T.ceil || T.sub === '窗簾' || T.sub === '掛畫';
 const arCache = { key: null, ready: null, done: false, size: null };
 const IN_APP = /Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(navigator.userAgent);   // LINE、FB、IG、微信的內建瀏覽器開不了 AR
 const TOUCH = matchMedia('(pointer: coarse)').matches;
+const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+// iPhone 的 AR（Quick Look）要 USDZ 檔：先做好，按 AR 時就不用現場轉檔（現場轉要好幾秒）
+async function makeUSDZ(root) {
+  const { USDZExporter } = await import('three/addons/exporters/USDZExporter.js');
+  const ex = new USDZExporter();
+  const buf = ex.parseAsync ? await ex.parseAsync(root) : await new Promise((res, rej) => ex.parse(root, res, rej));
+  return URL.createObjectURL(new Blob([buf], { type: 'model/vnd.usdz+zip' }));
+}
 const arList = all => all ? state.items.filter(i => !i.hidden && !AR_SKIP(PRODUCTS[i.type])) : [cur()].filter(Boolean);
 function prepareAR(list, all) {
   const key = (all ? 'A' : 'S') + JSON.stringify(list);
@@ -1752,6 +1764,10 @@ function prepareAR(list, all) {
       const iv = setInterval(() => { if (mv.src === url && mv.loaded && performance.now() - t0 > 150) done(); else if (performance.now() - t0 > 20000) { clearInterval(iv); rej(new Error('timeout')); } }, 100);
       mv.addEventListener('load', done, { once: true }); mv.addEventListener('error', e => { clearInterval(iv); rej(e); }, { once: true });
     });
+    if (IOS) {                                          // iPhone：USDZ 也先準備好
+      try { const u = await makeUSDZ(root); if (mv.dataset.ios) URL.revokeObjectURL(mv.dataset.ios); mv.dataset.ios = u; mv.setAttribute('ios-src', u); }
+      catch (e) { mv.removeAttribute('ios-src'); }        // 轉不出來就交給 model-viewer 自己轉
+    }
     mv.src = url; await loaded;
     if (arCache.key === key) { arCache.done = true; arCache.size = size; }
     return size;
@@ -1764,7 +1780,10 @@ let warmT = null;
 function prewarmAR() {
   if (!TOUCH || IN_APP) return;
   clearTimeout(warmT);
-  warmT = setTimeout(() => { if (overview) return; const all = showMode && !cur(), list = arList(all); if (list.length) prepareAR(list, all).catch(() => { }); }, 900);
+  warmT = setTimeout(() => {
+    const run = () => { if (overview || drag || walk.on) return; const all = showMode && !cur(), list = arList(all); if (list.length) prepareAR(list, all).catch(() => { }); };
+    if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 2500 }); else run();
+  }, 1400);
 }
 function arSizeText(list, all, size) {
   const it = list[0]; return all ? `整組 ${list.length} 件・範圍約 寬 ${Math.round(size.x)} × 深 ${Math.round(size.z)} 公分` : `實際尺寸 寬 ${it.w} × 深 ${it.d} × 高 ${it.h} 公分`;
@@ -1780,9 +1799,9 @@ async function openAR(all = false) {
   // 已經準備好：同一下就直接開相機（不用再按一次）
   if (arCache.key === key && arCache.done && mv.canActivateAR && !IN_APP) {
     $('#ar-msg').textContent = arSizeText(list, all, arCache.size); $('#ar-go').disabled = false; $('#ar-go').hidden = false;
-    try { mv.activateAR(); return; } catch (e) { }
+    try { launchAR(); return; } catch (e) { }
   }
-  $('#ar-msg').textContent = '準備 3D 模型中…'; $('#ar-go').hidden = false; $('#ar-go').disabled = true;
+  $('#ar-msg').innerHTML = '<span class="ar-spin"></span>準備 3D 模型中…'; $('#ar-go').hidden = false; $('#ar-go').disabled = true; $('#ar-go').classList.remove('ready');
   try {
     const size = await prepareAR(list, all);
     $('#ar-msg').textContent = arSizeText(list, all, size);
@@ -1791,12 +1810,20 @@ async function openAR(all = false) {
       $('#ar-go').hidden = true;
       if (TOUCH) arWarn('這支手機不支援 AR 相機。<br>iPhone 請用 Safari 打開；Android 需要支援 Google ARCore 的手機，並用 Chrome 打開。');
       else { arWarn('電腦沒有 AR 相機。按下面的按鈕複製連結，傳到手機打開，就能把家具放進家裡。'); $('#ar-copy').hidden = false; }
-    } else $('#ar-go').disabled = false;
+    } else { $('#ar-go').disabled = false; $('#ar-go').classList.add('ready'); }   // 準備好了：按鈕亮起來
   } catch (e) { if (e && e.message === 'stale') return; $('#ar-msg').textContent = ''; arWarn('模型準備失敗，請關掉再試一次。'); $('#ar-go').hidden = true; }
 }
-$('#ar-go').onclick = () => { const mv = $('#mv'); if (mv.canActivateAR) mv.activateAR(); };
+let arLive = false;
+function launchAR() {
+  const mv = $('#mv'); if (!mv.canActivateAR) return;
+  mv.activateAR(); arLive = true;
+  if (IOS) setTimeout(() => { if ($('#ar').classList.contains('on')) closeAR(false); }, 800);   // iPhone：Quick Look 蓋住整個畫面，說明頁先關掉，回來就是房間
+}
+$('#ar-go').onclick = launchAR;
 $('#mv').addEventListener('ar-status', e => {
-  if (e.detail && e.detail.status === 'failed') arWarn('開啟相機失敗。請確認已允許這個網站使用相機；Android 需要支援 Google ARCore 的手機和 Chrome。');
+  const st = e.detail && e.detail.status;
+  if (st === 'failed') arWarn('開啟相機失敗。請確認已允許這個網站使用相機；Android 需要支援 Google ARCore 的手機和 Chrome。');
+  if (st === 'not-presenting' && arLive) { arLive = false; if ($('#ar').classList.contains('on')) closeAR(false); toast('已回到房間'); }   // 離開相機：直接回到房間
 });
 $('#ar-copy').onclick = async () => {                         // 電腦：連結傳到手機，打開就是展示畫面＋AR
   const url = location.origin + location.pathname + '?show=1&ar=1#p=' + encode();
