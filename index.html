@@ -1234,10 +1234,11 @@ function fitCamera() {
   try { updateViewOffset(); } catch (e) { }             // 先把畫面往上推的量算好
   if (overview) {                                            // 總覽：從斜上方看整間房子
     const b = new THREE.Box3().setFromObject(houseGroup), c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3());
-    const a = canvas.clientWidth / Math.max(1, canvas.clientHeight), f = visFrac(), side = a < 1 && sz.x > sz.z * 1.15;   // 直式手機、房子是橫長的：從側面看，長邊變成上下
-    const [L, W2] = side ? [sz.x, sz.z] : [sz.z, sz.x], S = Math.max(L / f, W2 / Math.min(1.6, a) * 1.1) * 1.05;
+    // 一打開像平面圖：幾乎正上方往下看、方向跟平面圖一樣（上方是平面圖的上方），稍微斜一點看得出牆的高度
+    const a = canvas.clientWidth / Math.max(1, canvas.clientHeight), f = visFrac(), S = Math.max(sz.z / f, sz.x / a) * 1.12;
     persp.fov = 42; persp.updateProjectionMatrix(); controls.minDistance = 80; controls.maxPolarAngle = 88 * deg; controls.maxDistance = 8000;
-    if (side) persp.position.set(c.x + sz.x / 2 + S * 0.75, S * 1.1, c.z - sz.z * 0.05); else persp.position.set(c.x + sz.x * 0.05, S * 1.1, c.z + sz.z / 2 + S * 0.75);
+    const dist = S / (2 * Math.tan(21 * deg)), tilt = 14 * deg;
+    persp.position.set(c.x, dist * Math.cos(tilt), c.z + dist * Math.sin(tilt));
     controls.target.set(c.x, 0, c.z); controls.update();
     sizeOrtho(); return;
   }
@@ -2192,7 +2193,7 @@ function setSheet(st) {
 if (!document.body.dataset.sheet) document.body.dataset.sheet = 'half';
 // 3D 畫面被抽屜或面板蓋住下半部時，把畫面往上推，家具才看得到
 // 手機上方浮著的按鈕擋住多少（總覽還有「走進去逛逛」）
-const topNow = () => { try { return isMob() && !walk.on && !showMode ? (overview ? 104 : 56) : 0; } catch (e) { return 0; } };
+const topNow = () => { try { return isMob() && !walk.on && !showMode ? (overview ? 124 : 56) : 0; } catch (e) { return 0; } };
 // 畫面下方被蓋住多少（抽屜、編輯面板、動作列、展示卡片）
 function coverNow() {
   const h = canvas.clientHeight; if (!h) return 0;
@@ -2378,7 +2379,7 @@ function buildOverview(full) {                     // full：走進去逛用，�
       const m = new THREE.Mesh(new THREE.BoxGeometry(sx, H, sz), wm); m.position.set(cx, H / 2, cz); houseGroup.add(m);
     }
   }
-  { const bb = new THREE.Box3().setFromObject(houseGroup), S = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z), lw = Math.max(80, Math.min(190, S * 0.13));   // 標籤大小跟著房子大小
+  { const bb = new THREE.Box3().setFromObject(houseGroup), S = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z), lw = Math.max(80, Math.min(190, S * 0.13)) * (isMob() ? 1.45 : 1);   // 標籤大小跟著房子大小
     houseGroup.traverse(o => { if (o.userData.label) o.scale.set(lw, lw * 0.344, 1); }); }
   state = keep; walls = []; zones = []; wallHidden.clear(); roomGroup.clear();
   const b = new THREE.Box3().setFromObject(houseGroup), c = b.getCenter(new THREE.Vector3()), S = Math.max(b.max.x - b.min.x, b.max.z - b.min.z);   // 整間的陽光
