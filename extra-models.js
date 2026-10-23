@@ -735,6 +735,117 @@ Object.assign(EXTRA_PRODUCTS, {
   dtExtend: { ...DT, form: 'legs', name: '伸縮岩板餐桌', w: 160, d: 90, h: 75, def: { shape: 'rect' }, color: '#e9e6e1', color2: '#2a2a2a', c1: '岩板顏色', c2: '腳的顏色', build: buildExtendable },
   dtXBase: { ...DT, form: 'other', name: 'X 型腳實木長桌', w: 200, d: 95, h: 75, def: { shape: 'rect' }, color: '#c49a6c', color2: '#8a6440', c1: '桌面木色', c2: '腳的木色', build: buildXBase },
 });
+/* ---------- 床架：落地款、架高款 ---------- */
+// 床墊＋被子＋兩個枕頭（床墊放在 y 的高度上）
+function bedding(g, w, d, y, zc) {
+  const white = mat('#f4f2ee', { roughness: 0.9 }), duvet = mat('#e9e4dc', { roughness: 0.95 }), throwM = mat('#b8a48c', { roughness: 0.95 });
+  rbox(g, w, 24, d, 0, y + 12, zc, white, 6);
+  rbox(g, w + 2, 6, d * 0.7, 0, y + 25, zc + d * 0.15, duvet, 3);                         // 被子
+  rbox(g, w + 3, 2.5, d * 0.22, 0, y + 28.5, zc + d * 0.3, throwM, 1.2);                  // 床尾毯
+  for (const sx of [-1, 1]) rbox(g, w * 0.42, 12, 38, sx * w * 0.24, y + 30, zc - d / 2 + 26, white, 6);   // 枕頭
+}
+const BED_HB = 6;                              // 床頭板厚度
+function buildLiftBed(it) {                    // 貓抓皮掀床：整個床箱落地（後掀收納），軟包床頭有橫向車線
+  const g = new THREE.Group(), { w, d, h } = it, L = mat(it.color, { roughness: 0.85 }), L2 = mat(new THREE.Color(it.color).multiplyScalar(0.92), { roughness: 0.85 });
+  const zc = BED_HB / 2, bd = d - BED_HB, boxH = 32;
+  rbox(g, w, boxH, bd, 0, boxH / 2, zc, L, 3); box(g, w - 6, 0.6, 1, 0, boxH - 6, zc + bd / 2 + 0.2, L2);   // 床箱＋掀蓋縫
+  rbox(g, w + 4, h, BED_HB + 4, 0, h / 2, -d / 2 + (BED_HB + 4) / 2, L, 4);
+  for (let i = 1; i < 4; i++) box(g, w + 2, 0.8, 0.8, 0, boxH + (h - boxH) * i / 4, -d / 2 + BED_HB + 4.2, L2);
+  bedding(g, w - 6, bd - 6, boxH - 4, zc);
+  return g;
+}
+function buildDrawerBed(it) {                  // 六抽收納床：落地床箱、兩側各三個抽屜、木紋床頭
+  const g = new THREE.Group(), { w, d, h } = it, W = mat(it.color, { roughness: 0.55 }), F = mat(it.color2, { roughness: 0.5 });
+  const zc = BED_HB / 2, bd = d - BED_HB, boxH = 38;
+  box(g, w, boxH, bd, 0, boxH / 2, zc, W);
+  for (const sx of [-1, 1]) for (let k = 0; k < 3; k++) { const z = zc - bd / 2 + bd * (k + 0.5) / 3; box(g, 1, boxH - 10, bd / 3 - 4, sx * (w / 2 + 0.3), boxH / 2, z, F); box(g, 1.2, 1.2, 14, sx * (w / 2 + 1), boxH / 2 + 4, z, dark('#3a3a3a')); }
+  box(g, w + 2, h, BED_HB, 0, h / 2, -d / 2 + BED_HB / 2, W);
+  bedding(g, w - 4, bd - 4, boxH - 3, zc);
+  return g;
+}
+function buildLowWoodBed(it) {                 // 日式實木落地床：低矮的實木床框直接落地、床框比床墊大一圈、矮床頭
+  const g = new THREE.Group(), { w, d, h } = it, W = mat(it.color, { roughness: 0.55 });
+  const zc = BED_HB / 2, bd = d - BED_HB, frameH = 14;
+  box(g, w, frameH, bd, 0, frameH / 2, zc, W);
+  box(g, w, h, BED_HB, 0, h / 2, -d / 2 + BED_HB / 2, W);
+  bedding(g, w - 30, bd - 26, frameH - 2, zc + 4);
+  return g;
+}
+function buildCurveBed(it) {                   // 圓弧床頭布面床：泰迪絨／布面，床頭上緣是一道圓弧，床框落地
+  const g = new THREE.Group(), { w, d, h } = it, F = mat(it.color, { roughness: 0.95 });
+  const zc = BED_HB / 2, bd = d - BED_HB, boxH = 30;
+  rbox(g, w, boxH, bd, 0, boxH / 2, zc, F, 6);
+  const sh = new THREE.Shape(), r = h - boxH; sh.moveTo(-w / 2, 0); sh.lineTo(w / 2, 0); sh.lineTo(w / 2, boxH); sh.absarc(w / 2 - r * 0.6, boxH, r * 0.6, 0, Math.PI / 2); sh.lineTo(-w / 2 + r * 0.6, boxH + r * 0.6);
+  sh.absarc(-w / 2 + r * 0.6, boxH, r * 0.6, Math.PI / 2, Math.PI); sh.lineTo(-w / 2, 0);
+  const hb = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: BED_HB + 6, bevelEnabled: true, bevelThickness: 3, bevelSize: 3, bevelSegments: 4, curveSegments: 32 }), F);
+  hb.position.z = -d / 2; hb.castShadow = true; g.add(hb); hb.scale.y = h / (boxH + r * 0.6 + 3);
+  bedding(g, w - 8, bd - 8, boxH - 4, zc + 2);
+  return g;
+}
+function buildChannelBed(it) {                 // 直條皮革高床頭：很高的直條車線床頭、床框落地
+  const g = new THREE.Group(), { w, d, h } = it, L = mat(it.color, { roughness: 0.6 }), n = Math.round(w / 18);
+  const zc = BED_HB / 2, bd = d - BED_HB, boxH = 32;
+  rbox(g, w, boxH, bd, 0, boxH / 2, zc, L, 3);
+  for (let i = 0; i < n; i++) rbox(g, w / n - 0.6, h - 2, BED_HB + 4, -w / 2 + w / n * (i + 0.5), h / 2, -d / 2 + (BED_HB + 4) / 2, L, 4);
+  bedding(g, w - 6, bd - 6, boxH - 4, zc);
+  return g;
+}
+function buildNordicBed(it) {                  // 北歐實木架高床：床框架在四支木腳上（離地 12 公分，掃地機器人過得去）、直條木床頭
+  const g = new THREE.Group(), { w, d, h } = it, W = mat(it.color, { roughness: 0.55 }), leg = 12, frameH = 14;
+  const zc = BED_HB / 2, bd = d - BED_HB;
+  box(g, w, frameH, bd, 0, leg + frameH / 2, zc, W);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) box(g, 6, leg, 6, sx * (w / 2 - 6), leg / 2, zc + sz * (bd / 2 - 6), W);
+  for (const sx of [-1, 1]) box(g, 6, h, BED_HB, sx * (w / 2 - 3), h / 2, -d / 2 + BED_HB / 2, W);
+  for (let i = 0; i < 9; i++) box(g, (w - 12) / 9 - 2, h - leg - frameH - 10, 2.5, -w / 2 + 6 + (w - 12) / 9 * (i + 0.5), leg + frameH + (h - leg - frameH - 10) / 2 + 2, -d / 2 + BED_HB / 2, W);
+  box(g, w, 6, BED_HB, 0, h - 3, -d / 2 + BED_HB / 2, W);
+  bedding(g, w - 8, bd - 8, leg + frameH - 3, zc);
+  return g;
+}
+function buildIronBed(it) {                    // 黑鐵架高床：細鐵管床架、床頭是直條鐵欄杆
+  const g = new THREE.Group(), { w, d, h } = it, F = dark(it.color), leg = 30;
+  const zc = BED_HB / 2, bd = d - BED_HB;
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) cyl(g, 1.6, 1.6, sz < 0 ? h : leg + 10, sx * (w / 2 - 2), (sz < 0 ? h : leg + 10) / 2, zc + sz * (bd / 2 - 2), F, 12);
+  for (const sz of [-1, 1]) box(g, w, 3, 3, 0, leg, zc + sz * (bd / 2 - 2), F); for (const sx of [-1, 1]) box(g, 3, 3, bd, sx * (w / 2 - 2), leg, zc, F);
+  for (const y of [h - 3, leg + 25]) box(g, w, 3, 3, 0, y, -d / 2 + BED_HB / 2 + 1, F);
+  for (let i = 1; i < 12; i++) cyl(g, 0.7, 0.7, h - 3 - leg - 25, -w / 2 + w * i / 12, (h - 3 + leg + 25) / 2, -d / 2 + BED_HB / 2 + 1, F, 8);
+  bedding(g, w - 6, bd - 6, leg + 1, zc);
+  return g;
+}
+/* ---------- 床頭櫃 ---------- */
+function buildNightWood(it) {                  // 實木兩抽床頭櫃：細腳架高
+  const g = new THREE.Group(), { w, d, h } = it, W = mat(it.color, { roughness: 0.55 }), leg = 14;
+  box(g, w, h - leg, d, 0, leg + (h - leg) / 2, 0, W);
+  for (let k = 0; k < 2; k++) { const y = leg + (h - leg) * (k + 0.5) / 2; box(g, w - 4, (h - leg) / 2 - 3, 1, 0, y, d / 2 + 0.3, mat(new THREE.Color(it.color).multiplyScalar(0.92), { roughness: 0.55 })); box(g, 10, 1.2, 1.4, 0, y, d / 2 + 1, gold(it.color2)); }
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1, leg + 1, 10), W); l.position.set(sx * (w / 2 - 4), leg / 2, sz * (d / 2 - 4)); l.rotation.set(sz * 0.1, 0, -sx * 0.1); g.add(l); }
+  return g;
+}
+function buildNightCurve(it) {                 // 圓弧單抽床頭櫃：四邊大圓角、一個抽屜加一格開放
+  const g = new THREE.Group(), { w, d, h } = it, B = mat(it.color, { roughness: 0.6 }), I = mat(it.color2, { roughness: 0.6 });
+  prism(g, rrShape(w, d, Math.min(w, d) * 0.3), 0, h, B, 1);
+  box(g, w - 12, h * 0.34, 1, 0, h * 0.68, d / 2 + 0.6, mat(new THREE.Color(it.color).multiplyScalar(0.9), { roughness: 0.6 }));   // 抽屜面
+  box(g, 8, 1, 1.2, 0, h * 0.68, d / 2 + 1.4, gold());
+  box(g, w - 12, h * 0.3, 1, 0, h * 0.28, d / 2 + 0.6, I);                     // 開放格（深一點的顏色）
+  return g;
+}
+function buildNightFloat(it) {                 // 懸浮壁掛床頭櫃：掛在牆上（離地 35 公分），一個抽屜、底下有燈條
+  const g = new THREE.Group(), { w, d, h } = it, B = mat(it.color, { roughness: 0.5 });
+  box(g, w, h, d, 0, h / 2, 0, B); box(g, w - 4, h - 6, 1, 0, h / 2, d / 2 + 0.3, mat(new THREE.Color(it.color).multiplyScalar(0.92), { roughness: 0.5 }));
+  box(g, w - 6, 0.5, 2, 0, 0.2, d / 2 - 3, new THREE.MeshStandardMaterial({ color: '#fff3d6', emissive: '#ffd89a', emissiveIntensity: 1.2 }));
+  return g;
+}
+const BED = { sub: '床台', generic: true, c1: '床架顏色', c2: null };
+Object.assign(EXTRA_PRODUCTS, {
+  bedLift: { ...BED, form: 'floor', name: '貓抓皮掀床', w: 165, d: 215, h: 105, color: '#b9b1a6', build: buildLiftBed },
+  bedDrawer: { ...BED, form: 'floor', name: '六抽收納床', w: 165, d: 210, h: 95, color: '#c9a87c', color2: '#bfa07a', c2: '抽屜木色', build: buildDrawerBed },
+  bedLowWood: { ...BED, form: 'floor', name: '日式實木落地床', w: 195, d: 225, h: 55, color: '#d9b98f', build: buildLowWoodBed },
+  bedCurve: { ...BED, form: 'floor', name: '圓弧床頭布面床', w: 170, d: 220, h: 110, color: '#ece6dc', build: buildCurveBed },
+  bedChannel: { ...BED, form: 'floor', name: '直條皮革高床頭床', w: 175, d: 220, h: 125, color: '#6e5a4a', build: buildChannelBed },
+  bedNordic: { ...BED, form: 'raised', name: '北歐實木架高床', w: 165, d: 212, h: 95, color: '#d9b98f', build: buildNordicBed },
+  bedIron: { ...BED, form: 'raised', name: '黑鐵架高床', w: 160, d: 205, h: 105, color: '#1f1f1f', build: buildIronBed },
+  nightWood: { sub: '床頭櫃', generic: true, name: '實木兩抽床頭櫃', w: 50, d: 40, h: 55, color: '#a87a4f', color2: '#c5a35a', c1: '木頭顏色', c2: '把手顏色', build: buildNightWood },
+  nightCurve: { sub: '床頭櫃', generic: true, name: '圓弧單抽床頭櫃', w: 48, d: 40, h: 50, color: '#ece6dc', color2: '#8a6440', c1: '櫃身顏色', c2: '開放格顏色', build: buildNightCurve },
+  nightFloat: { sub: '床頭櫃', generic: true, name: '懸浮壁掛床頭櫃', w: 50, d: 32, h: 18, elev: 35, color: '#6b4630', c1: '櫃身顏色', c2: null, build: buildNightFloat },
+});
 const CHAIR = { sub: '單椅', generic: true };
 Object.assign(EXTRA_PRODUCTS, {
   tubBoucle: { ...CHAIR, name: '泰迪絨圓弧椅（低背）', w: 78, d: 76, h: 72, color: '#efe9df', color2: '#b98a5e', c1: '布料顏色', c2: '椅腳顏色', build: buildTub,
@@ -766,7 +877,7 @@ export function registerExtras(PRODUCTS) {
     coffeeOval: preset('橢圓茶几', 130, 70, 40, '#d9c3a3', '#b98a5e', { shape: 'oval', base: 'legs', legmat: 'wood' }),
   });
   // 茶几只留 15 款（使用者 2026-10-23：同性質的不要重複）：莉凱自家 3 款＋下面 12 款；其他款不列在商品庫（舊專案用到的還是畫得出來）
-  for (const [k, f] of [['ownDanish', 'legs'], ['ownPencil', 'legs'], ['ownHeart', 'other']]) if (PRODUCTS[k]) PRODUCTS[k].form = f;   // 餐桌腳型
+  for (const [k, f] of [['ownAmis', 'raised'], ['ownMila', 'raised'], ['ownEmma', 'raised'], ['ownDanish', 'legs'], ['ownPencil', 'legs'], ['ownHeart', 'other']]) if (PRODUCTS[k]) PRODUCTS[k].form = f;   // 餐桌腳型
   const COFFEE_KEEP = new Set(['marbleCross', 'cageRound', 'travRound', 'plinthLong', 'ironDrawerLong', 'walnutShelf', 'floatSquare', 'leatherSquare', 'travPill', 'pebble', 'trayNest', 'slabNestLong']);
   for (const [k, T] of Object.entries(PRODUCTS)) if (T.sub === '茶几' && T.generic && !COFFEE_KEEP.has(k)) T.libHide = true;
   // 茶几形狀：圓形 round／長方形 rect／正方形 square／異形 free／套几 nest（沒標的照名字和尺寸判斷）
