@@ -868,7 +868,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js';
 import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js';
 import { registerExtras } from './extra-models.js';
-registerExtras(PRODUCTS);                                // 蜂巢簾、穿越簾、市面常見茶几
+registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -919,7 +919,7 @@ const WALL_T = 10, SNAP = 15;
 const SPACE_TYPES = {
   living:  { name: '客廳',   room: { w: 450, d: 400, h: 280 }, subs: ['沙發', '單椅', '茶几', '邊几', '窗簾', '燈具', '地毯', '植栽', '抱枕', '桌上擺飾', '掛畫'] },
   dining:  { name: '餐廳',   room: { w: 350, d: 300, h: 280 }, subs: ['餐桌', '餐椅', '長凳', '廚具', '中島', '廚房家電', '小家電', '餐櫃', '吧檯桌', '吧檯椅', '窗簾', '燈具', '地毯', '植栽', '桌上擺飾', '掛畫'] },
-  bedroom: { name: '臥室',   room: { w: 350, d: 330, h: 280 }, subs: ['床台', '床頭櫃', '化妝桌椅', '書桌', '單椅', '窗簾', '燈具', '地毯', '植栽', '抱枕', '桌上擺飾', '掛畫'] },
+  bedroom: { name: '臥室',   room: { w: 350, d: 330, h: 280 }, subs: ['床台', '床頭櫃', '櫃體', '化妝桌椅', '書桌', '單椅', '窗簾', '燈具', '地毯', '植栽', '抱枕', '桌上擺飾', '掛畫'] },
   bath:    { name: '衛浴',   room: { w: 180, d: 220, h: 230 }, subs: ['衛浴', '植栽', '桌上擺飾', '掛畫', '燈具'] },
   ld:      { name: '客餐廳', room: { w: 700, d: 420, h: 280 }, subs: ['沙發', '單椅', '茶几', '邊几', '餐桌', '餐椅', '長凳', '廚具', '中島', '廚房家電', '小家電', '餐櫃', '吧檯桌', '吧檯椅', '窗簾', '燈具', '地毯', '植栽', '抱枕', '桌上擺飾', '掛畫'] },
 };
@@ -1978,7 +1978,7 @@ canvas.addEventListener('pointerup', e => {
 function renderLib() {
   const card = k => { const T = PRODUCTS[k]; return `<button class="card" data-type="${k}"${T.form ? ` data-form="${T.form}"` : ''}><div class="th" id="th-${k}"></div><b>${T.name}</b><span>${T.w}×${T.d}×${T.h}</span></button>`; };
   let own = '', more = '';
-  const PROMOTE = new Set(['茶几', '邊几', '餐桌', '床台', '床頭櫃']);                  // 茶几一般款也很常用：直接列在上面，不收進「其他」
+  const PROMOTE = new Set(['茶几', '邊几', '餐桌', '床台', '床頭櫃', '櫃體']);                  // 茶几一般款也很常用：直接列在上面，不收進「其他」
   const FORMS = [['all', '全部'], ['round', '圓形'], ['rect', '長方形'], ['square', '正方形'], ['free', '異形'], ['nest', '大小套几']];
   for (const s of SUBS) {
     const keys = Object.keys(PRODUCTS).filter(k => PRODUCTS[k].sub === s && !PRODUCTS[k].libHide); if (!keys.length) continue;   // libHide：不列在商品庫

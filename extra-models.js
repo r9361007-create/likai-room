@@ -846,6 +846,77 @@ Object.assign(EXTRA_PRODUCTS, {
   nightCurve: { sub: '床頭櫃', generic: true, name: '圓弧單抽床頭櫃', w: 48, d: 40, h: 50, color: '#ece6dc', color2: '#8a6440', c1: '櫃身顏色', c2: '開放格顏色', build: buildNightCurve },
   nightFloat: { sub: '床頭櫃', generic: true, name: '懸浮壁掛床頭櫃', w: 50, d: 32, h: 18, elev: 35, color: '#6b4630', c1: '櫃身顏色', c2: null, build: buildNightFloat },
 });
+/* ---------- 櫃體（臥室）：尺寸自訂，門片／抽屜數跟著大小自動算 ---------- */
+const HANDLE_OPT = { key: 'handle', label: '把手', list: [opt('bar', '長條把手'), opt('knob', '圓把手'), opt('push', '無把手（按壓）')] };
+function handleOn(g, it, x, y, z, vertical, len) {
+  const H = gold(it.color2 || '#c5a35a');
+  if (it.handle === 'push') return;
+  if (it.handle === 'knob') { const k = new THREE.Mesh(new THREE.SphereGeometry(1.4, 12, 8), H); k.position.set(x, y, z + 1.5); g.add(k); return; }
+  box(g, vertical ? 1.2 : len, vertical ? len : 1.2, 1.6, x, y, z + 1, H);
+}
+function buildWardrobe(it) {                  // 衣櫃：對開門（每片約 45～50 公分）／推拉門（兩三片）／開放式（吊衣桿＋層板）
+  const g = new THREE.Group(), { w, d, h } = it, B = mat(it.color, { roughness: 0.5 }), D2 = mat(new THREE.Color(it.color).multiplyScalar(0.95), { roughness: 0.45 }), T = 1.8, kick = 6;
+  const door = it.door || 'hinge';
+  box(g, w, h - kick, 1.5, 0, kick + (h - kick) / 2, -d / 2 + 0.75, B);                       // 背板
+  for (const sx of [-1, 1]) box(g, T, h - kick, d, sx * (w / 2 - T / 2), kick + (h - kick) / 2, 0, B);   // 側板
+  box(g, w, T, d, 0, h - T / 2, 0, B); box(g, w, T, d, 0, kick + T / 2, 0, B); box(g, w - 2, kick, d - 4, 0, kick / 2, -2, dark('#2a2826'));   // 頂、底、踢腳
+  const innerW = w - 2 * T, bays = Math.max(1, Math.round(innerW / 90));                 // 每 90 公分一格，中間有隔板
+  for (let i = 1; i < bays; i++) box(g, T, h - kick - 2 * T, d - 2, -innerW / 2 + innerW * i / bays, kick + (h - kick) / 2, -1, B);
+  if (door === 'open') {                                                                 // 開放式：上層板、吊衣桿、掛著的衣服、下層抽屜
+    const cloth = ['#d9d2c5', '#8a8f96', '#e8e4dc', '#5a6470', '#c9b8a4', '#f2efe9'];
+    for (let i = 0; i < bays; i++) {
+      const cx = -innerW / 2 + innerW * (i + 0.5) / bays, bw = innerW / bays - T;
+      box(g, bw, T, d - 4, cx, h - 32, -1, B);
+      const rod = cyl(g, 1, 1, bw - 2, cx, h - 40, 0, gold(), 10); rod.rotation.z = Math.PI / 2;
+      const n = Math.max(3, Math.floor(bw / 9));
+      for (let k = 0; k < n; k++) box(g, 3, 70 + (k % 3) * 18, d * 0.62, cx - bw / 2 + 5 + (bw - 10) * k / (n - 1 || 1), h - 42 - (70 + (k % 3) * 18) / 2, 0, mat(cloth[(i * 3 + k) % cloth.length], { roughness: 0.95 }));
+      for (let k = 0; k < 2; k++) { box(g, bw - 1, 20, 1, cx, kick + T + 11 + k * 22, d / 2 - 1.5, D2); handleOn(g, it, cx, kick + T + 11 + k * 22, d / 2 - 1, false, 18); }
+    }
+    return g;
+  }
+  if (door === 'slide') {                                                                // 推拉門：兩到三片前後錯開的門片＋上軌
+    const n = w > 240 ? 3 : 2, pw = w / n + 4;
+    box(g, w, 4, 6, 0, h - 2, d / 2 - 3, dark('#555'));
+    for (let i = 0; i < n; i++) { const x = -w / 2 + pw / 2 + (w - pw) * i / (n - 1), z = d / 2 - (i % 2 ? 6 : 2);
+      box(g, pw, h - kick - 6, 2, x, kick + (h - kick - 6) / 2, z, i % 2 ? D2 : B); if (it.handle !== 'push') box(g, 1.4, 40, 1.6, x + (i % 2 ? -1 : 1) * (pw / 2 - 5), kick + (h - kick) * 0.5, z + 1.6, gold(it.color2 || '#c5a35a')); }
+    return g;
+  }
+  const n = Math.max(2, Math.round(w / 48)), dw = w / n;                                 // 對開門：門片數照寬度算
+  for (let i = 0; i < n; i++) {
+    const x = -w / 2 + dw * (i + 0.5);
+    box(g, dw - 0.4, h - kick - 0.6, 2, x, kick + (h - kick) / 2, d / 2 + 1, i % 2 ? D2 : B);
+    handleOn(g, it, x + (i % 2 ? -1 : 1) * (dw / 2 - 4), kick + (h - kick) * 0.48, d / 2 + 1, true, 30);
+  }
+  return g;
+}
+function buildDresser(it) {                   // 斗櫃：抽屜數照高度算（每格約 20 公分），細腳
+  const g = new THREE.Group(), { w, d, h } = it, B = mat(it.color, { roughness: 0.5 }), F = mat(new THREE.Color(it.color).multiplyScalar(0.94), { roughness: 0.5 }), leg = 12;
+  box(g, w, h - leg, d, 0, leg + (h - leg) / 2, 0, B);
+  const rows = Math.max(2, Math.round((h - leg) / 20)), rh = (h - leg - 3) / rows, cols = w > 100 ? 2 : 1;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const x = -w / 2 + w * (c + 0.5) / cols, y = leg + 1.5 + rh * (r + 0.5);
+    box(g, w / cols - 1.6, rh - 1.2, 1, x, y, d / 2 + 0.4, F); handleOn(g, it, x, y, d / 2 + 0.4, false, Math.min(18, w / cols * 0.35)); }
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.1, leg + 1, 10), mat(it.color2 || '#7a5236', { roughness: 0.5 })); l.position.set(sx * (w / 2 - 4), leg / 2, sz * (d / 2 - 4)); l.rotation.set(sz * 0.08, 0, -sx * 0.08); g.add(l); }
+  return g;
+}
+function buildLowCab(it) {                    // 收納矮櫃：落地、抽屜一欄一欄（欄數照寬度算），上面可以放東西
+  const g = new THREE.Group(), { w, d, h } = it, B = mat(it.color, { roughness: 0.5 }), F = mat(new THREE.Color(it.color).multiplyScalar(0.94), { roughness: 0.5 }), kick = 5;
+  box(g, w, h - kick, d, 0, kick + (h - kick) / 2, 0, B); box(g, w - 2, kick, d - 4, 0, kick / 2, -2, dark('#2a2826'));
+  const cols = Math.max(1, Math.round(w / 50)), rows = Math.max(1, Math.round((h - kick) / 25)), cw = w / cols, rh = (h - kick - 2) / rows;
+  for (let c = 0; c < cols; c++) for (let r = 0; r < rows; r++) { const x = -w / 2 + cw * (c + 0.5), y = kick + 1 + rh * (r + 0.5);
+    box(g, cw - 1.2, rh - 1.2, 1, x, y, d / 2 + 0.4, F); handleOn(g, it, x, y + rh * 0.3, d / 2 + 0.4, false, Math.min(16, cw * 0.4)); }
+  return g;
+}
+const CAB = { sub: '櫃體', generic: true, wall: true, c1: '櫃體顏色', c2: '把手顏色' };
+Object.assign(EXTRA_PRODUCTS, {
+  cabWardrobe: { ...CAB, name: '衣櫃（尺寸自訂）', w: 180, d: 60, h: 240, color: '#ece9e3', color2: '#c5a35a', build: buildWardrobe,
+    opts: [{ key: 'door', label: '門的樣式', list: [opt('hinge', '對開門'), opt('slide', '推拉門'), opt('open', '開放式')] }, HANDLE_OPT], def: { door: 'hinge', handle: 'bar' } },
+  cabSlide: { ...CAB, name: '推拉門衣櫃', w: 240, d: 62, h: 240, color: '#b9a088', color2: '#c5a35a', build: buildWardrobe,
+    opts: [{ key: 'door', label: '門的樣式', list: [opt('slide', '推拉門'), opt('hinge', '對開門'), opt('open', '開放式')] }, HANDLE_OPT], def: { door: 'slide', handle: 'bar' } },
+  cabOpen: { ...CAB, name: '開放式衣櫃', w: 150, d: 55, h: 220, color: '#d9b98f', color2: '#c5a35a', build: buildWardrobe,
+    opts: [{ key: 'door', label: '門的樣式', list: [opt('open', '開放式'), opt('hinge', '對開門'), opt('slide', '推拉門')] }, HANDLE_OPT], def: { door: 'open', handle: 'bar' } },
+  cabDresser: { ...CAB, name: '斗櫃', w: 80, d: 45, h: 115, color: '#a87a4f', color2: '#7a5236', c2: '腳的顏色', build: buildDresser, opts: [HANDLE_OPT], def: { handle: 'knob' } },
+  cabLow: { ...CAB, name: '收納矮櫃', w: 150, d: 45, h: 80, color: '#ece9e3', color2: '#c5a35a', build: buildLowCab, opts: [HANDLE_OPT], def: { handle: 'bar' } },
+});
 const CHAIR = { sub: '單椅', generic: true };
 Object.assign(EXTRA_PRODUCTS, {
   tubBoucle: { ...CHAIR, name: '泰迪絨圓弧椅（低背）', w: 78, d: 76, h: 72, color: '#efe9df', color2: '#b98a5e', c1: '布料顏色', c2: '椅腳顏色', build: buildTub,
@@ -861,7 +932,8 @@ Object.assign(EXTRA_PRODUCTS, {
 });
 
 // 用原版通用茶几（可換形狀、腳座、腳材質）做出市面常見的預設款
-export function registerExtras(PRODUCTS) {
+export function registerExtras(PRODUCTS, SUBS) {
+  if (SUBS && !SUBS.includes('櫃體')) SUBS.splice(SUBS.indexOf('床頭櫃') + 1, 0, '櫃體');   // 臥室的櫃體分類
   Object.assign(PRODUCTS, EXTRA_PRODUCTS);
   // 原版單椅標上低背／高背
   for (const [k, tag] of [['lounge', '低背'], ['shellchair', '低背'], ['woodchair', '低背'], ['wingchair', '高背'], ['armchair', '低背']]) if (PRODUCTS[k] && !PRODUCTS[k].name.includes('背）')) PRODUCTS[k].name += `（${tag}）`;
