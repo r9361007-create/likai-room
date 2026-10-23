@@ -302,6 +302,11 @@ body.show-mode .compass{left:16px;top:16px;bottom:auto}
 .or-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .or-grid button{font-size:13px;line-height:1.35}
 .or-mid{display:flex;align-items:center;justify-content:center}
+.or-plan{position:relative;display:grid;grid-template-columns:44px 1fr 44px;grid-template-rows:38px auto 38px;gap:4px;margin-bottom:6px}
+.or-plan svg{grid-column:2;grid-row:2;width:100%;height:auto;background:#f6f8fa;border-radius:10px}
+.or-plan button{border:1.5px dashed var(--line);background:#fff;border-radius:10px;font-size:12px;color:var(--muted);line-height:1.3;padding:0}
+.or-plan button.on{border:2px solid var(--brand);background:var(--yellow);color:var(--yellow-ink);font-weight:700}
+.or-plan .t{grid-column:2;grid-row:1}.or-plan .b{grid-column:2;grid-row:3}.or-plan .l{grid-column:1;grid-row:2}.or-plan .r{grid-column:3;grid-row:2}
 .or-sun{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .or-sun button small{display:block;font-size:11px}
 #or-auto{margin:6px 0 0;color:var(--accent);font-weight:600}
@@ -747,8 +752,12 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
             <button data-b="270">座東<br>朝西</button><span class="or-mid" id="or-mini"></span><button data-b="90">座西<br>朝東</button>
             <button data-b="225">座東北<br>朝西南</button><button data-b="180">座北<br>朝南</button><button data-b="135">座西北<br>朝東南</button>
           </div>
-          <h3>大門／陽台在平面圖的哪一邊？</h3>
-          <div class="chips" id="or-side"><button data-s="180">下方</button><button data-s="0">上方</button><button data-s="270">左邊</button><button data-s="90">右邊</button></div>
+          <h3>這是你的平面圖，大門或陽台在哪一邊？<small>點那一邊的按鈕</small></h3>
+          <div class="or-plan" id="or-side">
+            <svg id="or-svg" viewBox="0 0 240 170"></svg>
+            <button data-s="0" class="t">大門／陽台在這邊</button><button data-s="180" class="b">大門／陽台在這邊</button>
+            <button data-s="270" class="l">在<br>這<br>邊</button><button data-s="90" class="r">在<br>這<br>邊</button>
+          </div>
           <h3>日照 <small>選好座向會自動判定，也可以自己切換</small></h3>
           <div class="chips or-sun" id="or-sun"><button data-m="am">早上<small>東照</small></button><button data-m="noon">中午<small>南向</small></button><button data-m="pm">下午<small>西曬</small></button><button data-m="off">不顯示</button></div>
           <p class="hint" id="or-auto"></p>
@@ -1286,12 +1295,46 @@ const FACE_NOTE = {
   270: '朝西：下午西曬明顯、夏天較熱，建議遮光窗簾、隔熱玻璃',
   315: '朝西北：下午有西曬，冬天迎東北季風',
 };
+// 從陽台、落地窗（再來是房門）在哪面外牆，猜大門／陽台在平面圖的哪一邊
+const SIDE_OF_WALL = { N: 0, E: 90, S: 180, W: 270 };
+function guessSide() {
+  autoLayout();
+  const score = { 0: 0, 90: 0, 180: 0, 270: 0 }, bs = project.spaces.map(roomBox);
+  const all = { x0: Math.min(...bs.map(b => b.x0)), x1: Math.max(...bs.map(b => b.x1)), z0: Math.min(...bs.map(b => b.z0)), z1: Math.max(...bs.map(b => b.z1)) };
+  project.spaces.forEach((sp, i) => { const b = bs[i];
+    for (const op of sp.room.openings || []) {
+      const wgt = op.kind === 'balcony' ? 3 : op.kind === 'floor' ? 2 : op.kind === 'window' ? 0.3 : 0; if (!wgt) continue;
+      const outer = { N: b.z0 - all.z0 < 30, S: all.z1 - b.z1 < 30, W: b.x0 - all.x0 < 30, E: all.x1 - b.x1 < 30 }[op.wall];   // 只算外牆
+      if (outer) score[SIDE_OF_WALL[op.wall]] += wgt * op.w;
+    } });
+  const best = Object.entries(score).sort((a, b) => b[1] - a[1])[0];
+  return best[1] > 0 ? +best[0] : 180;
+}
+function drawOrPlan() {
+  autoLayout();
+  const bs = project.spaces.map(roomBox), x0 = Math.min(...bs.map(b => b.x0)), x1 = Math.max(...bs.map(b => b.x1)), z0 = Math.min(...bs.map(b => b.z0)), z1 = Math.max(...bs.map(b => b.z1));
+  const k = Math.min(224 / (x1 - x0), 154 / (z1 - z0)), ox = (240 - (x1 - x0) * k) / 2, oz = (170 - (z1 - z0) * k) / 2, X = x => ox + (x - x0) * k, Z = z => oz + (z - z0) * k;
+  const col = { door: '#c9a227', balcony: '#3b8f6a', floor: '#2f7fb0', window: '#9cc3dc', bath: '#7d6bb0' };
+  let svg = '';
+  project.spaces.forEach((sp, i) => { const b = bs[i];
+    svg += `<rect x="${X(b.x0)}" y="${Z(b.z0)}" width="${(b.x1 - b.x0) * k}" height="${(b.z1 - b.z0) * k}" fill="#fff" stroke="#00436a" stroke-width="1.6"/>`;
+    if ((b.x1 - b.x0) * k > 26) svg += `<text x="${X((b.x0 + b.x1) / 2)}" y="${Z((b.z0 + b.z1) / 2) + 3}" text-anchor="middle" font-size="9" fill="#00436a">${esc(sp.name)}</text>`;
+    for (const op of sp.room.openings || []) {           // 門窗畫成牆上的色條（陽台最粗）
+      const c = col[op.kind]; if (!c) continue; const a = op.off, e2 = op.off + op.w;
+      const seg = { N: [b.x0 + a, b.z0, b.x0 + e2, b.z0], S: [b.x1 - a, b.z1, b.x1 - e2, b.z1], W: [b.x0, b.z1 - a, b.x0, b.z1 - e2], E: [b.x1, b.z0 + a, b.x1, b.z0 + e2] }[op.wall];
+      svg += `<line x1="${X(seg[0])}" y1="${Z(seg[1])}" x2="${X(seg[2])}" y2="${Z(seg[3])}" stroke="${c}" stroke-width="${op.kind === 'balcony' ? 5 : 3.5}" stroke-linecap="round"/>`;
+    } });
+  svg += `<g font-size="8" fill="#5b6b78"><text x="4" y="166"><tspan fill="#3b8f6a">━</tspan> 陽台　<tspan fill="#2f7fb0">━</tspan> 落地窗　<tspan fill="#c9a227">━</tspan> 門</text></g>`;
+  $('#or-svg').innerHTML = svg;
+}
 function openOrient() { $('#orient').classList.add('on'); renderOrient(); }
 function closeOrient() { $('#orient').classList.remove('on'); }
 function renderOrient() {
   const o = project.orient;
   $('#or-face').querySelectorAll('[data-b]').forEach(b => b.classList.toggle('on', !!o && +b.dataset.b === o.face));
-  $('#or-side').querySelectorAll('[data-s]').forEach(b => b.classList.toggle('on', +b.dataset.s === (o ? o.side : 180)));
+  drawOrPlan();
+  const sd = o ? o.side : guessSide();
+  $('#or-side').querySelectorAll('[data-s]').forEach(b => b.classList.toggle('on', +b.dataset.s === sd));
   $('#or-sun').querySelectorAll('[data-m]').forEach(b => { b.classList.toggle('on', b.dataset.m === sunMode); b.disabled = !o && b.dataset.m !== 'off'; });
   $('#or-mini').innerHTML = o ? `<svg viewBox="-40 -40 80 80" width="70" height="70"><rect x="-22" y="-22" width="44" height="44" rx="4" fill="#eef3f7" stroke="#00436a" stroke-width="2"/>${(() => { const a = o.side * deg, x = Math.sin(a) * 22, y = -Math.cos(a) * 22; return `<circle cx="${x}" cy="${y}" r="5" fill="#F9E573" stroke="#00436a"/>`; })()}${[0, 90, 180, 270].map(b => { const d = worldDir(b, o), x = d.x * 34, y = d.z * 34; return `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="11" font-weight="700" fill="${b === 0 ? '#c23e4e' : b === 90 ? '#c98a00' : b === 270 ? '#d1495b' : '#5b6b78'}">${DIR8[b / 45]}</text>`; }).join('')}</svg>` : '<span class="hint">先選座向</span>';
   if (!o) { $('#or-sum').innerHTML = '選好座向，系統會自動判定哪些窗戶早上東照、下午西曬，並顯示陽光。'; $('#or-auto').textContent = ''; return; }
@@ -1305,7 +1348,7 @@ function renderOrient() {
 $('#compass').onclick = openOrient; $('#or-x').onclick = $('#or-done').onclick = closeOrient;
 $('#or-face').addEventListener('click', e => {
   const b = e.target.closest('[data-b]'); if (!b) return;
-  project.orient = { face: +b.dataset.b, side: project.orient ? project.orient.side : 180 };
+  project.orient = { face: +b.dataset.b, side: project.orient ? project.orient.side : guessSide() };   // 大門／陽台位置先用猜的
   sunMode = autoSun(project.orient);                 // 自動判定要看哪個時段的陽光
   orientChanged();
 });
