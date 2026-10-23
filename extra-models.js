@@ -419,6 +419,212 @@ Object.assign(EXTRA_PRODUCTS, {
     build: nestPair(buildPebble, (w, d, h) => ({ w: w * 0.68, d: d * 0.78, h }), (w, d, h) => ({ w: w * 0.42, d: d * 0.5, h: h - 6 })) },
   cSide: { ...COFFEE2, sub: '邊几', name: 'C 型沙發邊几', w: 45, d: 35, h: 60, color: '#e9e7e3', color2: '#2a2a2a', c1: '桌面', c2: '鐵件顏色', build: buildCSide },
 });
+/* ---------- 第三批：參考莉凱雲端資料夾的茶几、邊几 ---------- */
+// 大理石貼圖：底色＋斜斜的細紋
+const MARB = new Map();
+function marbMat(color, vein = '#8a8580', rough = 0.3) {
+  const key = color + vein; if (MARB.has(key)) return MARB.get(key);
+  const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
+  x.fillStyle = color; x.fillRect(0, 0, 256, 256);
+  let seed = 3; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  x.strokeStyle = vein; x.globalAlpha = 0.38;
+  for (let v = 0; v < 7; v++) { x.lineWidth = 0.4 + r() * 1.6; x.beginPath(); let px = r() * 256, py = 0; x.moveTo(px, py); while (py < 256) { px += (r() - 0.35) * 26; py += 8 + r() * 22; x.lineTo(px, py); } x.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  const m = new THREE.MeshStandardMaterial({ map: t, roughness: rough }); MARB.set(key, m); return m;
+}
+const gold = (c = '#c5a35a') => mat(c, { roughness: 0.28, metalness: 0.85 });
+const dark = (c = '#262422') => mat(c, { roughness: 0.55 });
+function rrShape(w, d, r) { const sh = new THREE.Shape(); r = Math.min(r, w / 2, d / 2); sh.moveTo(-w / 2 + r, -d / 2); sh.lineTo(w / 2 - r, -d / 2); sh.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + r); sh.lineTo(w / 2, d / 2 - r); sh.quadraticCurveTo(w / 2, d / 2, w / 2 - r, d / 2); sh.lineTo(-w / 2 + r, d / 2); sh.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - r); sh.lineTo(-w / 2, -d / 2 + r); sh.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + r, -d / 2); return sh; }
+function prism(g, shape, y0, h, m, bevel = 0.6) {   // 平面形狀往上長成柱體（底在 y0）
+  const e = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: Math.max(0.1, h - bevel * 2), bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments: 24 }), m);
+  e.rotation.x = -Math.PI / 2; e.position.y = y0 + bevel; e.castShadow = e.receiveShadow = true; g.add(e); return e;
+}
+function drawerFront(g, w, h, x, y, z, m, pull) { box(g, w, h, 1, x, y, z, m); box(g, w * 0.3, 1.2, 1.2, x, y, z + 0.9, pull); }
+
+// ---- 圓形大几 ----
+function buildMarbleCross(it) {          // 大理石圓桌面＋十字實木底座
+  const g = new THREE.Group(), { w, h } = it, r = w / 2, S = marbMat(it.color, '#7d7368'), W = mat(it.color2, { roughness: 0.55 });
+  cyl(g, r, r, 4, 0, h - 2, 0, S, 64);
+  for (const a of [0, Math.PI / 2]) { const b = box(g, w * 0.62, h - 4, 8, 0, (h - 4) / 2, 0, W); b.rotation.y = a + Math.PI / 4; }
+  return g;
+}
+function buildTripodRound(it) {          // 黑大理石圓几＋三支斜金腳
+  const g = new THREE.Group(), { w, h } = it, r = w / 2, S = marbMat(it.color, '#d8d4cc', 0.22), G = gold(it.color2);
+  cyl(g, r, r, 3, 0, h - 1.5, 0, S, 64);
+  for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2, leg = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 0.8, h + 4, 12), G); leg.position.set(Math.cos(a) * r * 0.42, (h - 3) / 2, Math.sin(a) * r * 0.42); leg.rotation.set(Math.sin(a) * 0.22, 0, -Math.cos(a) * 0.22); leg.castShadow = true; g.add(leg); }
+  return g;
+}
+function buildCageRound(it) {            // 金屬鳥籠圓几：一圈直條金屬＋石面
+  const g = new THREE.Group(), { w, h } = it, r = w / 2, S = marbMat(it.color, '#9a948c'), G = gold(it.color2);
+  cyl(g, r, r, 3, 0, h - 1.5, 0, S, 64);
+  for (const y of [1, h - 4]) { const t = new THREE.Mesh(new THREE.TorusGeometry(r * 0.94, 0.8, 8, 64), G); t.rotation.x = Math.PI / 2; t.position.y = y; g.add(t); }
+  for (let k = 0; k < 36; k++) { const a = k / 36 * Math.PI * 2; cyl(g, 0.45, 0.45, h - 5, Math.cos(a) * r * 0.94, (h - 3) / 2, Math.sin(a) * r * 0.94, G, 6); }
+  return g;
+}
+function buildDrawerRound(it) {          // 胡桃木抽屜圓几：圓鼓櫃身、前面一個弧形抽屜、外八小腳
+  const g = new THREE.Group(), { w, h } = it, r = w / 2, W = mat(it.color, { roughness: 0.5 }), W2 = mat(new THREE.Color(it.color).multiplyScalar(0.8), { roughness: 0.55 });
+  cyl(g, r, r, 4, 0, h - 2, 0, W, 64);
+  cyl(g, r * 0.92, r * 0.92, h * 0.45, 0, h - 4 - h * 0.225, 0, W2, 64);
+  const dr = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.93, r * 0.93, h * 0.3, 32, 1, true, -0.55, 1.1), W); dr.position.set(0, h - 4 - h * 0.225, 0); g.add(dr);
+  for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2 + Math.PI / 4, leg = new THREE.Mesh(new THREE.CylinderGeometry(2, 1.3, h * 0.5, 12), W); leg.position.set(Math.cos(a) * r * 0.72, h * 0.25, Math.sin(a) * r * 0.72); leg.rotation.set(Math.sin(a) * 0.15, 0, -Math.cos(a) * 0.15); leg.castShadow = true; g.add(leg); }
+  return g;
+}
+function buildPoufTray(it) {             // 皮革圓墩＋上面木托盤
+  const g = new THREE.Group(), { w, h } = it, r = w / 2, L = mat(it.color, { roughness: 0.7 }), W = mat(it.color2, { roughness: 0.5 });
+  const prof = []; for (let i = 0; i <= 12; i++) { const t = i / 12, y = t * (h - 3); prof.push(new THREE.Vector2(r * (0.82 + 0.18 * Math.sin(t * Math.PI)), y)); }
+  const body = new THREE.Mesh(new THREE.LatheGeometry([new THREE.Vector2(0, 0), ...prof, new THREE.Vector2(0, h - 3)], 48), L); body.castShadow = true; g.add(body);
+  cyl(g, r * 0.66, r * 0.66, 2.5, 0, h - 1.25, 0, W, 48);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(r * 0.66, 1.1, 8, 48), W); rim.rotation.x = Math.PI / 2; rim.position.y = h; g.add(rim);
+  return g;
+}
+// ---- 長方几 ----
+function buildSlabDrawerLong(it) {       // 岩板圓角抽屜長几：圓角櫃身＋岩板面＋細外八腳
+  const g = new THREE.Group(), { w, d, h } = it, S = marbMat(it.color, '#8c8780', 0.25), B = mat(it.color2, { roughness: 0.5 }), legH = h * 0.35;
+  prism(g, rrShape(w - 6, d - 6, d * 0.4), legH, h - legH - 2.5, B);
+  prism(g, rrShape(w, d, d * 0.42), h - 2.5, 2.5, S, 0.4);
+  box(g, w * 0.5, (h - legH) * 0.45, 1, 0, legH + (h - legH) * 0.45, d / 2 - 2.8, mat(new THREE.Color(it.color2).multiplyScalar(0.85), { roughness: 0.5 }));
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(1, 0.7, legH + 2, 10), dark()); l.position.set(sx * (w / 2 - 18), legH / 2, sz * (d / 2 - 12)); l.rotation.set(sz * 0.18, 0, -sx * 0.18); g.add(l); }
+  return g;
+}
+function buildIronDrawerLong(it) {       // 鐵框木抽屜岩板茶几（工業風）
+  const g = new THREE.Group(), { w, d, h } = it, S = marbMat(it.color, '#7c7872'), F = dark('#1f1f1f'), W = mat(it.color2, { roughness: 0.6 }), t = 2.5;
+  box(g, w, 2.5, d, 0, h - 1.25, 0, S);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) box(g, t, h - 2.5, t, sx * (w / 2 - t / 2), (h - 2.5) / 2, sz * (d / 2 - t / 2), F);
+  for (const y of [h - 3.5, 3]) { for (const sz of [-1, 1]) box(g, w, t, t, 0, y, sz * (d / 2 - t / 2), F); for (const sx of [-1, 1]) box(g, t, t, d, sx * (w / 2 - t / 2), y, 0, F); }
+  box(g, w - 8, h * 0.38, d - 8, 0, 4 + h * 0.19, 0, W);
+  for (const sx of [-1, 1]) drawerFront(g, (w - 12) / 2 - 2, h * 0.3, sx * (w - 12) / 4, 4 + h * 0.19, d / 2 - 3.6, W, F);
+  return g;
+}
+function buildPlinthLong(it) {           // 岩板墩式長几：厚岩板、內縮深色底座、一圈金邊
+  const g = new THREE.Group(), { w, d, h } = it, S = marbMat(it.color, '#8c8780', 0.25), B = dark(it.color2), G = gold();
+  prism(g, rrShape(w, d, 10), h - 7, 7, S, 0.8);
+  prism(g, rrShape(w - 14, d - 14, 8), 0, h - 7, B, 0.4);
+  prism(g, rrShape(w - 13, d - 13, 8), h - 8.2, 1.2, G, 0);
+  return g;
+}
+function buildLeatherLong(it) {          // 皮革收納長几：皮革包覆的托盤式箱體＋實木腳
+  const g = new THREE.Group(), { w, d, h } = it, L = mat(it.color, { roughness: 0.65 }), W = mat(it.color2, { roughness: 0.55 }), legH = 9;
+  prism(g, rrShape(w, d, 4), legH, h - legH, L, 1);
+  prism(g, rrShape(w - 6, d - 6, 3), h - 0.6, 0.8, mat(new THREE.Color(it.color).multiplyScalar(0.9), { roughness: 0.6 }), 0);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) box(g, 4, legH, 4, sx * (w / 2 - 8), legH / 2, sz * (d / 2 - 8), W);
+  return g;
+}
+// ---- 四方茶几 ----
+function buildFloatSquare(it) {          // 懸浮石材方几：厚石板、很深的內縮黑底座（看起來浮起來）
+  const g = new THREE.Group(), { w, d, h } = it, S = marbMat(it.color, '#7e786f', 0.28);
+  box(g, w, 10, d, 0, h - 5, 0, S); box(g, w * 0.7, h - 10, d * 0.7, 0, (h - 10) / 2, 0, dark(it.color2));
+  return g;
+}
+function buildLeatherSquare(it) {        // 皮革方几＋金屬護角＋石面
+  const g = new THREE.Group(), { w, d, h } = it, S = marbMat('#ece9e3', '#9a948c'), L = mat(it.color, { roughness: 0.65 }), G = gold(it.color2);
+  prism(g, rrShape(w, d, 3), 0, h - 2, L, 0.8); box(g, w - 8, 2, d - 8, 0, h - 1, 0, S);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { box(g, 7, h, 0.8, sx * (w / 2 - 3.5), h / 2, sz * (d / 2 + 0.1), G); box(g, 0.8, h, 7, sx * (w / 2 + 0.1), h / 2, sz * (d / 2 - 3.5), G); }
+  return g;
+}
+function buildDrawerSquare(it) {         // 雙向抽屜方几：前後都能拉的抽屜、深色框
+  const g = new THREE.Group(), { w, d, h } = it, T = marbMat(it.color, '#8a857e'), B = mat(it.color2, { roughness: 0.55 }), G = gold();
+  box(g, w, 3, d, 0, h - 1.5, 0, T); box(g, w - 2, h - 9, d - 2, 0, 6 + (h - 9) / 2 - 3, 0, B);
+  for (const sz of [-1, 1]) { const f = box(g, w * 0.7, (h - 9) * 0.7, 1, 0, 3 + (h - 9) / 2, sz * (d / 2 - 0.4), mat(new THREE.Color(it.color2).multiplyScalar(0.8), { roughness: 0.55 })); box(g, w * 0.25, 1, 1, 0, 3 + (h - 9) / 2, sz * (d / 2 + 0.3), G); }
+  box(g, w - 6, 3, d - 6, 0, 1.5, 0, dark());
+  return g;
+}
+function buildStepSquare(it) {           // 錯層雙層方几：大方石面低、小方深色面高，錯開疊
+  const g = new THREE.Group(), { w, d, h } = it, S = marbMat(it.color, '#8a857e'), D = marbMat(it.color2, '#b9b3aa', 0.25);
+  box(g, w, h - 10, d, 0, (h - 10) / 2, 0, dark('#2a2826')); box(g, w + 1, 3, d + 1, 0, h - 11.5, 0, S);
+  box(g, w * 0.55, 10, d * 0.55, w * 0.18, h - 5, -d * 0.18, dark('#1f1d1c')); box(g, w * 0.55 + 1, 3, d * 0.55 + 1, w * 0.18, h - 1.5, -d * 0.18, D);
+  return g;
+}
+function buildSoftSquare(it) {           // 圓角石面方几：大圓角岩板＋內縮圓角木座
+  const g = new THREE.Group(), { w, d, h } = it, S = marbMat(it.color, '#8a857e', 0.25), W = mat(it.color2, { roughness: 0.5 });
+  prism(g, rrShape(w, d, w * 0.18), h - 4, 4, S, 0.8); prism(g, rrShape(w * 0.78, d * 0.78, w * 0.14), 0, h - 4, W, 0.6);
+  return g;
+}
+// ---- 套几 ----
+function trayRound(g, r, h, x, z, W, F) {   // 有凸邊的圓托盤桌面＋細黑腳
+  cyl(g, r, r, 1.5, x, h - 3, z, W, 48);
+  const rim = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 4, 48, 1, true), W); rim.position.set(x, h - 2, z); rim.material.side = THREE.DoubleSide; g.add(rim);
+  for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2 + 0.3; cyl(g, 0.8, 0.8, h - 3, x + Math.cos(a) * r * 0.8, (h - 3) / 2, z + Math.sin(a) * r * 0.8, F, 8); }
+}
+function buildTrayNest(it) {             // 托盤邊圓套几：大小兩個木托盤圓几（黑鐵腳）
+  const g = new THREE.Group(), { w, d, h } = it, W = mat(it.color, { roughness: 0.5 }), F = dark('#1d1d1d'), R1 = d / 2, R2 = d * 0.34;
+  trayRound(g, R1, h, -w / 2 + R1, 0, W, F); trayRound(g, R2, h - 6, w / 2 - R2, d / 2 - R2, W.clone(), F);
+  return g;
+}
+function buildSlabNestLong(it) {         // 長形岩板子母几：兩片圓角長岩板高低錯開（深色底座）
+  const g = new THREE.Group(), { w, d, h } = it, S = marbMat(it.color, '#8a857e', 0.25), B = dark(it.color2);
+  const w1 = w * 0.68, d1 = d * 0.72, w2 = w * 0.5, d2 = d * 0.6;
+  prism(g, rrShape(w1, d1, d1 * 0.45), h - 3, 3, S, 0.5); prism(g, rrShape(w1 * 0.7, d1 * 0.6, 6), 0, h - 3, B, 0.3);
+  const s2 = prism(g, rrShape(w2, d2, d2 * 0.45), h - 12, 3, S, 0.5); s2.position.x = w / 2 - w2 / 2; s2.position.z = d / 2 - d2 / 2;
+  const b2 = prism(g, rrShape(w2 * 0.6, d2 * 0.6, 5), 0, h - 12, B, 0.3); b2.position.x = s2.position.x; b2.position.z = s2.position.z;
+  g.children.slice(0, 2).forEach(m => { m.position.x = -w / 2 + w1 / 2; m.position.z = -d / 2 + d1 / 2; });
+  return g;
+}
+function buildHalfMoonNest(it) {         // 半圓拼合子母几：兩個半圓一高一低，合起來是一個圓
+  const g = new THREE.Group(), { w, h } = it, r = w / 2, S = marbMat(it.color, '#8a857e'), B = mat(it.color2, { roughness: 0.55 });
+  for (const [a0, hh, dx] of [[0, h, 2.5], [Math.PI, h - 9, -2.5]]) {   // 一高一低、中間留一點縫
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 3, 48, 1, false, a0, Math.PI), S); top.position.set(dx, hh - 1.5, 0); top.castShadow = true; g.add(top);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.9, r * 0.9, hh - 3, 48, 1, false, a0, Math.PI), B); base.position.set(dx, (hh - 3) / 2, 0); base.castShadow = true; g.add(base);
+  }
+  return g;
+}
+// ---- 邊几（小茶几）----
+function buildFinSide(it) {              // 弧板雙片邊几：兩片弧形板撐起大理石圓面
+  const g = new THREE.Group(), { w, h } = it, r = w / 2, S = marbMat(it.color, '#9a948c'), M = mat(it.color2, { roughness: 0.4, metalness: 0.4 });
+  cyl(g, r, r, 2.5, 0, h - 1.25, 0, S, 48);
+  for (const a0 of [0.15, Math.PI + 0.15]) { const f = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.45, r * 0.45, h - 2.5, 24, 1, true, a0, Math.PI * 0.75), M); f.material.side = THREE.DoubleSide; f.position.y = (h - 2.5) / 2; f.castShadow = true; g.add(f); }
+  return g;
+}
+function buildDrumCabSide(it) {          // 圓筒收納邊几：圓筒櫃身、側面開一個口
+  const g = new THREE.Group(), { w, h } = it, r = w / 2, B = mat(it.color, { roughness: 0.55 }), I = mat(it.color2, { roughness: 0.6 });
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 48, 1, true, 0.9, Math.PI * 2 - 1.8), B); shell.material.side = THREE.DoubleSide; shell.position.y = h / 2; shell.castShadow = true; g.add(shell);
+  cyl(g, r * 0.97, r * 0.97, h - 1, 0, h / 2, 0, I, 48).scale.set(0.98, 1, 0.98);
+  for (const y of [1, h - 1, h / 2]) cyl(g, r, r, 2, 0, y, 0, B, 48);
+  return g;
+}
+function buildConeSide(it) {             // 金色圓錐邊几
+  const g = new THREE.Group(), { w, h } = it, r = w / 2, G = gold(it.color2), T = mat(it.color, { roughness: 0.35 });
+  cyl(g, r, r, 2.5, 0, h - 1.25, 0, T, 48); cyl(g, r * 0.12, r * 0.6, h - 2.5, 0, (h - 2.5) / 2, 0, G, 48);
+  return g;
+}
+function buildBasketSide(it) {           // 金屬線籃邊几：上寬下窄的鐵線籃＋圓托盤面
+  const g = new THREE.Group(), { w, h } = it, r = w / 2, F = dark('#1f1f1f'), T = mat(it.color, { roughness: 0.5 });
+  for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, b = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, h, 6), F); b.position.set(Math.cos(a) * r * 0.82, h / 2, Math.sin(a) * r * 0.82); b.rotation.set(Math.sin(a) * 0.12, 0, -Math.cos(a) * 0.12); g.add(b); }
+  for (const [y, k] of [[1, 0.7], [h - 3, 0.95]]) { const t = new THREE.Mesh(new THREE.TorusGeometry(r * k, 0.6, 6, 48), F); t.rotation.x = Math.PI / 2; t.position.y = y; g.add(t); }
+  cyl(g, r * 0.95, r * 0.95, 1.5, 0, h - 1, 0, T, 48);
+  return g;
+}
+function buildRingSide(it) {             // 環形腳邊几：三支腳、底下一圈圓環
+  const g = new THREE.Group(), { w, h } = it, r = w / 2, F = mat(it.color2, { roughness: 0.4, metalness: 0.5 }), T = marbMat(it.color, '#8a857e');
+  cyl(g, r, r, 2.5, 0, h - 1.25, 0, T, 48);
+  for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2; cyl(g, 0.9, 0.9, h - 2.5, Math.cos(a) * r * 0.75, (h - 2.5) / 2, Math.sin(a) * r * 0.75, F, 10); }
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 0.75, 0.9, 8, 48), F); ring.rotation.x = Math.PI / 2; ring.position.y = h * 0.18; g.add(ring);
+  return g;
+}
+const TBL = { sub: '茶几', generic: true, c1: '桌面', c2: '底座' }, SIDE = { sub: '邊几', generic: true, c1: '桌面', c2: '腳／底座' };
+Object.assign(EXTRA_PRODUCTS, {
+  marbleCross: { ...TBL, form: 'round', name: '大理石十字木座圓几', w: 100, d: 100, h: 40, color: '#e9e2d6', color2: '#7a5236', c1: '石面顏色', c2: '木座顏色', build: buildMarbleCross },
+  tripodRound: { ...TBL, form: 'round', name: '黑石三腳金圓几', w: 100, d: 100, h: 40, color: '#2b2a29', color2: '#c5a35a', c1: '石面顏色', c2: '腳的顏色', build: buildTripodRound },
+  cageRound: { ...TBL, form: 'round', name: '金屬鳥籠圓几', w: 90, d: 90, h: 42, color: '#f0ede8', color2: '#c5a35a', c1: '石面顏色', c2: '金屬顏色', build: buildCageRound },
+  drawerRound: { ...TBL, form: 'round', name: '胡桃木抽屜圓几', w: 100, d: 100, h: 40, color: '#6b4630', color2: '#6b4630', c1: '木頭顏色', c2: null, build: buildDrawerRound },
+  poufTray: { ...TBL, form: 'round', name: '皮革圓墩托盤几', w: 80, d: 80, h: 40, color: '#ece6dc', color2: '#7a5236', c1: '皮革顏色', c2: '托盤木色', build: buildPoufTray },
+  slabDrawerLong: { ...TBL, form: 'rect', name: '岩板圓角抽屜長几', w: 130, d: 65, h: 38, color: '#e9e6e1', color2: '#b9b2a8', c1: '岩板顏色', c2: '櫃身顏色', build: buildSlabDrawerLong },
+  ironDrawerLong: { ...TBL, form: 'rect', name: '鐵框木抽屜岩板茶几', w: 130, d: 70, h: 42, color: '#8f8b86', color2: '#a6784f', c1: '岩板顏色', c2: '抽屜木色', build: buildIronDrawerLong },
+  plinthLong: { ...TBL, form: 'rect', name: '岩板墩式長几（金邊）', w: 140, d: 75, h: 35, color: '#e2ded8', color2: '#2a2826', c1: '岩板顏色', c2: '底座顏色', build: buildPlinthLong },
+  leatherLong: { ...TBL, form: 'rect', name: '皮革收納長几', w: 130, d: 65, h: 40, color: '#b49a80', color2: '#6b4630', c1: '皮革顏色', c2: '腳的木色', build: buildLeatherLong },
+  floatSquare: { ...TBL, form: 'square', name: '懸浮石材方几', w: 120, d: 120, h: 32, color: '#ece9e3', color2: '#1f1d1c', c1: '石面顏色', c2: '底座顏色', build: buildFloatSquare },
+  leatherSquare: { ...TBL, form: 'square', name: '皮革方几（金屬護角）', w: 110, d: 110, h: 38, color: '#3a3532', color2: '#c5a35a', c1: '皮革顏色', c2: '護角顏色', build: buildLeatherSquare },
+  drawerSquare: { ...TBL, form: 'square', name: '雙向抽屜方几', w: 110, d: 110, h: 38, color: '#e6e2dc', color2: '#5a4636', c1: '石面顏色', c2: '櫃身顏色', build: buildDrawerSquare },
+  stepSquare: { ...TBL, form: 'square', name: '錯層雙層方几', w: 120, d: 120, h: 38, color: '#e9e5df', color2: '#3a3836', c1: '下層石面', c2: '上層石面', build: buildStepSquare },
+  softSquare: { ...TBL, form: 'square', name: '圓角石面方几', w: 110, d: 110, h: 38, color: '#e3ddd3', color2: '#6b4630', c1: '石面顏色', c2: '木座顏色', build: buildSoftSquare },
+  trayNest: { ...TBL, form: 'nest', name: '托盤邊圓套几', w: 125, d: 85, h: 42, color: '#7a5236', c1: '托盤木色', c2: null, build: buildTrayNest },
+  slabNestLong: { ...TBL, form: 'nest', name: '長形岩板子母几', w: 150, d: 90, h: 36, color: '#ece9e3', color2: '#2a2826', c1: '岩板顏色', c2: '底座顏色', build: buildSlabNestLong },
+  halfMoonNest: { ...TBL, form: 'nest', name: '半圓拼合子母几', w: 100, d: 100, h: 40, color: '#e6e2dc', color2: '#7a5236', c1: '石面顏色', c2: '底座顏色', build: buildHalfMoonNest },
+  finSide: { ...SIDE, name: '弧板雙片邊几', w: 50, d: 50, h: 55, color: '#ece9e3', color2: '#b49a80', c1: '石面顏色', c2: '弧板顏色', build: buildFinSide },
+  drumCabSide: { ...SIDE, name: '圓筒收納邊几', w: 45, d: 45, h: 52, color: '#cfc6ba', color2: '#5a4636', c1: '外殼顏色', c2: '內層顏色', build: buildDrumCabSide },
+  coneSide: { ...SIDE, name: '金色圓錐邊几', w: 45, d: 45, h: 52, color: '#2b2a29', color2: '#c5a35a', c1: '桌面顏色', c2: '底座顏色', build: buildConeSide },
+  basketSide: { ...SIDE, name: '金屬線籃邊几', w: 45, d: 45, h: 48, color: '#7a5236', color2: '#1f1f1f', c1: '桌面木色', c2: null, build: buildBasketSide },
+  ringSide: { ...SIDE, name: '環形腳邊几', w: 45, d: 45, h: 52, color: '#e6e2dc', color2: '#2a2a2a', c1: '石面顏色', c2: '腳的顏色', build: buildRingSide },
+});
 const CHAIR = { sub: '單椅', generic: true };
 Object.assign(EXTRA_PRODUCTS, {
   tubBoucle: { ...CHAIR, name: '泰迪絨圓弧椅（低背）', w: 78, d: 76, h: 72, color: '#efe9df', color2: '#b98a5e', c1: '布料顏色', c2: '椅腳顏色', build: buildTub,
