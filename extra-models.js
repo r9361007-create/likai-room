@@ -655,6 +655,9 @@ export function registerExtras(PRODUCTS) {
     coffeeDrum: preset('圓鼓茶几', 80, 80, 38, '#efe6d8', '#efe6d8', { shape: 'round', base: 'drum', legmat: 'wood' }),
     coffeeOval: preset('橢圓茶几', 130, 70, 40, '#d9c3a3', '#b98a5e', { shape: 'oval', base: 'legs', legmat: 'wood' }),
   });
+  // 茶几只留 15 款（使用者 2026-10-23：同性質的不要重複）：莉凱自家 3 款＋下面 12 款；其他款不列在商品庫（舊專案用到的還是畫得出來）
+  const COFFEE_KEEP = new Set(['marbleCross', 'cageRound', 'travRound', 'plinthLong', 'ironDrawerLong', 'walnutShelf', 'floatSquare', 'leatherSquare', 'travPill', 'pebble', 'trayNest', 'slabNestLong']);
+  for (const [k, T] of Object.entries(PRODUCTS)) if (T.sub === '茶几' && T.generic && !COFFEE_KEEP.has(k)) T.libHide = true;
   // 茶几形狀：圓形 round／長方形 rect／正方形 square／異形 free／套几 nest（沒標的照名字和尺寸判斷）
   const FORM = { coffee: 'rect', coffeeset: 'nest', side: 'round', coffeeSlate: 'rect', coffeeWood: 'rect', coffeeSquare: 'square', coffeeMarble: 'round', coffeeDrum: 'round', coffeeOval: 'free',
     nestRound: 'nest', nestSquare: 'nest', drawerCoffee: 'rect', cloudCoffee: 'free', ownDorn: 'free', ownAshBig: 'round', ownAshSmall: 'round' };

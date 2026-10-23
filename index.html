@@ -1936,7 +1936,7 @@ function renderLib() {
   const PROMOTE = new Set(['茶几', '邊几']);                  // 茶几一般款也很常用：直接列在上面，不收進「其他」
   const FORMS = [['all', '全部'], ['round', '圓形'], ['rect', '長方形'], ['square', '正方形'], ['free', '異形'], ['nest', '大小套几']];
   for (const s of SUBS) {
-    const keys = Object.keys(PRODUCTS).filter(k => PRODUCTS[k].sub === s); if (!keys.length) continue;
+    const keys = Object.keys(PRODUCTS).filter(k => PRODUCTS[k].sub === s && !PRODUCTS[k].libHide); if (!keys.length) continue;   // libHide：不列在商品庫
     const a = PROMOTE.has(s) ? keys.sort((x, y) => (PRODUCTS[x].generic ? 1 : 0) - (PRODUCTS[y].generic ? 1 : 0)) : keys.filter(k => !PRODUCTS[k].generic), b = PROMOTE.has(s) ? [] : keys.filter(k => PRODUCTS[k].generic);
     const chips = s === '茶几' ? `<div class="formbar" data-forms>${FORMS.filter(([f]) => f === 'all' || a.some(k => PRODUCTS[k].form === f)).map(([f, n]) => `<button data-form="${f}" class="${f === 'all' ? 'on' : ''}">${n}</button>`).join('')}</div>` : '';
     if (a.length) own += `<section data-sub="${s}"><h3>${s}</h3>${chips}<div class="grid">${a.map(card).join('')}</div></section>`;
