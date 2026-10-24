@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610241425">
+<meta name="likai-build" content="202610241444">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -238,6 +238,9 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden;b
 /* ---------- 還沒設門窗的提示 ---------- */
 .setupchip{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:5;border:0;border-radius:999px;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--accent);font-size:13px;font-weight:600;padding:8px 16px;box-shadow:0 6px 18px rgba(0,67,106,.12);white-space:nowrap}
 .setupchip[hidden]{display:none}
+.stroll-chip{position:absolute;left:50%;top:108px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:10px;border-radius:999px;background:#F9E573;color:#00436A;font-size:13px;font-weight:600;padding:6px 6px 6px 16px;box-shadow:0 6px 18px rgba(0,67,106,.18);white-space:nowrap}
+.stroll-chip[hidden],body.ov-mode .stroll-chip,body.show-mode .stroll-chip{display:none}
+.stroll-chip button{border:0;border-radius:999px;background:#00436A;color:#fff;font-size:12px;padding:6px 12px}
 /* ---------- 匯入平面圖 ---------- */
 .plan-box{width:min(1180px,100%);height:min(820px,100%)}
 .plan-body{display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:0;flex:1}
@@ -682,6 +685,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <span class="cp-dial" id="cp-dial"><i data-d="0">北</i><i data-d="90" class="sun am">東</i><i data-d="180">南</i><i data-d="270" class="sun pm">西</i><b class="cp-needle" id="cp-needle"></b></span>
       <span class="cp-label" id="cp-label">設定座向</span>
     </button>
+    <div class="stroll-chip" id="stroll-chip" hidden>點地板，莉凱寶寶就會走過去<button id="stroll-done">完成</button></div>
     <button class="setupchip" id="setup-chip" hidden>這間還沒設定門窗・點這裡設定 ›</button>
     <div class="show-ui" id="show-ui">
       <button class="show-exit" id="show-exit">結束展示</button>
@@ -913,9 +917,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241425';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241425';
-import { registerExtras } from './extra-models.js?v=202610241425';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241444';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241444';
+import { registerExtras } from './extra-models.js?v=202610241444';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -1794,7 +1798,7 @@ $('#s-sw').addEventListener('click', e => {
 });
 $('#s-sw').addEventListener('change', e => { if (e.target.id === 's-sw-custom') { editSel(it => { it.color = e.target.value; }); buildSelPanel(); } });
 function buildSelPanel() {
-  setTimeout(() => { try { syncMobile(); } catch (e) { } }, 0);   // 手機動作列跟著選取狀態（延後執行，啟動時也安全）
+  setTimeout(() => { try { syncMobile(); } catch (e) { } try { syncStrollChip(); } catch (e) { } }, 0);   // 手機動作列跟著選取狀態（延後執行，啟動時也安全）
   const it = cur(); $('#sel').classList.toggle('on', !!it && panelOpen); if (!it) return;
   const T = PRODUCTS[it.type];
   $('#s-name').textContent = T.name; renderResizeMode(it);
@@ -2125,8 +2129,112 @@ canvas.addEventListener('pointerup', e => {
     drag = null; controls.enabled = !topView; return;
   }
   gyro.lastX = null;
-  if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) { if (gyro.on) walkTo(floorPt(e)); else select(null); }   // 點空白處：環視中走過去，平常取消選取
+  if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) {
+    if (gyro.on) walkTo(floorPt(e));
+    else if (isPerson(cur()) && !showMode) strollTo(cur(), floorPt(e));   // 選著莉凱寶寶：點地板，它就走過去
+    else select(null);
+  }
 });
+
+/* ================= 莉凱寶寶真的走路 =================
+ * 選到莉凱寶寶後點地板：用 10 公分的格子找一條繞過家具的路（身體寬 48 公分過得去才算），
+ * 手腳擺動走過去；走完告訴你一路上最窄的地方幾公分。完全過不去就說被擋住 */
+const isPerson = it => !!it && PRODUCTS[it.type] && PRODUCTS[it.type].sub === '示意人';
+let stroll = null;
+function strollObstacles(me) {
+  const out = [];
+  for (const o of state.items) {
+    if (o === me) continue; const T = PRODUCTS[o.type];
+    if (o.hidden || T.flat || T.noHit || T.ceil || T.sub === '窗簾' || T.sub === '掛畫' || T.sub === '示意人') continue;
+    const b = boxOf(o); if (b.min.y > 150) continue;                    // 掛很高的（吊櫃、層板）不擋路
+    out.push(b);
+  }
+  return out;
+}
+function strollPlan(me, tx, tz) {
+  const C = 10, W = state.room.w, D = state.room.d, nx = Math.max(1, Math.floor(W / C)), nz = Math.max(1, Math.floor(D / C)), R = Math.max(18, (me.w || 48) / 2);
+  const obs = strollObstacles(me), blk = new Uint8Array(nx * nz);
+  const cx = i => -W / 2 + (i + 0.5) * W / nx, cz = j => -D / 2 + (j + 0.5) * D / nz;
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    const x = cx(i), z = cz(j);
+    if (x < -W / 2 + R || x > W / 2 - R || z < -D / 2 + R || z > D / 2 - R) { blk[j * nx + i] = 1; continue; }
+    for (const b of obs) if (x > b.min.x - R && x < b.max.x + R && z > b.min.z - R && z < b.max.z + R) { blk[j * nx + i] = 1; break; }
+  }
+  const cell = (x, z) => [clamp(Math.floor((x + W / 2) / W * nx), 0, nx - 1), clamp(Math.floor((z + D / 2) / D * nz), 0, nz - 1)];
+  const [si, sj] = cell(me.x, me.z), [ti, tj] = cell(tx, tz), S = sj * nx + si, T0 = tj * nx + ti;
+  if (blk[T0]) return { fail: 'spot', obs };
+  blk[S] = 0;
+  // A*（8 方向，不切牆角）
+  const g = new Float32Array(nx * nz).fill(Infinity), from = new Int32Array(nx * nz).fill(-1), done = new Uint8Array(nx * nz), open = [S];
+  const hcost = k => Math.hypot(k % nx - ti, ((k / nx) | 0) - tj);
+  g[S] = 0;
+  while (open.length) {
+    let bi = 0; for (let q = 1; q < open.length; q++) if (g[open[q]] + hcost(open[q]) < g[open[bi]] + hcost(open[bi])) bi = q;
+    const k = open[bi]; open[bi] = open[open.length - 1]; open.pop();
+    if (k === T0) break; if (done[k]) continue; done[k] = 1;
+    const i = k % nx, j = (k / nx) | 0;
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const a = i + di, b = j + dj; if (a < 0 || b < 0 || a >= nx || b >= nz) continue;
+      const n = b * nx + a; if (blk[n] || done[n]) continue;
+      if (di && dj && (blk[j * nx + a] || blk[b * nx + i])) continue;
+      const ng = g[k] + (di && dj ? 1.4142 : 1); if (ng < g[n]) { g[n] = ng; from[n] = k; open.push(n); }
+    }
+  }
+  if (S !== T0 && from[T0] < 0) return { fail: 'block', obs };
+  const cells = []; for (let k = T0; k >= 0 && k !== S; k = from[k]) cells.push(k); cells.reverse();
+  const pts = [{ x: me.x, z: me.z }, ...cells.map(k => ({ x: cx(k % nx), z: cz((k / nx) | 0) }))];
+  pts[pts.length - 1] = { x: tx, z: tz };
+  // 拉直：看得到的點就直接走過去，不要一格一格轉
+  const free = (a, b) => { const n = Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 4); for (let q = 1; q < n; q++) { const [i, j] = cell(a.x + (b.x - a.x) * q / n, a.z + (b.z - a.z) * q / n); if (blk[j * nx + i] && j * nx + i !== S) return false; } return true; };
+  const path = [pts[0]]; let a = 0;
+  while (a < pts.length - 1) { let b = pts.length - 1; while (b > a + 1 && !free(pts[a], pts[b])) b--; path.push(pts[b]); a = b; }
+  return { path, obs };
+}
+// 某一點左右（垂直走的方向）離家具或牆各多遠，加起來＝這裡的走道寬
+function strollWidth(p, dx, dz, obs) {
+  const W = state.room.w / 2, D = state.room.d / 2, nx = -dz, nz = dx;
+  const side = sg => { for (let t = 0; t < 300; t += 2) { const x = p.x + nx * t * sg, z = p.z + nz * t * sg; if (Math.abs(x) > W || Math.abs(z) > D) return t; for (const b of obs) if (x > b.min.x && x < b.max.x && z > b.min.z && z < b.max.z) return t; } return 300; };
+  return side(1) + side(-1);
+}
+function strollTo(it, p) {
+  if (!p || !it) return;
+  if (it.locked) { lockedMsg(it); return; }
+  const r = strollPlan(it, p.x, p.z);
+  if (r.fail === 'spot') { toast('那裡站不下（離家具或牆太近）'); return; }
+  if (r.fail === 'block') { toast('走不過去：路被家具擋住了，最少要留 ' + Math.round(Math.max(48, it.w || 48)) + ' 公分寬'); return; }
+  const before = JSON.stringify(state);
+  stroll = { it, path: r.path, seg: 0, t: 0, phase: 0, last: performance.now(), minW: Infinity, obs: r.obs, walked: 0, before };
+}
+function strollFrame() {
+  const s = stroll, now = performance.now(), dt = Math.min(0.05, (now - s.last) / 1000); s.last = now;
+  const g = objs.get(s.it.id); if (!g || !state.items.includes(s.it)) { stroll = null; return; }
+  let step = 110 * dt;                                                   // 每秒 110 公分（一般走路速度）
+  while (step > 0 && s.seg < s.path.length - 1) {
+    const a = s.path[s.seg], b = s.path[s.seg + 1], L = Math.hypot(b.x - a.x, b.z - a.z) || 1e-6;
+    const dx = (b.x - a.x) / L, dz = (b.z - a.z) / L, left = L - s.t, mv = Math.min(step, left);
+    s.t += mv; step -= mv; s.walked += mv;
+    s.it.x = a.x + dx * s.t; s.it.z = a.z + dz * s.t;
+    const want = Math.atan2(-dx, dz) / deg; let cur0 = s.it.rot || 0, d = ((want - cur0 + 540) % 360) - 180;
+    s.it.rot = (cur0 + d * Math.min(1, dt * 10) + 360) % 360;              // 慢慢轉向，不要一下子轉過去
+    if (s.walked > 25 && s.walked % 6 < mv + 0.01) s.minW = Math.min(s.minW, strollWidth(s.it, dx, dz, s.obs));
+    if (s.t >= L - 1e-3) { s.seg++; s.t = 0; }
+  }
+  s.phase += dt * 6.2;
+  const sw = Math.sin(s.phase) * 0.5;
+  g.traverse(o => { if (o.userData.swing) o.rotation.x = sw * o.userData.swing; });
+  g.position.set(s.it.x, s.it.elev || 0, s.it.z); g.rotation.y = -s.it.rot * deg;
+  if (s.seg >= s.path.length - 1) {                                     // 走到了
+    stroll = null; s.it.rot = Math.round(s.it.rot);
+    undoStack.push(s.before); $('#undo').disabled = false;
+    makeObj(s.it); refresh(); save();
+    toast(isFinite(s.minW) && s.minW < 300 ? `走到了・一路最窄的地方約 ${Math.round(s.minW)} 公分` + (s.minW < 75 ? '（有點擠，建議留 75 公分以上）' : '') : '走到了・一路都很寬敞');
+  }
+}
+function syncStrollChip() {
+  const on = isPerson(cur()) && !showMode && !overview && !(walk && walk.on);
+  $('#stroll-chip').hidden = !on;
+}
+$('#stroll-done').onclick = () => { stroll = null; select(null); };
 
 /* ================= 商品庫（縮圖自動產生） ================= */
 function renderLib() {
@@ -3533,7 +3641,7 @@ function resize() {
   renderer.setSize(w, h, false); persp.aspect = w / h; persp.updateProjectionMatrix(); sizeOrtho();
 }
 new ResizeObserver(resize).observe(canvas);
-renderer.setAnimationLoop(() => { if (walk.on) walkFrame(); else if (gyro.on) gyroFrame(); else if (!topView) controls.update(); render(); });
+renderer.setAnimationLoop(() => { if (stroll) strollFrame(); if (walk.on) walkFrame(); else if (gyro.on) gyroFrame(); else if (!topView) controls.update(); render(); });
 
 { const z = location.hash.match(/^#z=(.+)$/); if (z) try { ZIP_PROJ = await decodeZ(z[1]); } catch (e) { } }
 load(); sunMode = (project.orient && project.orient.sun) || 'off'; rememberProj(); renderProjects(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary(); renderSpaces(); filterLib();
