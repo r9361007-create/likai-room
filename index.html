@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610241414">
+<meta name="likai-build" content="202610241425">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -913,9 +913,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241414';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241414';
-import { registerExtras } from './extra-models.js?v=202610241414';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241425';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241425';
+import { registerExtras } from './extra-models.js?v=202610241425';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -1030,8 +1030,42 @@ async function encodeZ() {
   return u8b64(new Uint8Array(buf));
 }
 async function decodeZ(s) {
-  const txt = await new Response(new Blob([b64u(s)]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  const bytes = b64u(s);
+  let txt = null;
+  if (typeof DecompressionStream !== 'undefined') try { txt = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text(); } catch (e) { }
+  if (txt === null) txt = new TextDecoder().decode(inflateRaw(bytes));   // 舊手機（iOS 16.4 以前、舊版 LINE）沒有內建解壓，用自己的
   return cleanProj(JSON.parse(txt));
+}
+// 自己的 deflate 解壓（給沒有 DecompressionStream 的舊瀏覽器）
+function inflateRaw(src) {
+  let pos = 0, bit = 0, out = new Uint8Array(src.length * 8), n = 0;
+  const need = k => { if (n + k > out.length) { const o = new Uint8Array(Math.max(out.length * 2, n + k)); o.set(out); out = o; } };
+  const bits = c => { let v = 0; for (let i = 0; i < c; i++) { v |= ((src[pos] >> bit) & 1) << i; if (++bit === 8) { bit = 0; pos++; } } return v; };
+  const build = lens => { const cnt = new Uint16Array(16), offs = new Uint16Array(16), sym = new Uint16Array(lens.length); for (const l of lens) cnt[l]++; cnt[0] = 0; for (let i = 1; i < 16; i++) offs[i] = offs[i - 1] + cnt[i - 1]; lens.forEach((l, i) => { if (l) sym[offs[l]++] = i; }); return { cnt, sym }; };
+  const dec = t => { let code = 0, first = 0, idx = 0; for (let l = 1; l < 16; l++) { code |= bits(1); const c = t.cnt[l]; if (code - c < first) return t.sym[idx + code - first]; idx += c; first += c; first <<= 1; code <<= 1; } throw new Error('bad code'); };
+  const LB = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258], LE = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+  const DB = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577], DE = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+  let last;
+  do {
+    last = bits(1); const type = bits(2);
+    if (type === 0) { if (bit) { bit = 0; pos++; } const len = src[pos] | (src[pos + 1] << 8); pos += 4; need(len); out.set(src.subarray(pos, pos + len), n); n += len; pos += len; continue; }
+    let lt, dt;
+    if (type === 1) { const l = new Array(288).fill(8, 0, 144).fill(9, 144, 256).fill(7, 256, 280).fill(8, 280, 288); lt = build(l); dt = build(new Array(30).fill(5)); }
+    else {
+      const hl = bits(5) + 257, hd = bits(5) + 1, hc = bits(4) + 4, ORD = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15], cl = new Array(19).fill(0);
+      for (let i = 0; i < hc; i++) cl[ORD[i]] = bits(3);
+      const ct = build(cl), lens = [];
+      while (lens.length < hl + hd) { const s2 = dec(ct); if (s2 < 16) lens.push(s2); else if (s2 === 16) { const p = lens[lens.length - 1]; for (let r = bits(2) + 3; r--;) lens.push(p); } else for (let r = s2 === 17 ? bits(3) + 3 : bits(7) + 11; r--;) lens.push(0); }
+      lt = build(lens.slice(0, hl)); dt = build(lens.slice(hl));
+    }
+    for (;;) {
+      const s2 = dec(lt); if (s2 === 256) break;
+      if (s2 < 256) { need(1); out[n++] = s2; continue; }
+      const len = LB[s2 - 257] + bits(LE[s2 - 257]), ds = dec(dt), dist = DB[ds] + bits(DE[ds]);
+      need(len); for (let i = 0; i < len; i++, n++) out[n] = out[n - dist];
+    }
+  } while (!last);
+  return out.subarray(0, n);
 }
 // 切換空間
 function switchSpace(i, origin) {
