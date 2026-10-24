@@ -917,9 +917,9 @@ Object.assign(EXTRA_PRODUCTS, {
   cabDresser: { ...CAB, name: '斗櫃', w: 80, d: 45, h: 115, color: '#a87a4f', color2: '#7a5236', c2: '腳的顏色', build: buildDresser, opts: [HANDLE_OPT], def: { handle: 'knob' } },
   cabLow: { ...CAB, name: '收納矮櫃', w: 150, d: 45, h: 80, color: '#ece9e3', color2: '#c5a35a', build: buildLowCab, opts: [HANDLE_OPT], def: { handle: 'bar' } },
 });
-/* ---------- 示意人（評估動線）：Q 版土地公，總高 180 公分、身寬約 48，評估動線準 ---------- */
+/* ---------- 示意人（評估動線）：Q 版土地公，預設 178 公分、75 公斤（身寬約 46），評估動線準 ---------- */
 function buildPerson(it) {
-  const g = new THREE.Group(), s = (it.h || 180) / 180, walk = it.pose === 'walk';
+  const g = new THREE.Group(), s = (it.h || 178) / 180, walk = it.pose === 'walk';
   const ROBE = mat(it.color || '#b8322a', { roughness: 0.6 }), TRIM = mat(it.color2 || '#E8B73A', { roughness: 0.6 }), SKIN = mat('#f3cfb0', { roughness: 0.65 });
   const BLACK = mat('#1f1f22', { roughness: 0.45 }), WHITE = mat('#fbfaf6', { roughness: 0.9 }), GOLD = mat('#f2c230', { roughness: 0.25, metalness: 0.6 });
   const DARK = mat('#2b211c', { roughness: 0.35 });
@@ -974,9 +974,9 @@ function buildPerson(it) {
   return g;
 }
 Object.assign(EXTRA_PRODUCTS, {
-  person: { sub: '示意人', generic: true, noHit: true, name: '土地公・示意人（180cm）', w: 48, d: 30, h: 180, color: '#b8322a', color2: '#E8B73A', c1: '袍子顏色', c2: '腰帶、衣邊顏色', build: buildPerson,
+  person: { sub: '示意人', generic: true, noHit: true, name: '土地公・示意人（178cm）', w: 46, d: 29, h: 178, color: '#b8322a', color2: '#E8B73A', c1: '袍子顏色', c2: '腰帶、衣邊顏色', build: buildPerson,
     opts: [{ key: 'pose', label: '姿勢', list: [opt('stand', '站立'), opt('walk', '走路')] }], def: { pose: 'stand' } },
-  personWalk: { sub: '示意人', generic: true, noHit: true, name: '土地公・走路（180cm）', w: 48, d: 66, h: 180, color: '#b8322a', color2: '#E8B73A', c1: '袍子顏色', c2: '腰帶、衣邊顏色', build: buildPerson,
+  personWalk: { sub: '示意人', generic: true, noHit: true, name: '土地公・走路（178cm）', w: 46, d: 64, h: 178, color: '#b8322a', color2: '#E8B73A', c1: '袍子顏色', c2: '腰帶、衣邊顏色', build: buildPerson,
     opts: [{ key: 'pose', label: '姿勢', list: [opt('walk', '走路'), opt('stand', '站立')] }], def: { pose: 'walk' } },
 });
 const CHAIR = { sub: '單椅', generic: true };
