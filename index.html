@@ -2708,9 +2708,12 @@ function openArrPop(i) {
 function applyArr(swap) {
   const sp = project.spaces[arrIdx]; if (!sp) return;
   let w = clamp(Math.round(toNum($('#arr-w').value) || sp.room.w), 100, 2000), d = clamp(Math.round(toNum($('#arr-d').value) || sp.room.d), 100, 2000);
-  if (swap) [w, d] = [d, w];
-  if (w === sp.room.w && d === sp.room.d) return;
-  if (swap) sp.room.openings = [];                    // 轉向：原本的門窗位置對不上了，先清掉（之後到房間再設）
+  if (swap) {                                         // 轉 90°（順時針）：整間房連門窗、家具一起轉，方的房間也轉得動
+    [w, d] = [d, w];
+    const NEXT = { N: 'E', E: 'S', S: 'W', W: 'N' };   // 門窗換到下一面牆，離牆角的距離不變
+    for (const op of sp.room.openings || []) op.wall = NEXT[op.wall];
+    for (const it of sp.items || []) { const x = it.x; it.x = -it.z; it.z = x; it.rot = ((it.rot || 0) + 90) % 360; }
+  } else if (w === sp.room.w && d === sp.room.d) return;
   sp.room.w = w; sp.room.d = d; $('#arr-w').value = w; $('#arr-d').value = d;
   const t = snapRoom(arrIdx, sp.pos.x, sp.pos.z); sp.pos = { x: t.x, z: t.z };   // 變大了：不要疊到隔壁
   save(); buildOverview(); renderOverviewPanel();
