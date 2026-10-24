@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610241649">
+<meta name="likai-build" content="202610241651">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -917,9 +917,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241649';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241649';
-import { registerExtras } from './extra-models.js?v=202610241649';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241651';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241651';
+import { registerExtras } from './extra-models.js?v=202610241651';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -1312,7 +1312,7 @@ function zoneBoxes() {
 /* ---------- 視角：3D 鳥瞰／平面／人視角 ---------- */
 let view = 'orbit', viewCover = 0;             // viewCover：畫面下方被抽屜／面板蓋住的高度
 const walk = { col: [], ty: 0, tp: 0, v: 0, av: 0, wq: 0, ring: null, room: -1, on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
-if (location.search.includes("debug")) window.__dbg = { walk, floorAt: (x, y) => floorPt({ clientX: x, clientY: y }), get cam() { return persp; }, get project() { return project; }, get state() { return state; }, addBathFor: i => addBathFor(i), arStats: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); let n0 = 0; root.traverse(o => { if (o.isMesh) n0++; }); const t0 = performance.now(), slim = await mergeForAR(root); let n1 = 0; slim.traverse(o => { if (o.isMesh) n1++; }); const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js"); const a = await new GLTFExporter().parseAsync(root, { binary: true }), r2 = new THREE.Group(); r2.add(slim); const b = await new GLTFExporter().parseAsync(r2, { binary: true }); return [type, n0 + "→" + n1, Math.round(performance.now() - t0) + "ms", Math.round(a.byteLength / 1024) + "KB→" + Math.round(b.byteLength / 1024) + "KB"]; }, usdzTest: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); const t0 = performance.now(), u = await makeUSDZ(root), b = await (await fetch(u)).blob(); return [type, b.size, Math.round(performance.now() - t0) + "ms"]; } };   // 除錯用
+if (location.search.includes("debug")) window.__dbg = { walk, beam: () => fxPillar(state.items.find(isPerson)), floorAt: (x, y) => floorPt({ clientX: x, clientY: y }), get cam() { return persp; }, get project() { return project; }, get state() { return state; }, addBathFor: i => addBathFor(i), arStats: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); let n0 = 0; root.traverse(o => { if (o.isMesh) n0++; }); const t0 = performance.now(), slim = await mergeForAR(root); let n1 = 0; slim.traverse(o => { if (o.isMesh) n1++; }); const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js"); const a = await new GLTFExporter().parseAsync(root, { binary: true }), r2 = new THREE.Group(); r2.add(slim); const b = await new GLTFExporter().parseAsync(r2, { binary: true }); return [type, n0 + "→" + n1, Math.round(performance.now() - t0) + "ms", Math.round(a.byteLength / 1024) + "KB→" + Math.round(b.byteLength / 1024) + "KB"]; }, usdzTest: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); const t0 = performance.now(), u = await makeUSDZ(root), b = await (await fetch(u)).blob(); return [type, b.size, Math.round(performance.now() - t0) + "ms"]; } };   // 除錯用
 /* ---------- 座向：project.orient = { face: 朝向的方位角（北0 東90 南180 西270）, side: 大門在平面圖的哪邊（上0 右90 下180 左270） } ---------- */
 const DIR8 = ['北', '東北', '東', '東南', '南', '西南', '西', '西北'];
 const dirName = b => DIR8[Math.round((((b % 360) + 360) % 360) / 45) % 8];
@@ -2229,17 +2229,18 @@ function strollFrame() {
     s.phase += dt * 6.2;
     const sw = Math.sin(s.phase) * 0.5;
     g.traverse(o => { if (o.userData.swing) o.rotation.x = sw * o.userData.swing; });
-  } else {                                                              // 走到了：定點轉一圈、光束罩住、一閃一閃發金光
-    if (!s.spin) { s.spin = { t: 0, base: s.it.rot || 0, fl: 0 }; g.traverse(o => { if (o.userData.swing) o.rotation.x = 0; }); fxPillar(s.it); }   // 光束罩住整個土地公
-    const p = s.spin; p.t += dt; const k = Math.min(1, p.t / 1.2), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-    s.it.rot = (p.base + 360 * e) % 360;
+  } else {                                                              // 走到了：先定點轉兩圈、一閃一閃發金光，轉完光束從天而降罩住全身
+    if (!s.spin) { s.spin = { t: 0, base: s.it.rot || 0, fl: 0 }; g.traverse(o => { if (o.userData.swing) o.rotation.x = 0; }); }
+    const p = s.spin; p.t += dt; const k = Math.min(1, p.t / 1.6), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+    s.it.rot = (p.base + 720 * e) % 360;
     const blink = Math.abs(Math.sin(p.t * 11));
     s.halo.scale.setScalar(0.62 + 0.14 * blink); s.halo.material.opacity = 0.45 + 0.55 * blink;
+    if (p.t >= 1.6 && !p.beam) { p.beam = true; fxPillar(s.it); }   // 轉完：光束從天而降
     p.fl += dt; if (p.fl > 0.18) { p.fl = 0; for (let q = 0; q < 7; q++) spark(s.it, 18 + R() * 6, 30 + R() * 120, [30, 12], 0.45, 6 + R() * 4); }
   }
   g.position.set(s.it.x, s.it.elev || 0, s.it.z); g.rotation.y = -s.it.rot * deg;
   s.rt = (s.rt || 0) + dt; if (s.rt > 0.12) { s.rt = 0; refresh(); }   // 選取框跟著走
-  if (s.spin && s.spin.t >= 1.2) {                                      // 轉完：收工
+  if (s.spin && s.spin.t >= 2.5) {                                      // 轉完：收工
     stroll = null; s.it.rot = Math.round(s.spin.base) % 360;
     undoStack.push(s.before); $('#undo').disabled = false;
     makeObj(s.it); refresh(); save();
@@ -2270,19 +2271,25 @@ function fxRing() {             // 腳下一圈金色光環（走路時跟著走
   const m = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
   m.rotation.x = -Math.PI / 2; m.raycast = () => { }; scene.add(m); return m;
 }
-function fxPillar(it) {         // 走到時一道金色光柱從地上往上衝
+function fxPillar(it) {         // 金色光束從天而降：從天花板往下伸到地上，落地時腳邊閃一圈金光
   const c = document.createElement('canvas'); c.width = 4; c.height = 128; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 128, 0, 0);
-  gr.addColorStop(0, 'rgba(255,196,40,1)'); gr.addColorStop(0.55, 'rgba(255,208,70,.7)'); gr.addColorStop(1, 'rgba(255,225,120,0)'); x.fillStyle = gr; x.fillRect(0, 0, 4, 128);
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(30, 36, 240, 32, 1, true), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
-  m.position.copy(furnGroup.localToWorld(new THREE.Vector3(it.x, 120, it.z))); m.raycast = () => { }; scene.add(m);
-  sparks.push({ sp: m, pillar: true, life: 1.7, age: 0, size: 1 });
+  gr.addColorStop(0, 'rgba(255,196,40,1)'); gr.addColorStop(0.5, 'rgba(255,208,70,.8)'); gr.addColorStop(1, 'rgba(255,230,140,.25)'); x.fillStyle = gr; x.fillRect(0, 0, 4, 128);
+  const top = (state.room.h || 280) - 5, geo = new THREE.CylinderGeometry(28, 34, top, 32, 1, true); geo.translate(0, -top / 2, 0);   // 原點在光束頂端，往下長
+  const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+  m.position.copy(furnGroup.localToWorld(new THREE.Vector3(it.x, top, it.z))); m.scale.y = 0.001; m.raycast = () => { }; scene.add(m);
+  sparks.push({ sp: m, pillar: true, life: 2.1, age: 0, size: 1, it, landed: false });
 }
 function sparkFrame() {
   const now = performance.now(), dt = Math.min(0.05, (now - (sparkLast || now)) / 1000); sparkLast = now;
   for (let i = sparks.length - 1; i >= 0; i--) {
     const p = sparks[i]; p.age += dt; const k = p.age / p.life;
     if (k >= 1) { scene.remove(p.sp); if (p.pillar) p.sp.material.map.dispose(); p.sp.material.dispose(); sparks.splice(i, 1); continue; }
-    if (p.pillar) { p.sp.material.opacity = k < 0.15 ? k / 0.15 : (1 - k) / 0.85; p.sp.scale.set(1 + k * 0.25, 0.4 + Math.min(1, k * 3) * 0.6, 1 + k * 0.25); p.sp.rotation.y += dt; continue; }
+    if (p.pillar) {
+      const drop = Math.min(1, p.age / 0.35);                                  // 0.35 秒從天花板落到地上
+      p.sp.scale.y = Math.max(0.001, 1 - Math.pow(1 - drop, 3));
+      if (drop >= 1 && !p.landed) { p.landed = true; for (let q = 0; q < 24; q++) spark(p.it, 20 + Math.random() * 10, 3 + Math.random() * 12, [70 + Math.random() * 50, 20 + Math.random() * 30], 0.6 + Math.random() * 0.3, 8 + Math.random() * 6); }
+      p.sp.material.opacity = k < 0.75 ? 1 : (1 - k) / 0.25; p.sp.rotation.y += dt * 1.5; continue;
+    }
     p.sp.position.addScaledVector(p.v, dt); p.sp.material.opacity = 1 - k; p.sp.scale.setScalar(p.size * (1 - k * 0.4) * (0.85 + 0.15 * Math.sin(p.age * 18)));
   }
   if (!sparks.length) sparkLast = 0;
