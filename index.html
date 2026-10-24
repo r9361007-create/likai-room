@@ -787,7 +787,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
         <div class="setup-head"><div><b id="ar-title">用相機擺擺看</b><div class="hint">家具會以 1:1 實際大小出現在家裡</div></div><button class="x" id="ar-x" aria-label="關閉">×</button></div>
         <div class="ar-body">
           <div class="ar-warn" id="ar-warn" hidden></div>
-          <model-viewer id="mv" loading="eager" reveal="auto" ar ar-modes="webxr quick-look scene-viewer" ar-scale="fixed" ar-placement="floor" camera-controls touch-action="pan-y" shadow-intensity="1" exposure="1.1" interaction-prompt="none">
+          <model-viewer id="mv" loading="eager" reveal="auto" ar ar-modes="webxr quick-look scene-viewer" ar-scale="fixed" ar-placement="floor" camera-controls touch-action="pan-y" shadow-intensity="0.8" shadow-softness="0.6" exposure="1.1" interaction-prompt="none">
             <button slot="ar-button" hidden></button>
           </model-viewer>
           <p class="ar-size" id="ar-msg"></p>
@@ -1226,7 +1226,7 @@ function zoneBoxes() {
 /* ---------- 視角：3D 鳥瞰／平面／人視角 ---------- */
 let view = 'orbit', viewCover = 0;             // viewCover：畫面下方被抽屜／面板蓋住的高度
 const walk = { col: [], ty: 0, tp: 0, v: 0, av: 0, wq: 0, ring: null, room: -1, on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
-if (location.search.includes("debug")) window.__dbg = { walk, get cam() { return persp; }, get project() { return project; }, get state() { return state; }, addBathFor: i => addBathFor(i), usdzTest: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); const t0 = performance.now(), u = await makeUSDZ(root), b = await (await fetch(u)).blob(); return [type, b.size, Math.round(performance.now() - t0) + "ms"]; } };   // 除錯用
+if (location.search.includes("debug")) window.__dbg = { walk, get cam() { return persp; }, get project() { return project; }, get state() { return state; }, addBathFor: i => addBathFor(i), arStats: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); let n0 = 0; root.traverse(o => { if (o.isMesh) n0++; }); const t0 = performance.now(), slim = await mergeForAR(root); let n1 = 0; slim.traverse(o => { if (o.isMesh) n1++; }); const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js"); const a = await new GLTFExporter().parseAsync(root, { binary: true }), r2 = new THREE.Group(); r2.add(slim); const b = await new GLTFExporter().parseAsync(r2, { binary: true }); return [type, n0 + "→" + n1, Math.round(performance.now() - t0) + "ms", Math.round(a.byteLength / 1024) + "KB→" + Math.round(b.byteLength / 1024) + "KB"]; }, usdzTest: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); const t0 = performance.now(), u = await makeUSDZ(root), b = await (await fetch(u)).blob(); return [type, b.size, Math.round(performance.now() - t0) + "ms"]; } };   // 除錯用
 /* ---------- 座向：project.orient = { face: 朝向的方位角（北0 東90 南180 西270）, side: 大門在平面圖的哪邊（上0 右90 下180 左270） } ---------- */
 const DIR8 = ['北', '東北', '東', '東南', '南', '西南', '西', '西北'];
 const dirName = b => DIR8[Math.round((((b % 360) + 360) % 360) / 45) % 8];
@@ -1789,6 +1789,32 @@ function plainMats(root) {
     o.material = Array.isArray(o.material) ? o.material.map(conv) : conv(o.material);
   });
 }
+// 同一種材質的零件合併成一塊：手機 AR 要畫的東西從幾百個變成十幾個
+async function mergeForAR(root) {
+  const { mergeGeometries } = await import('three/addons/utils/BufferGeometryUtils.js');
+  root.updateMatrixWorld(true);
+  const groups = new Map(), inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), m = new THREE.Matrix4();
+  root.traverse(o => {
+    if (!o.isMesh || !o.visible || Array.isArray(o.material) || !o.geometry || !o.geometry.attributes.position) return;
+    const mt = o.material, key = mt.uuid;
+    const g = o.geometry.clone();                       // 保留共用頂點（不攤平），檔案才不會變大
+    for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+    if (!g.attributes.normal) g.computeVertexNormals();
+    if (!g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+    g.morphAttributes = {}; g.clearGroups();
+    if (!g.index) { const n = g.attributes.position.count, idx = new (n > 65535 ? Uint32Array : Uint16Array)(n); for (let i = 0; i < n; i++) idx[i] = i; g.setIndex(new THREE.BufferAttribute(idx, 1)); }
+    m.multiplyMatrices(inv, o.matrixWorld); g.applyMatrix4(m);
+    if (m.determinant() < 0) { const a = g.index.array; for (let v = 0; v + 2 < a.length; v += 3) { const t = a[v + 1]; a[v + 1] = a[v + 2]; a[v + 2] = t; } }   // 鏡像的零件：三角形反過來，不然會破面
+    if (!groups.has(key)) groups.set(key, { mt, geos: [] }); groups.get(key).geos.push(g);
+  });
+  const out = new THREE.Group();
+  for (const { mt, geos } of groups.values()) {
+    const merged = geos.length === 1 ? geos[0] : mergeGeometries(geos, false);
+    if (!merged) { for (const g of geos) out.add(new THREE.Mesh(g, mt)); continue; }   // 合不起來就照原樣放
+    out.add(new THREE.Mesh(merged, mt));
+  }
+  return out;
+}
 // 整組 AR：顯示中的家具照房間裡的相對位置一起帶進去（牆上的窗簾、掛畫、吊燈不帶）
 const AR_SKIP = T => T.ceil || T.sub === '窗簾' || T.sub === '掛畫';
 // 先把模型準備好放進 model-viewer：按 AR 時就能一鍵直接開相機
@@ -1816,6 +1842,7 @@ function prepareAR(list, all) {
     set.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(set), c = bb.getCenter(new THREE.Vector3()), size = bb.getSize(new THREE.Vector3());
     if (all) set.position.set(-c.x, 0, -c.z);                   // 整組：以整組的中心當原點，放在地上
     set.scale.setScalar(0.01); root.add(set); plainMats(root); root.updateMatrixWorld(true);   // 公分 → 公尺
+    try { const slim = await mergeForAR(root); root.clear(); root.add(slim); root.updateMatrixWorld(true); } catch (e) { }   // 零件合併，AR 比較順（失敗就用原本的）
     const glb = await new GLTFExporter().parseAsync(root, { binary: true });
     const mv = $('#mv'), url = URL.createObjectURL(new Blob([glb], { type: 'model/gltf-binary' }));
     if (arCache.key !== key) { URL.revokeObjectURL(url); throw new Error('stale'); }   // 準備途中又換了目標
@@ -1845,8 +1872,8 @@ function prewarmAR() {
   clearTimeout(warmT);
   warmT = setTimeout(() => {
     const run = () => { if (overview || drag || walk.on) return; const all = showMode && !cur(), list = arList(all); if (list.length) prepareAR(list, all).catch(() => { }); };
-    if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 2500 }); else run();
-  }, 1400);
+    if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 800 }); else run();
+  }, 600);                                             // 模型合併後準備很快：早一點準備，按 AR 時多半已經好了
 }
 function arSizeText(list, all, size) {
   const it = list[0]; return all ? `整組 ${list.length} 件・範圍約 寬 ${Math.round(size.x)} × 深 ${Math.round(size.z)} 公分` : `實際尺寸 寬 ${it.w} × 深 ${it.d} × 高 ${it.h} 公分`;
