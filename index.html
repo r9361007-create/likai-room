@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610241653">
+<meta name="likai-build" content="202610241654">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -917,9 +917,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241653';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241653';
-import { registerExtras } from './extra-models.js?v=202610241653';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241654';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241654';
+import { registerExtras } from './extra-models.js?v=202610241654';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -2229,8 +2229,8 @@ function strollFrame() {
     s.phase += dt * 6.2;
     const sw = Math.sin(s.phase) * 0.5;
     g.traverse(o => { if (o.userData.swing) o.rotation.x = sw * o.userData.swing; });
-  } else {                                                              // 走到了：金色光束從天而降罩住全身，接著定點轉三圈、一閃一閃發金光
-    if (!s.spin) { s.spin = { t: 0, base: s.it.rot || 0, fl: 0 }; g.traverse(o => { if (o.userData.swing) o.rotation.x = 0; }); fxPillar(s.it); }   // 先光束從天而降
+  } else {                                                              // 走到了：金色光束從腳下往上發射罩住全身，接著定點轉三圈、一閃一閃發金光
+    if (!s.spin) { s.spin = { t: 0, base: s.it.rot || 0, fl: 0 }; g.traverse(o => { if (o.userData.swing) o.rotation.x = 0; }); fxPillar(s.it); }   // 先光束往上發射
     const p = s.spin; p.t += dt; const k = Math.min(1, Math.max(0, p.t - 0.45) / 2.1), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
     s.it.rot = (p.base + 1080 * e) % 360;
     const blink = Math.abs(Math.sin(p.t * 11));
@@ -2270,12 +2270,12 @@ function fxRing() {             // 腳下一圈金色光環（走路時跟著走
   const m = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
   m.rotation.x = -Math.PI / 2; m.raycast = () => { }; scene.add(m); return m;
 }
-function fxPillar(it) {         // 金色光束從天而降：從天花板往下伸到地上，落地時腳邊閃一圈金光
+function fxPillar(it) {         // 金色光束從腳下往上發射到天花板，發射時腳邊閃一圈金光
   const c = document.createElement('canvas'); c.width = 4; c.height = 128; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 128, 0, 0);
   gr.addColorStop(0, 'rgba(255,196,40,1)'); gr.addColorStop(0.5, 'rgba(255,208,70,.8)'); gr.addColorStop(1, 'rgba(255,230,140,.25)'); x.fillStyle = gr; x.fillRect(0, 0, 4, 128);
-  const top = (state.room.h || 280) - 5, geo = new THREE.CylinderGeometry(28, 34, top, 32, 1, true); geo.translate(0, -top / 2, 0);   // 原點在光束頂端，往下長
+  const top = (state.room.h || 280) - 5, geo = new THREE.CylinderGeometry(28, 34, top, 32, 1, true); geo.translate(0, top / 2, 0);   // 原點在光束底部（地上），往上長
   const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
-  m.position.copy(furnGroup.localToWorld(new THREE.Vector3(it.x, top, it.z))); m.scale.y = 0.001; m.raycast = () => { }; scene.add(m);
+  m.position.copy(furnGroup.localToWorld(new THREE.Vector3(it.x, 0, it.z))); m.scale.y = 0.001; m.raycast = () => { }; scene.add(m);
   sparks.push({ sp: m, pillar: true, life: 3, age: 0, size: 1, it, landed: false });
 }
 function sparkFrame() {
@@ -2284,9 +2284,9 @@ function sparkFrame() {
     const p = sparks[i]; p.age += dt; const k = p.age / p.life;
     if (k >= 1) { scene.remove(p.sp); if (p.pillar) p.sp.material.map.dispose(); p.sp.material.dispose(); sparks.splice(i, 1); continue; }
     if (p.pillar) {
-      const drop = Math.min(1, p.age / 0.35);                                  // 0.35 秒從天花板落到地上
+      const drop = Math.min(1, p.age / 0.35);                                  // 0.35 秒從地上衝到天花板
       p.sp.scale.y = Math.max(0.001, 1 - Math.pow(1 - drop, 3));
-      if (drop >= 1 && !p.landed) { p.landed = true; for (let q = 0; q < 24; q++) spark(p.it, 20 + Math.random() * 10, 3 + Math.random() * 12, [70 + Math.random() * 50, 20 + Math.random() * 30], 0.6 + Math.random() * 0.3, 8 + Math.random() * 6); }
+      if (!p.landed) { p.landed = true; for (let q = 0; q < 24; q++) spark(p.it, 20 + Math.random() * 10, 3 + Math.random() * 12, [70 + Math.random() * 50, 20 + Math.random() * 30], 0.6 + Math.random() * 0.3, 8 + Math.random() * 6); }
       p.sp.material.opacity = Math.min(1, (p.life - p.age) / 0.4); p.sp.rotation.y += dt * 1.5; continue;   // 最後 0.4 秒淡掉
     }
     p.sp.position.addScaledVector(p.v, dt); p.sp.material.opacity = 1 - k; p.sp.scale.setScalar(p.size * (1 - k * 0.4) * (0.85 + 0.15 * Math.sin(p.age * 18)));
