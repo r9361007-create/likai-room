@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610241340">
+<meta name="likai-build" content="202610241342">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -377,6 +377,14 @@ body.show-mode .app{grid-template-columns:minmax(0,1fr);grid-template-rows:minma
 body.show-mode #vtop{display:none}
 .show-exit{position:absolute;top:14px;right:14px;z-index:6;border:0;border-radius:999px;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:8px 16px;font-size:13px;color:var(--muted);box-shadow:0 6px 18px rgba(0,67,106,.12)}
 body.show-locked .show-exit{display:none}
+.show-tools{position:absolute;top:14px;right:118px;z-index:6;display:flex;gap:6px}
+body.show-locked .show-tools{right:14px}
+.show-tools button{border:0;border-radius:999px;background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:8px 14px;font-size:13px;font-weight:600;color:var(--brand);box-shadow:0 6px 18px rgba(0,67,106,.12)}
+.show-tools #show-link{background:var(--brand);color:#fff}
+.show-linkpop{position:absolute;top:58px;right:14px;z-index:8;width:min(280px,calc(100% - 28px));background:var(--panel);border-radius:16px;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:8px}
+.show-linkpop[hidden]{display:none}
+.show-linkpop b{font-size:15px;color:var(--brand)}
+.show-linkpop p{margin:0;font-size:12px;color:var(--muted)}
 .show-spaces{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:6;display:flex;gap:6px;padding:6px;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:999px;box-shadow:0 10px 30px rgba(0,67,106,.16);max-width:calc(100% - 32px);overflow-x:auto;scrollbar-width:none}
 .show-spaces button{flex:none;border:0;background:none;border-radius:999px;padding:9px 16px;font-size:14px;color:var(--ink)}
 .show-spaces button.on{background:var(--brand);color:#fff;font-weight:600}
@@ -668,6 +676,13 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
     <button class="setupchip" id="setup-chip" hidden>這間還沒設定門窗・點這裡設定 ›</button>
     <div class="show-ui" id="show-ui">
       <button class="show-exit" id="show-exit">結束展示</button>
+      <div class="show-tools"><button id="show-view">看平面圖</button><button id="show-link">網址</button></div>
+      <div class="show-linkpop" id="show-linkpop" hidden>
+        <b>傳網址給客人</b>
+        <p>客人打開網址就能自己看，不用下載 App</p>
+        <button class="btn pri wide" data-v="3d">打開是 3D 立體</button>
+        <button class="btn wide" data-v="top">打開是平面圖</button>
+      </div>
       <div class="show-spaces" id="show-spaces"></div>
       <div class="show-card" id="show-card" hidden>
         <div class="sc-top"><div><b id="show-name"></b><span id="show-size"></span></div><button class="x" id="show-x" aria-label="關閉">×</button></div>
@@ -880,9 +895,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241340';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241340';
-import { registerExtras } from './extra-models.js?v=202610241340';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241342';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241342';
+import { registerExtras } from './extra-models.js?v=202610241342';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -2502,9 +2517,10 @@ function renderShowCard() {
 }
 function enterShow() {
   if (arranging) setArranging(false);
+  setTimeout(syncShowView, 0);
   showMode = true; document.body.classList.add('show-mode'); select(null);
   $('#more-menu').classList.remove('on'); hideFlow();
-  if (view === 'top') setView('orbit'); else setView(view);
+  setView(view);                                   // 保留目前的視角（網址帶 view=top 的客人一打開就是平面圖；畫面上可以切換）
   renderShowSpaces(); renderShowCard(); syncChip(); setTimeout(() => { resize(); fitCamera(); updateViewOffset(); }, 30); prewarmAR();
   if (IN_APP) toast('要用相機看，請點右上角「⋯」→ 用瀏覽器開啟');
   else if (!document.body.classList.contains('show-locked')) toast('展示中：客人點家具可以換顏色、用相機看');
@@ -3360,11 +3376,19 @@ $('#shot').onclick = () => {
   gr.addColorStop(0, '#fbfdff'); gr.addColorStop(0.55, '#eaf1f7'); gr.addColorStop(1, '#d9e4ee'); ox.fillStyle = gr; ox.fillRect(0, 0, out.width, out.height); ox.drawImage(canvas, 0, 0);
   a.href = out.toDataURL('image/png'); a.download = '莉凱空間配置.png'; a.click();
 };
-$('#share').onclick = async () => {
-  const url = location.origin + location.pathname + '?show=1#p=' + encode();   // 客人打開直接是展示畫面
+// 給客人的網址：打開直接是展示畫面；top＝打開就是平面圖
+async function shareLink(top) {
+  const url = location.origin + location.pathname + '?show=1' + (top ? '&view=top' : '') + '#p=' + encode();
   if (navigator.share && matchMedia('(pointer:coarse)').matches) { try { await navigator.share({ title: '莉凱家俱・空間配置', url }); return; } catch (e) { } }
-  try { await navigator.clipboard.writeText(url); toast('已複製給客人的連結，貼到 LINE 傳給他'); } catch (e) { prompt('複製這個連結分享：', url); }
-};
+  try { await navigator.clipboard.writeText(url); toast(top ? '已複製「平面圖」網址，貼到 LINE 傳給客人' : '已複製給客人的網址，貼到 LINE 傳給他'); } catch (e) { prompt('複製這個網址分享：', url); }
+}
+$('#share').onclick = () => shareLink(false);
+// 展示畫面：「網址」按鈕（選 3D 或平面圖）、「看平面圖／看 3D」切換
+$('#show-link').onclick = e => { e.stopPropagation(); $('#show-linkpop').hidden = !$('#show-linkpop').hidden; };
+$('#show-linkpop').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; $('#show-linkpop').hidden = true; shareLink(b.dataset.v === 'top'); });
+document.addEventListener('pointerdown', e => { if (!e.target.closest('#show-linkpop,#show-link')) $('#show-linkpop').hidden = true; });
+function syncShowView() { $('#show-view').textContent = view === 'top' ? '看 3D' : '看平面圖'; }
+$('#show-view').onclick = () => { setView(view === 'top' ? 'orbit' : 'top'); syncShowView(); };
 addEventListener('keydown', e => {
   if (e.target.matches('input,select')) return;
   if ($('#quick').classList.contains('on') || $('#style').classList.contains('on') || $('#ar').classList.contains('on') || $('#home').classList.contains('on')) return;
