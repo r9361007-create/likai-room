@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610241511">
+<meta name="likai-build" content="202610241649">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -917,9 +917,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241511';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241511';
-import { registerExtras } from './extra-models.js?v=202610241511';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241649';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241649';
+import { registerExtras } from './extra-models.js?v=202610241649';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -2229,17 +2229,17 @@ function strollFrame() {
     s.phase += dt * 6.2;
     const sw = Math.sin(s.phase) * 0.5;
     g.traverse(o => { if (o.userData.swing) o.rotation.x = sw * o.userData.swing; });
-  } else {                                                              // 走到了：定點轉兩圈、一閃一閃發金光
-    if (!s.spin) { s.spin = { t: 0, base: s.it.rot || 0, fl: 0 }; g.traverse(o => { if (o.userData.swing) o.rotation.x = 0; }); }
-    const p = s.spin; p.t += dt; const k = Math.min(1, p.t / 1.4), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-    s.it.rot = (p.base + 720 * e) % 360;
+  } else {                                                              // 走到了：定點轉一圈、光束罩住、一閃一閃發金光
+    if (!s.spin) { s.spin = { t: 0, base: s.it.rot || 0, fl: 0 }; g.traverse(o => { if (o.userData.swing) o.rotation.x = 0; }); fxPillar(s.it); }   // 光束罩住整個土地公
+    const p = s.spin; p.t += dt; const k = Math.min(1, p.t / 1.2), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+    s.it.rot = (p.base + 360 * e) % 360;
     const blink = Math.abs(Math.sin(p.t * 11));
     s.halo.scale.setScalar(0.62 + 0.14 * blink); s.halo.material.opacity = 0.45 + 0.55 * blink;
     p.fl += dt; if (p.fl > 0.18) { p.fl = 0; for (let q = 0; q < 7; q++) spark(s.it, 18 + R() * 6, 30 + R() * 120, [30, 12], 0.45, 6 + R() * 4); }
   }
   g.position.set(s.it.x, s.it.elev || 0, s.it.z); g.rotation.y = -s.it.rot * deg;
   s.rt = (s.rt || 0) + dt; if (s.rt > 0.12) { s.rt = 0; refresh(); }   // 選取框跟著走
-  if (s.spin && s.spin.t >= 1.4) {                                      // 轉完：收工
+  if (s.spin && s.spin.t >= 1.2) {                                      // 轉完：收工
     stroll = null; s.it.rot = Math.round(s.spin.base) % 360;
     undoStack.push(s.before); $('#undo').disabled = false;
     makeObj(s.it); refresh(); save();
@@ -2272,17 +2272,17 @@ function fxRing() {             // 腳下一圈金色光環（走路時跟著走
 }
 function fxPillar(it) {         // 走到時一道金色光柱從地上往上衝
   const c = document.createElement('canvas'); c.width = 4; c.height = 128; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 128, 0, 0);
-  gr.addColorStop(0, 'rgba(255,220,90,1)'); gr.addColorStop(0.6, 'rgba(255,230,140,.5)'); gr.addColorStop(1, 'rgba(255,240,180,0)'); x.fillStyle = gr; x.fillRect(0, 0, 4, 128);
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(34, 40, 320, 32, 1, true), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
-  m.position.copy(furnGroup.localToWorld(new THREE.Vector3(it.x, 160, it.z))); m.raycast = () => { }; scene.add(m);
-  sparks.push({ sp: m, pillar: true, life: 1.6, age: 0, size: 1 });
+  gr.addColorStop(0, 'rgba(255,196,40,1)'); gr.addColorStop(0.55, 'rgba(255,208,70,.7)'); gr.addColorStop(1, 'rgba(255,225,120,0)'); x.fillStyle = gr; x.fillRect(0, 0, 4, 128);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(30, 36, 240, 32, 1, true), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+  m.position.copy(furnGroup.localToWorld(new THREE.Vector3(it.x, 120, it.z))); m.raycast = () => { }; scene.add(m);
+  sparks.push({ sp: m, pillar: true, life: 1.7, age: 0, size: 1 });
 }
 function sparkFrame() {
   const now = performance.now(), dt = Math.min(0.05, (now - (sparkLast || now)) / 1000); sparkLast = now;
   for (let i = sparks.length - 1; i >= 0; i--) {
     const p = sparks[i]; p.age += dt; const k = p.age / p.life;
     if (k >= 1) { scene.remove(p.sp); if (p.pillar) p.sp.material.map.dispose(); p.sp.material.dispose(); sparks.splice(i, 1); continue; }
-    if (p.pillar) { p.sp.material.opacity = k < 0.15 ? k / 0.15 : (1 - k) / 0.85; p.sp.scale.set(1 + k * 0.5, 0.4 + Math.min(1, k * 3) * 0.6, 1 + k * 0.5); p.sp.rotation.y += dt; continue; }
+    if (p.pillar) { p.sp.material.opacity = k < 0.15 ? k / 0.15 : (1 - k) / 0.85; p.sp.scale.set(1 + k * 0.25, 0.4 + Math.min(1, k * 3) * 0.6, 1 + k * 0.25); p.sp.rotation.y += dt; continue; }
     p.sp.position.addScaledVector(p.v, dt); p.sp.material.opacity = 1 - k; p.sp.scale.setScalar(p.size * (1 - k * 0.4) * (0.85 + 0.15 * Math.sin(p.age * 18)));
   }
   if (!sparks.length) sparkLast = 0;
