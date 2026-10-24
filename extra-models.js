@@ -918,40 +918,49 @@ Object.assign(EXTRA_PRODUCTS, {
   cabLow: { ...CAB, name: '收納矮櫃', w: 150, d: 45, h: 80, color: '#ece9e3', color2: '#c5a35a', build: buildLowCab, opts: [HANDLE_OPT], def: { handle: 'bar' } },
 });
 /* ---------- 示意人（評估動線）：照身高等比例，預設 180 公分、80 公斤的體型（肩寬約 48、胸厚約 26） ---------- */
-function buildPerson(it) {
+function buildPerson(it) {                 // 莉凱寶寶（Q 版）：大圓頭、短身體；總高度、身體寬度照實際（180 公分、約 48 寬），評估動線還是準的
   const g = new THREE.Group(), s = (it.h || 180) / 180, walk = it.pose === 'walk';
-  const B = mat(it.color, { roughness: 0.6 }), D = mat(it.color2 || '#2f3e4c', { roughness: 0.7 });
-  const cap = (r, len, m) => { const c = new THREE.Mesh(new THREE.CapsuleGeometry(r * s, len * s, 4, 14), m); c.castShadow = true; return c; };
-  const ball = (r, m, sx = 1, sy = 1, sz = 1) => { const b = new THREE.Mesh(new THREE.SphereGeometry(r * s, 20, 14), m); b.scale.set(sx, sy, sz); b.castShadow = true; return b; };
-  // 腿：從髖關節轉（走路時一前一後）
-  for (const [sx, a] of [[-1, walk ? 0.38 : 0], [1, walk ? -0.38 : 0]]) {
-    const hip = new THREE.Group(); hip.position.set(sx * 10 * s, 92 * s, 0); hip.rotation.x = a; g.add(hip);
-    const thigh = cap(8.5, 32, D); thigh.position.y = -22 * s; hip.add(thigh);
-    const shin = cap(6.2, 34, D); shin.position.y = -64 * s; hip.add(shin);
-    const foot = new THREE.Mesh(new THREE.BoxGeometry(10 * s, 7 * s, 26 * s), D); foot.position.set(0, -88.5 * s, 6 * s); foot.castShadow = true; hip.add(foot);
+  const SUIT = mat(it.color, { roughness: 0.7 }), NAVY = mat(it.color2 || '#00436a', { roughness: 0.7 }), SKIN = mat('#f6d6bd', { roughness: 0.65 });
+  const DARK = mat('#2b211c', { roughness: 0.35 }), WHITE = mat('#ffffff', { roughness: 0.3 });
+  const cap = (r, len, m) => { const c = new THREE.Mesh(new THREE.CapsuleGeometry(r * s, len * s, 8, 18), m); c.castShadow = true; return c; };
+  const ball = (r, m, sx = 1, sy = 1, sz = 1, seg = 28) => { const b = new THREE.Mesh(new THREE.SphereGeometry(r * s, seg, (seg * 0.7) | 0), m); b.scale.set(sx, sy, sz); b.castShadow = true; return b; };
+  // 短短的腳＋深藍圓鞋
+  for (const [sx, a] of [[-1, walk ? 0.45 : 0], [1, walk ? -0.45 : 0]]) {
+    const hip = new THREE.Group(); hip.position.set(sx * 11 * s, 42 * s, 0); hip.rotation.x = a; g.add(hip);
+    const leg = cap(9.5, 20, SUIT); leg.position.y = -19 * s; hip.add(leg);
+    const shoe = ball(10, NAVY, 1, 0.7, 1.45); shoe.position.set(0, -35 * s, 4 * s); hip.add(shoe);
   }
-  const pelvis = ball(18, D, 1, 0.62, 0.68); pelvis.position.y = 95 * s; g.add(pelvis);
-  const torso = new THREE.Mesh(new THREE.CylinderGeometry(22 * s, 17.5 * s, 52 * s, 28), B); torso.scale.z = 0.6; torso.position.y = 123 * s; torso.castShadow = true; g.add(torso);
-  const chest = ball(22, B, 1, 0.42, 0.6); chest.position.y = 148 * s; g.add(chest);   // 肩膀圓弧
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(5.8 * s, 6.4 * s, 9 * s, 16), B); neck.position.y = 156 * s; g.add(neck);
-  const head = ball(10.5, B, 0.92, 1.18, 1); head.position.y = 168 * s; g.add(head);
-  const face = ball(6, mat('#f4f1ea', { roughness: 0.5 }), 1, 1.1, 0.45); face.position.set(0, 168 * s, 8.6 * s); g.add(face);   // 臉朝前（看得出正面、側面）
-  // 手臂：從肩膀轉（走路時和腳相反擺動）
-  for (const [sx, a] of [[-1, walk ? -0.42 : 0], [1, walk ? 0.42 : 0]]) {
-    const sh = new THREE.Group(); sh.position.set(sx * 21 * s, 146 * s, 0); sh.rotation.set(a, 0, sx * 0.08); g.add(sh);
-    const up = cap(5, 24, B); up.position.y = -16 * s; sh.add(up);
-    const fore = cap(4.2, 22, B); fore.position.y = -45 * s; sh.add(fore);
-    const hand = ball(4.6, B, 0.8, 1.2, 0.6); hand.position.y = -62 * s; sh.add(hand);
+  // 圓滾滾的身體（黃色連身衣），肚子上有深藍圓口袋和黃色 L
+  const body = ball(24, SUIT, 1, 1.45, 0.78); body.position.y = 78 * s; g.add(body);
+  const pocket = new THREE.Mesh(new THREE.CircleGeometry(9 * s, 28), NAVY); pocket.position.set(0, 74 * s, 18.4 * s); pocket.rotation.x = -0.12; g.add(pocket);
+  box(g, 2.6 * s, 10 * s, 0.6 * s, -2 * s, 75 * s, 18.9 * s, SUIT); box(g, 7 * s, 2.6 * s, 0.6 * s, 0.2 * s, 71 * s, 18.9 * s, SUIT);   // L
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(9 * s, 2.2 * s, 10, 24), NAVY); collar.rotation.x = Math.PI / 2; collar.position.y = 112 * s; g.add(collar);
+  // 大大的頭（頭頂剛好 180）
+  const head = ball(31, SKIN, 1.04, 0.97, 0.95, 36); head.position.y = 150 * s; g.add(head);
+  const tuft = new THREE.Mesh(new THREE.TorusGeometry(4.5 * s, 1.6 * s, 10, 20, Math.PI * 1.4), mat('#5a3d2e', { roughness: 0.8 })); tuft.position.set(1 * s, 180.5 * s, 0); tuft.rotation.set(0, Math.PI / 2, 0.6); g.add(tuft);   // 頭頂一撮捲毛
+  for (const sx of [-1, 1]) {
+    const eye = ball(4.6, DARK, 0.85, 1.15, 0.45, 18); eye.position.set(sx * 10.5 * s, 151 * s, 27.6 * s); g.add(eye);
+    const shine = ball(1.5, WHITE, 1, 1, 0.5, 10); shine.position.set(sx * 10.5 * s + 1.4 * s, 153.2 * s, 29.4 * s); g.add(shine);
+    const shine2 = ball(0.7, WHITE, 1, 1, 0.5, 8); shine2.position.set(sx * 10.5 * s - 1.2 * s, 149.4 * s, 29.4 * s); g.add(shine2);
+    const blush = ball(4.6, new THREE.MeshStandardMaterial({ color: '#f59a98', roughness: 0.8, transparent: true, opacity: 0.7 }), 1.25, 0.7, 0.3, 14); blush.position.set(sx * 17.5 * s, 142.5 * s, 25.5 * s); g.add(blush);
+    const ear = ball(5, SKIN, 0.55, 1, 0.9, 14); ear.position.set(sx * 31.5 * s, 149 * s, 0); g.add(ear);
   }
-  // 地上的範圍：站著約 肩寬×胸厚，走路時前後要多一些
-  const fp = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: it.color2 || '#2f3e4c', transparent: true, opacity: 0.16, depthWrite: false }));
+  const smile = new THREE.Mesh(new THREE.TorusGeometry(4 * s, 0.9 * s, 8, 20, Math.PI), DARK); smile.rotation.z = Math.PI; smile.position.set(0, 141.5 * s, 29.2 * s); g.add(smile);
+  // 短短的手臂（走路時和腳相反擺動）
+  for (const [sx, a] of [[-1, walk ? -0.5 : 0], [1, walk ? 0.5 : 0]]) {
+    const sh = new THREE.Group(); sh.position.set(sx * 21 * s, 100 * s, 0); sh.rotation.set(a, 0, sx * 0.42); g.add(sh);
+    const arm = cap(6.5, 18, SUIT); arm.position.y = -14 * s; sh.add(arm);
+    const hand = ball(6.2, SKIN); hand.position.y = -28 * s; sh.add(hand);
+  }
+  // 地上的範圍：站著約 肩寬×身體厚，走路時前後要多一些
+  const fp = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: '#00436a', transparent: true, opacity: 0.14, depthWrite: false }));
   fp.rotation.x = -Math.PI / 2; fp.position.y = 0.4; fp.scale.set((it.w || 48) / 2 + 4, (walk ? 66 : (it.d || 30)) / 2 + 4, 1); g.add(fp);
   return g;
 }
 Object.assign(EXTRA_PRODUCTS, {
-  person: { sub: '示意人', generic: true, noHit: true, name: '示意人（180cm／80kg）', w: 48, d: 30, h: 180, color: '#9fb2c3', color2: '#3b4b5a', c1: '上半身顏色', c2: '下半身顏色', build: buildPerson,
+  person: { sub: '示意人', generic: true, noHit: true, name: '莉凱寶寶・示意人（180cm）', w: 48, d: 30, h: 180, color: '#F9E573', color2: '#00436a', c1: '衣服顏色', c2: '鞋子、口袋顏色', build: buildPerson,
     opts: [{ key: 'pose', label: '姿勢', list: [opt('stand', '站立'), opt('walk', '走路')] }], def: { pose: 'stand' } },
-  personWalk: { sub: '示意人', generic: true, noHit: true, name: '示意人・走路（180cm／80kg）', w: 48, d: 66, h: 180, color: '#9fb2c3', color2: '#3b4b5a', c1: '上半身顏色', c2: '下半身顏色', build: buildPerson,
+  personWalk: { sub: '示意人', generic: true, noHit: true, name: '莉凱寶寶・走路（180cm）', w: 48, d: 66, h: 180, color: '#F9E573', color2: '#00436a', c1: '衣服顏色', c2: '鞋子、口袋顏色', build: buildPerson,
     opts: [{ key: 'pose', label: '姿勢', list: [opt('walk', '走路'), opt('stand', '站立')] }], def: { pose: 'walk' } },
 });
 const CHAIR = { sub: '單椅', generic: true };
