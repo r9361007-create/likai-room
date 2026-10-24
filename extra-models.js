@@ -917,51 +917,66 @@ Object.assign(EXTRA_PRODUCTS, {
   cabDresser: { ...CAB, name: '斗櫃', w: 80, d: 45, h: 115, color: '#a87a4f', color2: '#7a5236', c2: '腳的顏色', build: buildDresser, opts: [HANDLE_OPT], def: { handle: 'knob' } },
   cabLow: { ...CAB, name: '收納矮櫃', w: 150, d: 45, h: 80, color: '#ece9e3', color2: '#c5a35a', build: buildLowCab, opts: [HANDLE_OPT], def: { handle: 'bar' } },
 });
-/* ---------- 示意人（評估動線）：照身高等比例，預設 180 公分、80 公斤的體型（肩寬約 48、胸厚約 26） ---------- */
-function buildPerson(it) {                 // 莉凱寶寶（Q 版）：大圓頭、短身體、光著手腳只穿黃色連身衣；總高度、身體寬度照實際（180 公分、約 48 寬），評估動線準
+/* ---------- 示意人（評估動線）：Q 版土地公，總高 180 公分、身寬約 48，評估動線準 ---------- */
+function buildPerson(it) {
   const g = new THREE.Group(), s = (it.h || 180) / 180, walk = it.pose === 'walk';
-  const SUIT = mat(it.color, { roughness: 0.7 }), NAVY = mat(it.color2 || '#00436a', { roughness: 0.7 }), SKIN = mat('#f6d6bd', { roughness: 0.65 });
-  const DARK = mat('#2b211c', { roughness: 0.35 }), WHITE = mat('#ffffff', { roughness: 0.3 });
+  const ROBE = mat(it.color || '#b8322a', { roughness: 0.6 }), TRIM = mat(it.color2 || '#E8B73A', { roughness: 0.6 }), SKIN = mat('#f3cfb0', { roughness: 0.65 });
+  const BLACK = mat('#1f1f22', { roughness: 0.45 }), WHITE = mat('#fbfaf6', { roughness: 0.9 }), GOLD = mat('#f2c230', { roughness: 0.25, metalness: 0.6 });
+  const DARK = mat('#2b211c', { roughness: 0.35 });
   const cap = (r, len, m) => { const c = new THREE.Mesh(new THREE.CapsuleGeometry(r * s, len * s, 8, 18), m); c.castShadow = true; return c; };
   const ball = (r, m, sx = 1, sy = 1, sz = 1, seg = 28) => { const b = new THREE.Mesh(new THREE.SphereGeometry(r * s, seg, (seg * 0.7) | 0), m); b.scale.set(sx, sy, sz); b.castShadow = true; return b; };
-  // 短短的腳、光腳丫
-  for (const [sx, a] of [[-1, walk ? 0.45 : 0], [1, walk ? -0.45 : 0]]) {
-    const hip = new THREE.Group(); hip.position.set(sx * 11 * s, 50 * s, 0); hip.rotation.x = a; hip.userData.swing = -sx; g.add(hip);   // swing：真的走路時前後擺
-    const leg = cap(9.5, 26, SKIN); leg.position.y = -23 * s; hip.add(leg);   // 光腳丫
-    const shoe = ball(9.6, SKIN, 1, 0.68, 1.4); shoe.position.set(0, -43.5 * s, 4 * s); hip.add(shoe);
+  const cyl = (rt, rb, h, m, seg = 32) => { const c = new THREE.Mesh(new THREE.CylinderGeometry(rt * s, rb * s, h * s, seg), m); c.castShadow = true; return c; };
+  // 黑布鞋（走路時一前一後從袍子底下露出來）
+  for (const [sx, a] of [[-1, walk ? 0.35 : 0], [1, walk ? -0.35 : 0]]) {
+    const hip = new THREE.Group(); hip.position.set(sx * 9 * s, 40 * s, 0); hip.rotation.x = a; hip.userData.swing = -sx; g.add(hip);   // swing：走路時前後擺
+    const shoe = ball(8, BLACK, 1, 0.6, 1.5); shoe.position.set(0, -35.5 * s, 6 * s); hip.add(shoe);
   }
-  // 圓滾滾的身體（黃色連身衣），肚子上有深藍圓口袋和黃色 L
-  const body = ball(24, SUIT, 1, 1.45, 0.78); body.position.y = 78 * s; g.add(body);
-  const pocket = new THREE.Mesh(new THREE.CircleGeometry(9 * s, 28), NAVY); pocket.position.set(0, 74 * s, 18.4 * s); pocket.rotation.x = -0.12; g.add(pocket);
-  box(g, 2.6 * s, 10 * s, 0.6 * s, -2 * s, 75 * s, 18.9 * s, SUIT); box(g, 7 * s, 2.6 * s, 0.6 * s, 0.2 * s, 71 * s, 18.9 * s, SUIT);   // L
-  const collar = new THREE.Mesh(new THREE.TorusGeometry(9 * s, 2.2 * s, 10, 24), NAVY); collar.rotation.x = Math.PI / 2; collar.position.y = 112 * s; g.add(collar);
-  const neck = cap(10, 8, SKIN); neck.position.y = 118 * s; g.add(neck);   // 脖子：頭和身體連起來
-  // 大大的頭（頭頂剛好 180）
-  const head = ball(31, SKIN, 1.04, 0.97, 0.95, 36); head.position.y = 150 * s; g.add(head);
-  const tuft = new THREE.Mesh(new THREE.TorusGeometry(4.5 * s, 1.6 * s, 10, 20, Math.PI * 1.4), mat('#5a3d2e', { roughness: 0.8 })); tuft.position.set(1 * s, 180.5 * s, 0); tuft.rotation.set(0, Math.PI / 2, 0.6); g.add(tuft);   // 頭頂一撮捲毛
+  // 長袍（上窄下寬）、紅色下擺和腰帶
+  const robe = cyl(17, 25, 92, ROBE); robe.position.y = 50 * s; g.add(robe);
+  const hem = cyl(25.6, 26, 6, TRIM); hem.position.y = 7 * s; g.add(hem);
+  const belt = cyl(20.8, 21.4, 6, TRIM); belt.position.y = 70 * s; g.add(belt);
+  const buckle = ball(4, GOLD, 1.3, 1, 0.5, 16); buckle.position.set(0, 70 * s, 21 * s); g.add(buckle);
+  const shoulders = ball(20, ROBE, 1.15, 0.62, 0.95); shoulders.position.y = 96 * s; g.add(shoulders);
+  // 頭
+  const head = ball(27, SKIN, 1.03, 1, 0.97, 36); head.position.y = 134 * s; g.add(head);
+  // 員外帽：黑色圓帽＋帽頂、後面兩片帽翅
+  const hat = cyl(24, 25, 13, BLACK); hat.position.y = 163 * s; g.add(hat);
+  const top = ball(23, BLACK, 1, 0.42, 1); top.position.y = 169.5 * s; g.add(top);
+  const gem = ball(3.2, GOLD, 1, 1, 0.6, 14); gem.position.set(0, 164 * s, 25 * s); g.add(gem);
   for (const sx of [-1, 1]) {
-    const eye = ball(4.6, DARK, 0.85, 1.15, 0.45, 18); eye.position.set(sx * 10.5 * s, 151 * s, 27.6 * s); g.add(eye);
-    const shine = ball(1.5, WHITE, 1, 1, 0.5, 10); shine.position.set(sx * 10.5 * s + 1.4 * s, 153.2 * s, 29.4 * s); g.add(shine);
-    const shine2 = ball(0.7, WHITE, 1, 1, 0.5, 8); shine2.position.set(sx * 10.5 * s - 1.2 * s, 149.4 * s, 29.4 * s); g.add(shine2);
-    const blush = ball(4.6, new THREE.MeshStandardMaterial({ color: '#f59a98', roughness: 0.8, transparent: true, opacity: 0.7 }), 1.25, 0.7, 0.3, 14); blush.position.set(sx * 17.5 * s, 142.5 * s, 25.5 * s); g.add(blush);
-    const ear = ball(5, SKIN, 0.55, 1, 0.9, 14); ear.position.set(sx * 31.5 * s, 149 * s, 0); g.add(ear);
+    const wing = ball(9, BLACK, 1, 0.55, 0.18, 18); wing.position.set(sx * 27 * s, 166 * s, -12 * s); wing.rotation.z = sx * 0.25; g.add(wing);
+    // 笑瞇瞇的眼睛（彎彎的）、白眉毛、臉頰
+    const eye = new THREE.Mesh(new THREE.TorusGeometry(3.6 * s, 1 * s, 8, 18, Math.PI), DARK); eye.position.set(sx * 9.5 * s, 138 * s, 25.2 * s); g.add(eye);
+    const brow = cap(2.4, 8, WHITE); brow.rotation.z = Math.PI / 2 + sx * 0.35; brow.position.set(sx * 10 * s, 146 * s, 23.5 * s); g.add(brow);
+    const blush = ball(4.2, new THREE.MeshStandardMaterial({ color: '#f59a98', roughness: 0.8, transparent: true, opacity: 0.6 }), 1.25, 0.7, 0.3, 14); blush.position.set(sx * 16 * s, 130 * s, 22.5 * s); g.add(blush);
+    const ear = ball(5, SKIN, 0.55, 1, 0.9, 14); ear.position.set(sx * 27.5 * s, 134 * s, 0); g.add(ear);
+    const mus = cap(3, 9, WHITE); mus.rotation.z = Math.PI / 2 - sx * 0.45; mus.position.set(sx * 6.5 * s, 126.5 * s, 25.5 * s); g.add(mus);   // 八字鬍
   }
-  const smile = new THREE.Mesh(new THREE.TorusGeometry(4 * s, 0.9 * s, 8, 20, Math.PI), DARK); smile.rotation.z = Math.PI; smile.position.set(0, 141.5 * s, 29.2 * s); g.add(smile);
-  // 短短的手臂（走路時和腳相反擺動）
-  for (const [sx, a] of [[-1, walk ? -0.5 : 0], [1, walk ? 0.5 : 0]]) {
-    const sh = new THREE.Group(); sh.position.set(sx * 17 * s, 101 * s, 0); sh.rotation.set(a, 0, sx * 0.36); sh.userData.swing = sx; g.add(sh);
-    const arm = cap(6.5, 18, SKIN); arm.position.y = -14 * s; sh.add(arm);   // 光著手臂
-    const hand = ball(6.2, SKIN); hand.position.y = -28 * s; sh.add(hand);
+  const nose = ball(3.6, SKIN, 1.1, 0.9, 0.8, 16); nose.position.set(0, 131 * s, 26.6 * s); g.add(nose);
+  const beard = ball(16, WHITE, 1.05, 1.25, 0.55, 28); beard.position.set(0, 111 * s, 16 * s); g.add(beard);   // 大白鬍子
+  // 袖子＋手：兩手往前彎，在胸前捧著金元寶（走路時手不擺，元寶捧得穩穩的）
+  for (const sx of [-1, 1]) {
+    const sh = new THREE.Group(); sh.position.set(sx * 21 * s, 97 * s, 0); sh.rotation.set(-0.8, 0, -sx * 0.38); g.add(sh);
+    const sleeve = cap(8, 16, ROBE); sleeve.position.y = -12 * s; sh.add(sleeve);
+    const cuff = cyl(8.8, 8.8, 4, TRIM); cuff.position.y = -24 * s; sh.add(cuff);
+    const hand = ball(6, SKIN, 1.1, 0.8, 1.1); hand.position.y = -30 * s; sh.add(hand);
   }
+  const ING = mat('#ffcf33', { roughness: 0.18, metalness: 0.75, emissive: '#ffb000', emissiveIntensity: 0.4 });
+  const ingot = new THREE.Group(); ingot.position.set(0, 80 * s, 33 * s); g.add(ingot);
+  const base = ball(11, ING, 1.6, 0.55, 1, 28); ingot.add(base);                                    // 船形底座
+  for (const ex of [-1, 1]) { const tip = ball(5.5, ING, 1.3, 1, 1, 18); tip.position.set(ex * 14 * s, 4 * s, 0); ingot.add(tip); }   // 兩頭翹起來
+  const dome = ball(6.8, ING, 1, 1.05, 1, 20); dome.position.y = 6 * s; ingot.add(dome);             // 中間鼓起來
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(19 * s, 20, 14), new THREE.MeshBasicMaterial({ color: '#ffd84a', transparent: true, opacity: 0.18, depthWrite: false }));
+  glow.scale.set(1.3, 0.85, 1); glow.position.y = 3 * s; ingot.add(glow);                           // 一圈淡淡的金光
   // 地上的範圍：站著約 肩寬×身體厚，走路時前後要多一些
   const fp = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: '#00436a', transparent: true, opacity: 0.14, depthWrite: false }));
   fp.rotation.x = -Math.PI / 2; fp.position.y = 0.4; fp.scale.set((it.w || 48) / 2 + 4, (walk ? 66 : (it.d || 30)) / 2 + 4, 1); g.add(fp);
   return g;
 }
 Object.assign(EXTRA_PRODUCTS, {
-  person: { sub: '示意人', generic: true, noHit: true, name: '莉凱寶寶・示意人（180cm）', w: 48, d: 30, h: 180, color: '#F9E573', color2: '#00436a', c1: '衣服顏色', c2: '鞋子、口袋顏色', build: buildPerson,
+  person: { sub: '示意人', generic: true, noHit: true, name: '土地公・示意人（180cm）', w: 48, d: 30, h: 180, color: '#b8322a', color2: '#E8B73A', c1: '袍子顏色', c2: '腰帶、衣邊顏色', build: buildPerson,
     opts: [{ key: 'pose', label: '姿勢', list: [opt('stand', '站立'), opt('walk', '走路')] }], def: { pose: 'stand' } },
-  personWalk: { sub: '示意人', generic: true, noHit: true, name: '莉凱寶寶・走路（180cm）', w: 48, d: 66, h: 180, color: '#F9E573', color2: '#00436a', c1: '衣服顏色', c2: '鞋子、口袋顏色', build: buildPerson,
+  personWalk: { sub: '示意人', generic: true, noHit: true, name: '土地公・走路（180cm）', w: 48, d: 66, h: 180, color: '#b8322a', color2: '#E8B73A', c1: '袍子顏色', c2: '腰帶、衣邊顏色', build: buildPerson,
     opts: [{ key: 'pose', label: '姿勢', list: [opt('walk', '走路'), opt('stand', '站立')] }], def: { pose: 'walk' } },
 });
 const CHAIR = { sub: '單椅', generic: true };

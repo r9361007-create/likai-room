@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610241453">
+<meta name="likai-build" content="202610241503">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -685,7 +685,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <span class="cp-dial" id="cp-dial"><i data-d="0">北</i><i data-d="90" class="sun am">東</i><i data-d="180">南</i><i data-d="270" class="sun pm">西</i><b class="cp-needle" id="cp-needle"></b></span>
       <span class="cp-label" id="cp-label">設定座向</span>
     </button>
-    <div class="stroll-chip" id="stroll-chip" hidden>點地板，莉凱寶寶就會走過去<button id="stroll-done">完成</button></div>
+    <div class="stroll-chip" id="stroll-chip" hidden>點地板，土地公就會走過去<button id="stroll-done">完成</button></div>
     <button class="setupchip" id="setup-chip" hidden>這間還沒設定門窗・點這裡設定 ›</button>
     <div class="show-ui" id="show-ui">
       <button class="show-exit" id="show-exit">結束展示</button>
@@ -917,9 +917,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241453';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241453';
-import { registerExtras } from './extra-models.js?v=202610241453';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241503';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241503';
+import { registerExtras } from './extra-models.js?v=202610241503';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -1312,7 +1312,7 @@ function zoneBoxes() {
 /* ---------- 視角：3D 鳥瞰／平面／人視角 ---------- */
 let view = 'orbit', viewCover = 0;             // viewCover：畫面下方被抽屜／面板蓋住的高度
 const walk = { col: [], ty: 0, tp: 0, v: 0, av: 0, wq: 0, ring: null, room: -1, on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
-if (location.search.includes("debug")) window.__dbg = { walk, get cam() { return persp; }, get project() { return project; }, get state() { return state; }, addBathFor: i => addBathFor(i), arStats: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); let n0 = 0; root.traverse(o => { if (o.isMesh) n0++; }); const t0 = performance.now(), slim = await mergeForAR(root); let n1 = 0; slim.traverse(o => { if (o.isMesh) n1++; }); const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js"); const a = await new GLTFExporter().parseAsync(root, { binary: true }), r2 = new THREE.Group(); r2.add(slim); const b = await new GLTFExporter().parseAsync(r2, { binary: true }); return [type, n0 + "→" + n1, Math.round(performance.now() - t0) + "ms", Math.round(a.byteLength / 1024) + "KB→" + Math.round(b.byteLength / 1024) + "KB"]; }, usdzTest: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); const t0 = performance.now(), u = await makeUSDZ(root), b = await (await fetch(u)).blob(); return [type, b.size, Math.round(performance.now() - t0) + "ms"]; } };   // 除錯用
+if (location.search.includes("debug")) window.__dbg = { walk, floorAt: (x, y) => floorPt({ clientX: x, clientY: y }), get cam() { return persp; }, get project() { return project; }, get state() { return state; }, addBathFor: i => addBathFor(i), arStats: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); let n0 = 0; root.traverse(o => { if (o.isMesh) n0++; }); const t0 = performance.now(), slim = await mergeForAR(root); let n1 = 0; slim.traverse(o => { if (o.isMesh) n1++; }); const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js"); const a = await new GLTFExporter().parseAsync(root, { binary: true }), r2 = new THREE.Group(); r2.add(slim); const b = await new GLTFExporter().parseAsync(r2, { binary: true }); return [type, n0 + "→" + n1, Math.round(performance.now() - t0) + "ms", Math.round(a.byteLength / 1024) + "KB→" + Math.round(b.byteLength / 1024) + "KB"]; }, usdzTest: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); const t0 = performance.now(), u = await makeUSDZ(root), b = await (await fetch(u)).blob(); return [type, b.size, Math.round(performance.now() - t0) + "ms"]; } };   // 除錯用
 /* ---------- 座向：project.orient = { face: 朝向的方位角（北0 東90 南180 西270）, side: 大門在平面圖的哪邊（上0 右90 下180 左270） } ---------- */
 const DIR8 = ['北', '東北', '東', '東南', '南', '西南', '西', '西北'];
 const dirName = b => DIR8[Math.round((((b % 360) + 360) % 360) / 45) % 8];
@@ -2131,13 +2131,13 @@ canvas.addEventListener('pointerup', e => {
   gyro.lastX = null;
   if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) {
     if (gyro.on) walkTo(floorPt(e));
-    else if (isPerson(cur()) && !showMode) strollTo(cur(), floorPt(e));   // 選著莉凱寶寶：點地板，它就走過去
+    else if (isPerson(cur()) && !showMode) strollTo(cur(), floorPt(e));   // 選著土地公（示意人）：點地板，它就走過去
     else select(null);
   }
 });
 
-/* ================= 莉凱寶寶真的走路 =================
- * 選到莉凱寶寶後點地板：用 10 公分的格子找一條繞過家具的路（身體寬 48 公分過得去才算），
+/* ================= 土地公（示意人）真的走路 =================
+ * 選到土地公後點地板：用 10 公分的格子找一條繞過家具的路（身體寬 48 公分過得去才算），
  * 手腳擺動走過去；走完告訴你一路上最窄的地方幾公分。完全過不去就說被擋住 */
 const isPerson = it => !!it && PRODUCTS[it.type] && PRODUCTS[it.type].sub === '示意人';
 let stroll = null;
@@ -2219,22 +2219,70 @@ function strollFrame() {
     if (s.walked > 25 && s.walked % 6 < mv + 0.01) s.minW = Math.min(s.minW, strollWidth(s.it, dx, dz, s.obs));
     if (s.t >= L - 1e-3) { s.seg++; s.t = 0; }
   }
+  s.sparkT = (s.sparkT || 0) + dt;
+  while (s.sparkT > 0.022) { s.sparkT -= 0.022; spark(s.it, 16 + Math.random() * 30, 5 + Math.random() * 170, [10, 40 + Math.random() * 50], 1 + Math.random() * 0.7, 12 + Math.random() * 14); }
+  if (!s.halo) s.halo = fxRing();
+  s.halo.position.copy(furnGroup.localToWorld(new THREE.Vector3(s.it.x, 1.5, s.it.z))); s.halo.rotation.z += dt * 2.5;
+  s.halo.scale.setScalar(1 + Math.sin(now / 160) * 0.12);
   s.phase += dt * 6.2;
   const sw = Math.sin(s.phase) * 0.5;
   g.traverse(o => { if (o.userData.swing) o.rotation.x = sw * o.userData.swing; });
   g.position.set(s.it.x, s.it.elev || 0, s.it.z); g.rotation.y = -s.it.rot * deg;
+  s.rt = (s.rt || 0) + dt; if (s.rt > 0.12) { s.rt = 0; refresh(); }   // 選取框跟著走
   if (s.seg >= s.path.length - 1) {                                     // 走到了
     stroll = null; s.it.rot = Math.round(s.it.rot);
     undoStack.push(s.before); $('#undo').disabled = false;
     makeObj(s.it); refresh(); save();
-    toast(isFinite(s.minW) && s.minW < 300 ? `走到了・一路最窄的地方約 ${Math.round(s.minW)} 公分` + (s.minW < 75 ? '（有點擠，建議留 75 公分以上）' : '') : '走到了・一路都很寬敞');
+    for (let q = 0; q < 110; q++) spark(s.it, 10 + Math.random() * 15, 5 + Math.random() * 120, [80 + Math.random() * 110, 30 + Math.random() * 110], 1.3 + Math.random() * 0.8, 14 + Math.random() * 16);   // 加持：金光散開
+    if (s.halo) { scene.remove(s.halo); s.halo.material.dispose(); }
+    fxPillar(s.it);
+    toast('土地公加持 ✨ ' + (isFinite(s.minW) && s.minW < 300 ? `走到了・一路最窄的地方約 ${Math.round(s.minW)} 公分` + (s.minW < 75 ? '（有點擠，建議留 75 公分以上）' : '') : '走到了・一路都很寬敞'));
   }
+}
+// 土地公加持：走路時身邊一直冒金光，走到時金光一圈散開
+const sparks = []; let sparkTex = null, sparkLast = 0;
+function sparkTexture() {
+  if (sparkTex) return sparkTex;
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,252,220,1)'); gr.addColorStop(0.25, 'rgba(255,214,80,.95)'); gr.addColorStop(1, 'rgba(255,190,40,0)');
+  x.fillStyle = gr; x.fillRect(0, 0, 64, 64); sparkTex = new THREE.CanvasTexture(c); return sparkTex;
+}
+function spark(it, r, y, v, life, size) {
+  const a = Math.random() * Math.PI * 2, p = furnGroup.localToWorld(new THREE.Vector3(it.x + Math.cos(a) * r, y, it.z + Math.sin(a) * r));
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: sparkTexture(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  sp.position.copy(p); sp.scale.setScalar(size); sp.raycast = () => { }; scene.add(sp);
+  sparks.push({ sp, v: new THREE.Vector3(Math.cos(a) * v[0], v[1], Math.sin(a) * v[0]), life, age: 0, size });
+}
+function fxRing() {             // 腳下一圈金色光環（走路時跟著走、會轉、會呼吸）
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), gr = x.createRadialGradient(64, 64, 20, 64, 64, 64);
+  gr.addColorStop(0, 'rgba(255,215,80,0)'); gr.addColorStop(0.55, 'rgba(255,215,80,.95)'); gr.addColorStop(0.7, 'rgba(255,245,190,1)'); gr.addColorStop(1, 'rgba(255,200,40,0)');
+  x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
+  x.strokeStyle = 'rgba(255,250,210,.9)'; x.lineWidth = 3; x.setLineDash([10, 8]); x.beginPath(); x.arc(64, 64, 44, 0, Math.PI * 2); x.stroke();
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  m.rotation.x = -Math.PI / 2; m.raycast = () => { }; scene.add(m); return m;
+}
+function fxPillar(it) {         // 走到時一道金色光柱從地上往上衝
+  const c = document.createElement('canvas'); c.width = 4; c.height = 128; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 128, 0, 0);
+  gr.addColorStop(0, 'rgba(255,220,90,1)'); gr.addColorStop(0.6, 'rgba(255,230,140,.5)'); gr.addColorStop(1, 'rgba(255,240,180,0)'); x.fillStyle = gr; x.fillRect(0, 0, 4, 128);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(34, 40, 320, 32, 1, true), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+  m.position.copy(furnGroup.localToWorld(new THREE.Vector3(it.x, 160, it.z))); m.raycast = () => { }; scene.add(m);
+  sparks.push({ sp: m, pillar: true, life: 1.6, age: 0, size: 1 });
+}
+function sparkFrame() {
+  const now = performance.now(), dt = Math.min(0.05, (now - (sparkLast || now)) / 1000); sparkLast = now;
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const p = sparks[i]; p.age += dt; const k = p.age / p.life;
+    if (k >= 1) { scene.remove(p.sp); if (p.pillar) p.sp.material.map.dispose(); p.sp.material.dispose(); sparks.splice(i, 1); continue; }
+    if (p.pillar) { p.sp.material.opacity = k < 0.15 ? k / 0.15 : (1 - k) / 0.85; p.sp.scale.set(1 + k * 0.5, 0.4 + Math.min(1, k * 3) * 0.6, 1 + k * 0.5); p.sp.rotation.y += dt; continue; }
+    p.sp.position.addScaledVector(p.v, dt); p.sp.material.opacity = 1 - k; p.sp.scale.setScalar(p.size * (1 - k * 0.4) * (0.85 + 0.15 * Math.sin(p.age * 18)));
+  }
+  if (!sparks.length) sparkLast = 0;
 }
 function syncStrollChip() {
   const on = isPerson(cur()) && !showMode && !overview && !(walk && walk.on);
   $('#stroll-chip').hidden = !on;
 }
-$('#stroll-done').onclick = () => { stroll = null; select(null); };
+$('#stroll-done').onclick = () => { if (stroll && stroll.halo) scene.remove(stroll.halo); stroll = null; select(null); };
 
 /* ================= 商品庫（縮圖自動產生） ================= */
 function renderLib() {
@@ -3641,7 +3689,7 @@ function resize() {
   renderer.setSize(w, h, false); persp.aspect = w / h; persp.updateProjectionMatrix(); sizeOrtho();
 }
 new ResizeObserver(resize).observe(canvas);
-renderer.setAnimationLoop(() => { if (stroll) strollFrame(); if (walk.on) walkFrame(); else if (gyro.on) gyroFrame(); else if (!topView) controls.update(); render(); });
+renderer.setAnimationLoop(() => { if (stroll) strollFrame(); if (sparks.length) sparkFrame(); if (walk.on) walkFrame(); else if (gyro.on) gyroFrame(); else if (!topView) controls.update(); render(); });
 
 { const z = location.hash.match(/^#z=(.+)$/); if (z) try { ZIP_PROJ = await decodeZ(z[1]); } catch (e) { } }
 load(); sunMode = (project.orient && project.orient.sun) || 'off'; rememberProj(); renderProjects(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary(); renderSpaces(); filterLib();
