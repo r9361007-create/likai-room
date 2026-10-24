@@ -917,6 +917,43 @@ Object.assign(EXTRA_PRODUCTS, {
   cabDresser: { ...CAB, name: '斗櫃', w: 80, d: 45, h: 115, color: '#a87a4f', color2: '#7a5236', c2: '腳的顏色', build: buildDresser, opts: [HANDLE_OPT], def: { handle: 'knob' } },
   cabLow: { ...CAB, name: '收納矮櫃', w: 150, d: 45, h: 80, color: '#ece9e3', color2: '#c5a35a', build: buildLowCab, opts: [HANDLE_OPT], def: { handle: 'bar' } },
 });
+/* ---------- 示意人（評估動線）：照身高等比例，預設 180 公分、80 公斤的體型（肩寬約 48、胸厚約 26） ---------- */
+function buildPerson(it) {
+  const g = new THREE.Group(), s = (it.h || 180) / 180, walk = it.pose === 'walk';
+  const B = mat(it.color, { roughness: 0.6 }), D = mat(it.color2 || '#2f3e4c', { roughness: 0.7 });
+  const cap = (r, len, m) => { const c = new THREE.Mesh(new THREE.CapsuleGeometry(r * s, len * s, 4, 14), m); c.castShadow = true; return c; };
+  const ball = (r, m, sx = 1, sy = 1, sz = 1) => { const b = new THREE.Mesh(new THREE.SphereGeometry(r * s, 20, 14), m); b.scale.set(sx, sy, sz); b.castShadow = true; return b; };
+  // 腿：從髖關節轉（走路時一前一後）
+  for (const [sx, a] of [[-1, walk ? 0.38 : 0], [1, walk ? -0.38 : 0]]) {
+    const hip = new THREE.Group(); hip.position.set(sx * 10 * s, 92 * s, 0); hip.rotation.x = a; g.add(hip);
+    const thigh = cap(8.5, 32, D); thigh.position.y = -22 * s; hip.add(thigh);
+    const shin = cap(6.2, 34, D); shin.position.y = -64 * s; hip.add(shin);
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(10 * s, 7 * s, 26 * s), D); foot.position.set(0, -88.5 * s, 6 * s); foot.castShadow = true; hip.add(foot);
+  }
+  const pelvis = ball(18, D, 1, 0.62, 0.68); pelvis.position.y = 95 * s; g.add(pelvis);
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(22 * s, 17.5 * s, 52 * s, 28), B); torso.scale.z = 0.6; torso.position.y = 123 * s; torso.castShadow = true; g.add(torso);
+  const chest = ball(22, B, 1, 0.42, 0.6); chest.position.y = 148 * s; g.add(chest);   // 肩膀圓弧
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(5.8 * s, 6.4 * s, 9 * s, 16), B); neck.position.y = 156 * s; g.add(neck);
+  const head = ball(10.5, B, 0.92, 1.18, 1); head.position.y = 168 * s; g.add(head);
+  const face = ball(6, mat('#f4f1ea', { roughness: 0.5 }), 1, 1.1, 0.45); face.position.set(0, 168 * s, 8.6 * s); g.add(face);   // 臉朝前（看得出正面、側面）
+  // 手臂：從肩膀轉（走路時和腳相反擺動）
+  for (const [sx, a] of [[-1, walk ? -0.42 : 0], [1, walk ? 0.42 : 0]]) {
+    const sh = new THREE.Group(); sh.position.set(sx * 21 * s, 146 * s, 0); sh.rotation.set(a, 0, sx * 0.08); g.add(sh);
+    const up = cap(5, 24, B); up.position.y = -16 * s; sh.add(up);
+    const fore = cap(4.2, 22, B); fore.position.y = -45 * s; sh.add(fore);
+    const hand = ball(4.6, B, 0.8, 1.2, 0.6); hand.position.y = -62 * s; sh.add(hand);
+  }
+  // 地上的範圍：站著約 肩寬×胸厚，走路時前後要多一些
+  const fp = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: it.color2 || '#2f3e4c', transparent: true, opacity: 0.16, depthWrite: false }));
+  fp.rotation.x = -Math.PI / 2; fp.position.y = 0.4; fp.scale.set((it.w || 48) / 2 + 4, (walk ? 66 : (it.d || 30)) / 2 + 4, 1); g.add(fp);
+  return g;
+}
+Object.assign(EXTRA_PRODUCTS, {
+  person: { sub: '示意人', generic: true, noHit: true, name: '示意人（180cm／80kg）', w: 48, d: 30, h: 180, color: '#9fb2c3', color2: '#3b4b5a', c1: '上半身顏色', c2: '下半身顏色', build: buildPerson,
+    opts: [{ key: 'pose', label: '姿勢', list: [opt('stand', '站立'), opt('walk', '走路')] }], def: { pose: 'stand' } },
+  personWalk: { sub: '示意人', generic: true, noHit: true, name: '示意人・走路（180cm／80kg）', w: 48, d: 66, h: 180, color: '#9fb2c3', color2: '#3b4b5a', c1: '上半身顏色', c2: '下半身顏色', build: buildPerson,
+    opts: [{ key: 'pose', label: '姿勢', list: [opt('walk', '走路'), opt('stand', '站立')] }], def: { pose: 'walk' } },
+});
 const CHAIR = { sub: '單椅', generic: true };
 Object.assign(EXTRA_PRODUCTS, {
   tubBoucle: { ...CHAIR, name: '泰迪絨圓弧椅（低背）', w: 78, d: 76, h: 72, color: '#efe9df', color2: '#b98a5e', c1: '布料顏色', c2: '椅腳顏色', build: buildTub,
@@ -934,6 +971,7 @@ Object.assign(EXTRA_PRODUCTS, {
 // 用原版通用茶几（可換形狀、腳座、腳材質）做出市面常見的預設款
 export function registerExtras(PRODUCTS, SUBS) {
   if (SUBS && !SUBS.includes('櫃體')) SUBS.splice(SUBS.indexOf('床頭櫃') + 1, 0, '櫃體');   // 臥室的櫃體分類
+  if (SUBS && !SUBS.includes('示意人')) SUBS.unshift('示意人');                             // 評估動線用的示意人（每個空間都有，放最前面）
   Object.assign(PRODUCTS, EXTRA_PRODUCTS);
   // 原版單椅標上低背／高背
   for (const [k, tag] of [['lounge', '低背'], ['shellchair', '低背'], ['woodchair', '低背'], ['wingchair', '高背'], ['armchair', '低背']]) if (PRODUCTS[k] && !PRODUCTS[k].name.includes('背）')) PRODUCTS[k].name += `（${tag}）`;
