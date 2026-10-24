@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610241352">
+<meta name="likai-build" content="202610241414">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -383,6 +383,15 @@ body.show-locked .show-tools{right:14px}
 .show-tools #show-link{background:var(--brand);color:#fff}
 .show-linkpop{position:absolute;top:58px;right:14px;z-index:8;width:min(280px,calc(100% - 28px));background:var(--panel);border-radius:16px;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:8px}
 .show-linkpop[hidden]{display:none}
+.slink{position:fixed;inset:0;z-index:60;background:rgba(0,30,50,.35);display:flex;align-items:center;justify-content:center;padding:16px}
+.slink[hidden]{display:none}
+.slink-box{background:var(--panel);border-radius:18px;box-shadow:var(--shadow);padding:18px;width:min(340px,100%);display:flex;flex-direction:column;gap:10px}
+.slink-box b{font-size:16px;color:var(--brand)}
+.slink-box p{margin:0;font-size:12px;color:var(--muted);line-height:1.5}
+.slink-url{background:var(--accent-soft);border-radius:10px;padding:12px;font-size:17px;font-weight:600;color:var(--brand);text-align:center;word-break:break-all;user-select:all;-webkit-user-select:all;max-height:90px;overflow:auto}
+.slink-url.long{font-size:11px;font-weight:400}
+.slink-acts{display:flex;gap:8px}
+.slink-acts .btn{flex:1;padding:10px 0}
 .show-linkpop b{font-size:15px;color:var(--brand)}
 .show-linkpop p{margin:0;font-size:12px;color:var(--muted)}
 .show-spaces{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:6;display:flex;gap:6px;padding:6px;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:999px;box-shadow:0 10px 30px rgba(0,67,106,.16);max-width:calc(100% - 32px);overflow-x:auto;scrollbar-width:none}
@@ -692,6 +701,15 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <button class="show-ar" id="show-ar">用相機看整組</button>
     </div>
     <div class="toast" id="toast"></div>
+    <div class="slink" id="slink" hidden>
+      <div class="slink-box">
+        <b id="slink-t">傳網址給客人</b>
+        <p>客人用手機或電腦點開就能看，不用下載 App，也改不到你的配置</p>
+        <div class="slink-url" id="slink-url">產生短網址中…</div>
+        <div class="slink-acts"><button class="btn pri" id="slink-copy" disabled>複製網址</button><button class="btn" id="slink-share" hidden>分享…</button></div>
+        <button class="btn wide" id="slink-x">關閉</button>
+      </div>
+    </div>
     <button class="upd" id="upd" hidden>有新版本，點這裡更新</button>
     <div class="setup" id="quick">
       <div class="setup-box quick-box">
@@ -895,9 +913,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241352';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241352';
-import { registerExtras } from './extra-models.js?v=202610241352';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241414';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241414';
+import { registerExtras } from './extra-models.js?v=202610241414';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -907,7 +925,7 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const deg = Math.PI / 180;
 /* 多專案：專案清單在 likai-room-projects；每個專案的內容各存一份（第一個專案沿用舊的 likai-room-v1）
  * 目前開的是哪個專案記在這個瀏覽器分頁（sessionStorage），所以電腦上可以同時開好幾個分頁、各編各的客人 */
-const START_Q = new URLSearchParams(location.search), START_SHARED = /^#p=/.test(location.hash);   // 網址原本的樣子（之後會被整理掉）
+const START_Q = new URLSearchParams(location.search), START_SHARED = /^#[pz]=/.test(location.hash);   // 網址原本的樣子（之後會被整理掉）
 const IDX_KEY = 'likai-room-projects';
 const keyOf = id => id === 'p1' ? 'likai-room-v1' : 'likai-room-' + id;
 function readIdx() { try { return JSON.parse(localStorage.getItem(IDX_KEY)); } catch (e) { return null; } }
@@ -967,10 +985,11 @@ function migrate(o) {
   if (o && o.room) { const p = defaultProject(); p.started = true; Object.assign(p.spaces[0], { room: o.room, items: o.items || [] }); return p; }
   return defaultProject();
 }
+let ZIP_PROJ = null;   // 短網址打開的壓縮配置（#z=），啟動時先解開
 function load() {
   const h = location.hash.match(/^#p=(.+)$/);
-  if (h) try {
-    project = migrate(decode(h[1])); history.replaceState(null, '', location.pathname + location.search);
+  if (h || ZIP_PROJ) try {
+    project = migrate(ZIP_PROJ || decode(h[1])); history.replaceState(null, '', location.pathname + location.search);
     const nm = String(project.name || '分享的配置').slice(0, 20);   // 連結可以帶專案名稱（例如建商平面圖）
     projId = newProjId(); STORE = keyOf(projId); projIdx.list.unshift({ id: projId, name: nm, updated: Date.now() }); writeIdx();
     if (START_Q.get('show') !== '1') toast(`已另存成新專案「${nm}」`);   // 客人看的連結不顯示
@@ -999,11 +1018,20 @@ function encode() {
   const json = JSON.stringify({ cur: project.cur, spaces: project.spaces.map(s => ({ name: s.name, type: s.type, room: s.room, pos: s.pos, items: s.items.map(slim) })), name: (projMeta() || {}).name, orient: project.orient });
   return btoa(String.fromCharCode(...new TextEncoder().encode(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
-function decode(s) {
-  const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
-  const o = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
-  for (const sp of o.spaces || [o]) sp.items = (sp.items || []).filter(it => PRODUCTS[it.type]);
-  return o;
+const b64u = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+const u8b64 = u => { let s = ''; for (let i = 0; i < u.length; i += 8192) s += String.fromCharCode(...u.subarray(i, i + 8192)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+function cleanProj(o) { for (const sp of o.spaces || [o]) sp.items = (sp.items || []).filter(it => PRODUCTS[it.type]); return o; }
+function decode(s) { return cleanProj(JSON.parse(new TextDecoder().decode(b64u(s)))); }
+// 壓縮版（#z=）：同樣的內容壓到大約 1/4 長，才放得進短網址
+async function encodeZ() {
+  const json = new TextDecoder().decode(b64u(encode()));
+  if (typeof CompressionStream === 'undefined') return null;
+  const buf = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer();
+  return u8b64(new Uint8Array(buf));
+}
+async function decodeZ(s) {
+  const txt = await new Response(new Blob([b64u(s)]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  return cleanProj(JSON.parse(txt));
 }
 // 切換空間
 function switchSpace(i, origin) {
@@ -3377,11 +3405,32 @@ $('#shot').onclick = () => {
   a.href = out.toDataURL('image/png'); a.download = '莉凱空間配置.png'; a.click();
 };
 // 給客人的網址：打開直接是展示畫面；top＝打開就是平面圖
+// 先把配置壓縮進網址，再交給 is.gd 變成短網址（像 is.gd/abc123）；短網址做不出來就給原本的長網址
+let slinkUrl = '', slinkSeq = 0;
 async function shareLink(top) {
-  const url = location.origin + location.pathname + '?show=1' + (top ? '&view=top' : '') + '#p=' + encode();
-  if (navigator.share && matchMedia('(pointer:coarse)').matches) { try { await navigator.share({ title: '莉凱家俱・空間配置', url }); return; } catch (e) { } }
-  try { await navigator.clipboard.writeText(url); toast(top ? '已複製「平面圖」網址，貼到 LINE 傳給客人' : '已複製給客人的網址，貼到 LINE 傳給他'); } catch (e) { prompt('複製這個網址分享：', url); }
+  const seq = ++slinkSeq, base = 'https://r9361007-create.github.io/likai-room/' + '?show=1' + (top ? '&view=top' : '');
+  const box = $('#slink-url');
+  $('#slink-t').textContent = top ? '傳網址給客人（打開是平面圖）' : '傳網址給客人（打開是 3D）';
+  box.textContent = '產生短網址中…'; box.classList.remove('long'); $('#slink-copy').disabled = true; $('#slink-share').hidden = true; $('#slink').hidden = false;
+  let z = null; try { z = await encodeZ(); } catch (e) { }
+  const long = base + (z ? '#z=' + z : '#p=' + encode());
+  let url = long;
+  if (long.length < 4800) try {
+    const ac = new AbortController(); setTimeout(() => ac.abort(), 8000);
+    const r = await fetch('https://is.gd/create.php?format=json&url=' + encodeURIComponent(long), { signal: ac.signal });
+    const j = await r.json(); if (j.shorturl) url = j.shorturl;
+  } catch (e) { }
+  if (seq !== slinkSeq) return;
+  slinkUrl = url; box.textContent = url; box.classList.toggle('long', url === long);
+  $('#slink-copy').disabled = false; $('#slink-share').hidden = !navigator.share;
 }
+$('#slink-copy').onclick = async () => {
+  try { await navigator.clipboard.writeText(slinkUrl); toast('已複製，貼到 LINE 傳給客人'); }
+  catch (e) { const r = document.createRange(); r.selectNodeContents($('#slink-url')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('網址已選取，長按複製'); }
+};
+$('#slink-share').onclick = async () => { try { await navigator.share({ title: '莉凱家俱・空間配置', url: slinkUrl }); } catch (e) { } };
+$('#slink-x').onclick = () => { slinkSeq++; $('#slink').hidden = true; };
+$('#slink').addEventListener('click', e => { if (e.target.id === 'slink') { slinkSeq++; $('#slink').hidden = true; } });
 $('#share').onclick = () => shareLink(false);
 // 展示畫面：「網址」按鈕（選 3D 或平面圖）、「看平面圖／看 3D」切換
 $('#show-link').onclick = e => { e.stopPropagation(); $('#show-linkpop').hidden = !$('#show-linkpop').hidden; };
@@ -3452,6 +3501,7 @@ function resize() {
 new ResizeObserver(resize).observe(canvas);
 renderer.setAnimationLoop(() => { if (walk.on) walkFrame(); else if (gyro.on) gyroFrame(); else if (!topView) controls.update(); render(); });
 
+{ const z = location.hash.match(/^#z=(.+)$/); if (z) try { ZIP_PROJ = await decodeZ(z[1]); } catch (e) { } }
 load(); sunMode = (project.orient && project.orient.sun) || 'off'; rememberProj(); renderProjects(); renderLib(); rebuildAll(); resize(); fitCamera(); roomSummary(); renderSpaces(); filterLib();
 { const v = new URLSearchParams(location.search).get('view'); if (v === 'eye' || v === 'top') setView(v); }   // 網址加 ?view=eye 直接用人視角打開
 if (project.started && state.room.setup && project.style && project.decor !== false && state.decorStyle !== project.style) { styleDecor(); refresh(); }   // 分享連結：補上風格軟裝
