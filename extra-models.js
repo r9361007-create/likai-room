@@ -926,15 +926,16 @@ function buildPerson(it) {                 // 莉凱寶寶（Q 版）：大圓�
   const ball = (r, m, sx = 1, sy = 1, sz = 1, seg = 28) => { const b = new THREE.Mesh(new THREE.SphereGeometry(r * s, seg, (seg * 0.7) | 0), m); b.scale.set(sx, sy, sz); b.castShadow = true; return b; };
   // 短短的腳、光腳丫
   for (const [sx, a] of [[-1, walk ? 0.45 : 0], [1, walk ? -0.45 : 0]]) {
-    const hip = new THREE.Group(); hip.position.set(sx * 11 * s, 42 * s, 0); hip.rotation.x = a; hip.userData.swing = -sx; g.add(hip);   // swing：真的走路時前後擺
-    const leg = cap(9.5, 20, SKIN); leg.position.y = -19 * s; hip.add(leg);   // 光腳丫
-    const shoe = ball(9.6, SKIN, 1, 0.68, 1.4); shoe.position.set(0, -35 * s, 4 * s); hip.add(shoe);
+    const hip = new THREE.Group(); hip.position.set(sx * 11 * s, 50 * s, 0); hip.rotation.x = a; hip.userData.swing = -sx; g.add(hip);   // swing：真的走路時前後擺
+    const leg = cap(9.5, 26, SKIN); leg.position.y = -23 * s; hip.add(leg);   // 光腳丫
+    const shoe = ball(9.6, SKIN, 1, 0.68, 1.4); shoe.position.set(0, -43.5 * s, 4 * s); hip.add(shoe);
   }
   // 圓滾滾的身體（黃色連身衣），肚子上有深藍圓口袋和黃色 L
   const body = ball(24, SUIT, 1, 1.45, 0.78); body.position.y = 78 * s; g.add(body);
   const pocket = new THREE.Mesh(new THREE.CircleGeometry(9 * s, 28), NAVY); pocket.position.set(0, 74 * s, 18.4 * s); pocket.rotation.x = -0.12; g.add(pocket);
   box(g, 2.6 * s, 10 * s, 0.6 * s, -2 * s, 75 * s, 18.9 * s, SUIT); box(g, 7 * s, 2.6 * s, 0.6 * s, 0.2 * s, 71 * s, 18.9 * s, SUIT);   // L
   const collar = new THREE.Mesh(new THREE.TorusGeometry(9 * s, 2.2 * s, 10, 24), NAVY); collar.rotation.x = Math.PI / 2; collar.position.y = 112 * s; g.add(collar);
+  const neck = cap(10, 8, SKIN); neck.position.y = 118 * s; g.add(neck);   // 脖子：頭和身體連起來
   // 大大的頭（頭頂剛好 180）
   const head = ball(31, SKIN, 1.04, 0.97, 0.95, 36); head.position.y = 150 * s; g.add(head);
   const tuft = new THREE.Mesh(new THREE.TorusGeometry(4.5 * s, 1.6 * s, 10, 20, Math.PI * 1.4), mat('#5a3d2e', { roughness: 0.8 })); tuft.position.set(1 * s, 180.5 * s, 0); tuft.rotation.set(0, Math.PI / 2, 0.6); g.add(tuft);   // 頭頂一撮捲毛
@@ -948,7 +949,7 @@ function buildPerson(it) {                 // 莉凱寶寶（Q 版）：大圓�
   const smile = new THREE.Mesh(new THREE.TorusGeometry(4 * s, 0.9 * s, 8, 20, Math.PI), DARK); smile.rotation.z = Math.PI; smile.position.set(0, 141.5 * s, 29.2 * s); g.add(smile);
   // 短短的手臂（走路時和腳相反擺動）
   for (const [sx, a] of [[-1, walk ? -0.5 : 0], [1, walk ? 0.5 : 0]]) {
-    const sh = new THREE.Group(); sh.position.set(sx * 21 * s, 100 * s, 0); sh.rotation.set(a, 0, sx * 0.42); sh.userData.swing = sx; g.add(sh);
+    const sh = new THREE.Group(); sh.position.set(sx * 17 * s, 101 * s, 0); sh.rotation.set(a, 0, sx * 0.36); sh.userData.swing = sx; g.add(sh);
     const arm = cap(6.5, 18, SKIN); arm.position.y = -14 * s; sh.add(arm);   // 光著手臂
     const hand = ball(6.2, SKIN); hand.position.y = -28 * s; sh.add(hand);
   }
