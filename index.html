@@ -2195,7 +2195,9 @@ const PL_TIPS = {
   floor: '點在牆線上加一扇落地窗',
   scale: '沿著圖上一段標了尺寸的線拖一條，再輸入它是幾公分',
 };
-function openPlan() { $('#plan').classList.add('on'); pushPage('plan'); setTimeout(() => { plFit(); plDraw(); }, 30); plSide(); }
+function openPlan() {
+  if (!toNum($('#pl-ping').value)) { const qp = toNum($('#q-ping').value); if (qp > 0) $('#pl-ping').value = qp; }   // 直接用歡迎畫面填的室內坪數換算尺寸，不用另外量比例
+  $('#plan').classList.add('on'); pushPage('plan'); setTimeout(() => { plFit(); plDraw(); }, 30); plSide(); }
 function closePlan(byPop, done) {
   $('#plan').classList.remove('on'); if (done) return;
   const backToQuick = $('#quick').classList.contains('on') && project.started;   // 回到「歡迎」畫面，它的返回鍵要還在
@@ -2220,7 +2222,7 @@ const plToImg = e => { const r = plcv.getBoundingClientRect(); return { x: (e.cl
 function plScale() {
   if (pl.cmPerPx) return pl.cmPerPx;
   const ping = toNum($('#pl-ping').value), A = pl.rooms.reduce((a, r) => a + (r.x1 - r.x0) * (r.y1 - r.y0), 0);
-  return ping > 0 && A > 0 ? Math.sqrt(ping * PING / A) : 0;
+  return ping > 0 && A > 0 ? Math.sqrt(ping * PING * 0.85 / A) : 0;   // 框出來的房間大約是室內坪數的 85%（扣掉牆、走道、收納）
 }
 const OPW = { door: 90, window: 150, floor: 240 };
 const plCol = { door: '#c9a227', window: '#4f9cc6', floor: '#2f7fb0' };
@@ -2281,7 +2283,7 @@ function plSide() {
   $('#pl-tip').textContent = pl.img ? PL_TIPS[pl.tool] : '先選一張平面圖圖片';
   const sc = plScale();
   const tot = pl.rooms.reduce((a, r) => a + Math.max(0, (r.x1 - r.x0) * sc - WALL_T) * Math.max(0, (r.y1 - r.y0) * sc - WALL_T), 0) / PING;
-  $('#pl-sc-txt').textContent = pl.cmPerPx ? `比例已設定・房間合計約 ${tot.toFixed(1)} 坪` : sc ? `用坪數換算比例・房間合計約 ${tot.toFixed(1)} 坪` : '還沒設定比例（量一段，或輸入坪數）';
+  $('#pl-sc-txt').textContent = pl.cmPerPx ? `比例已設定・房間合計約 ${tot.toFixed(1)} 坪` : sc ? `已用室內 ${toNum($('#pl-ping').value)} 坪自動換算尺寸（不用再量）` : toNum($('#pl-ping').value) ? `會用室內 ${toNum($('#pl-ping').value)} 坪自動換算尺寸，框好房間就好` : '還沒設定比例（量一段，或輸入坪數）';
   $('#pl-rooms').innerHTML = pl.rooms.map((r, i) => `<li data-i="${i}"><b>${esc(r.name)}</b><span>${sc ? `寬 ${Math.round((r.x1 - r.x0) * sc - WALL_T)} × 深 ${Math.round((r.y1 - r.y0) * sc - WALL_T)}` : '設好比例就會顯示尺寸'}</span></li>`).join('')
     || '<li style="cursor:default;color:var(--muted);font-size:13px">還沒有房間。用「框房間」在圖上拖出來</li>';
   $('#pl-go').disabled = !(pl.rooms.length && sc);
