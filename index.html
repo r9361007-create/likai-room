@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610251213">
+<meta name="likai-build" content="202610251215">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -688,7 +688,7 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <span class="cp-label" id="cp-label">設定座向</span>
     </button>
     <button class="tudi-btn" id="tudi-btn">🙏 請土地公</button>
-    <div class="stroll-chip" id="stroll-chip" hidden>點地板，土地公就會走過去，走完會自己回天庭<button id="stroll-done">完成</button></div>
+    <div class="stroll-chip" id="stroll-chip" hidden>點地板，土地公就會走過去<button id="stroll-done">完成</button></div>
     <button class="setupchip" id="setup-chip" hidden>這間還沒設定門窗・點這裡設定 ›</button>
     <div class="show-ui" id="show-ui">
       <button class="show-exit" id="show-exit">結束展示</button>
@@ -920,9 +920,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610251213';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610251213';
-import { registerExtras } from './extra-models.js?v=202610251213';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610251215';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610251215';
+import { registerExtras } from './extra-models.js?v=202610251215';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -2253,7 +2253,7 @@ function strollFrame() {
       state.items = state.items.filter(i => i !== s.it); furnGroup.remove(g); dispose(g); objs.delete(s.it.id);
       if (s.halo) { scene.remove(s.halo); s.halo.material.map.dispose(); s.halo.material.dispose(); }
       select(null); refresh(); save();
-      toast('土地公加持完畢，先回天庭了 ✨ ' + (isFinite(s.minW) && s.minW < 300 ? `一路最窄的地方約 ${Math.round(s.minW)} 公分` + (s.minW < 75 ? '（有點擠，建議留 75 公分以上）' : '') : '一路都很寬敞'));
+      toast('土地公加持完畢，先回天庭了 ✨ ' + (isFinite(s.minW) && s.minW < 300 ? `一路最窄的地方約 ${Math.round(s.minW)} 公分` + (s.minW < 75 ? '（有點擠，建議留 75 公分以上）' : '') : '一路都很寬敞'), 30000);   // 這句停 30 秒，方便看清楚
     }
   }
 }
@@ -3361,7 +3361,7 @@ $('#lib-all').onclick = () => { libAll = !libAll; filterLib(); };
 
 /* ================= 介面 ================= */
 let toastT;
-function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.remove('act'); el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
+function toast(t, ms = 1800) { const el = $('#toast'); el.textContent = t; el.classList.remove('act'); el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), ms); }   // ms：要停留多久
 /* ---------- 有新版本就提示更新（GitHub 網頁會被瀏覽器暫存 10 分鐘，不然常常看到舊版） ---------- */
 const BUILD = (document.querySelector('meta[name="likai-build"]') || {}).content || '';
 async function checkUpdate() {
