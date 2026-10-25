@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610251205">
+<meta name="likai-build" content="202610251213">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -920,9 +920,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610251205';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610251205';
-import { registerExtras } from './extra-models.js?v=202610251205';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610251213';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610251213';
+import { registerExtras } from './extra-models.js?v=202610251213';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -1315,7 +1315,7 @@ function zoneBoxes() {
 /* ---------- 視角：3D 鳥瞰／平面／人視角 ---------- */
 let view = 'orbit', viewCover = 0;             // viewCover：畫面下方被抽屜／面板蓋住的高度
 const walk = { col: [], ty: 0, tp: 0, v: 0, av: 0, wq: 0, ring: null, room: -1, on: false, yaw: 0, pitch: 0, go: null, key: {}, t: 0, doors: [] };   // 走進去逛（總覽裡）
-if (location.search.includes("debug")) window.__dbg = { walk, beam: () => fxPillar(state.items.find(isPerson)), floorAt: (x, y) => floorPt({ clientX: x, clientY: y }), get cam() { return persp; }, get project() { return project; }, get state() { return state; }, addBathFor: i => addBathFor(i), arStats: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); let n0 = 0; root.traverse(o => { if (o.isMesh) n0++; }); const t0 = performance.now(), slim = await mergeForAR(root); let n1 = 0; slim.traverse(o => { if (o.isMesh) n1++; }); const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js"); const a = await new GLTFExporter().parseAsync(root, { binary: true }), r2 = new THREE.Group(); r2.add(slim); const b = await new GLTFExporter().parseAsync(r2, { binary: true }); return [type, n0 + "→" + n1, Math.round(performance.now() - t0) + "ms", Math.round(a.byteLength / 1024) + "KB→" + Math.round(b.byteLength / 1024) + "KB"]; }, usdzTest: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); const t0 = performance.now(), u = await makeUSDZ(root), b = await (await fetch(u)).blob(); return [type, b.size, Math.round(performance.now() - t0) + "ms"]; } };   // 除錯用
+if (location.search.includes("debug")) window.__dbg = { walk, goTo: (x, z) => strollTo(state.items.find(isPerson), { x, z }), beam: () => fxPillar(state.items.find(isPerson)), floorAt: (x, y) => floorPt({ clientX: x, clientY: y }), get cam() { return persp; }, get project() { return project; }, get state() { return state; }, addBathFor: i => addBathFor(i), arStats: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); let n0 = 0; root.traverse(o => { if (o.isMesh) n0++; }); const t0 = performance.now(), slim = await mergeForAR(root); let n1 = 0; slim.traverse(o => { if (o.isMesh) n1++; }); const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js"); const a = await new GLTFExporter().parseAsync(root, { binary: true }), r2 = new THREE.Group(); r2.add(slim); const b = await new GLTFExporter().parseAsync(r2, { binary: true }); return [type, n0 + "→" + n1, Math.round(performance.now() - t0) + "ms", Math.round(a.byteLength / 1024) + "KB→" + Math.round(b.byteLength / 1024) + "KB"]; }, usdzTest: async (type) => { const root = new THREE.Group(), g = buildItemModel(withDefaults({ type })); g.scale.setScalar(0.01); root.add(g); plainMats(root); root.updateMatrixWorld(true); const t0 = performance.now(), u = await makeUSDZ(root), b = await (await fetch(u)).blob(); return [type, b.size, Math.round(performance.now() - t0) + "ms"]; } };   // 除錯用
 /* ---------- 座向：project.orient = { face: 朝向的方位角（北0 東90 南180 西270）, side: 大門在平面圖的哪邊（上0 右90 下180 左270） } ---------- */
 const DIR8 = ['北', '東北', '東', '東南', '南', '西南', '西', '西北'];
 const dirName = b => DIR8[Math.round((((b % 360) + 360) % 360) / 45) % 8];
@@ -2242,10 +2242,11 @@ function strollFrame() {
   }
   g.position.set(s.it.x, s.it.elev || 0, s.it.z); g.rotation.y = -s.it.rot * deg;
   s.rt = (s.rt || 0) + dt; if (s.rt > 0.12) { s.rt = 0; refresh(); }   // 選取框跟著走
-  if (s.spin && s.spin.t >= 2.75) {                                      // 轉完：往上縮小、回天庭（自己消失）
-    const q = Math.min(1, (s.spin.t - 2.75) / 0.55), e2 = q * q;
-    g.scale.setScalar(Math.max(0.001, 1 - e2)); g.position.y = (s.it.elev || 0) + e2 * 120;
-    if (!s.spin.gone) { s.spin.gone = true; for (let q2 = 0; q2 < 28; q2++) spark(s.it, 10 + R() * 8, 20 + R() * 120, [45 + R() * 40, 30 + R() * 40], 0.7 + R() * 0.4, 7 + R() * 6); }
+  if (s.spin && s.spin.t >= 2.75) {                                      // 轉完：咻一下往上飛走（回天庭）
+    const q = Math.min(1, (s.spin.t - 2.75) / 0.4), e2 = q * q * q;
+    g.scale.set(1 - q * 0.35, 1 + q * 0.6, 1 - q * 0.35); g.position.y = (s.it.elev || 0) + e2 * 520;   // 拉長身體、越飛越快
+    s.spin.trail = (s.spin.trail || 0) + dt; while (s.spin.trail > 0.012) { s.spin.trail -= 0.012; spark({ x: s.it.x, z: s.it.z }, R() * 14, g.position.y + R() * 60, [0, -60 - R() * 80], 0.35 + R() * 0.25, 7 + R() * 7); }   // 往下拖的金光尾巴
+    if (!s.spin.gone) { s.spin.gone = true; for (let q2 = 0; q2 < 22; q2++) spark(s.it, 10 + R() * 8, 4 + R() * 20, [60 + R() * 50, 10 + R() * 25], 0.5 + R() * 0.3, 7 + R() * 6); }
     if (q >= 1) {
       stroll = null;
       undoStack.push(s.before); $('#undo').disabled = false;
