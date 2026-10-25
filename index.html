@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610241656">
+<meta name="likai-build" content="202610251205">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -238,6 +238,8 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden;b
 /* ---------- 還沒設門窗的提示 ---------- */
 .setupchip{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:5;border:0;border-radius:999px;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--accent);font-size:13px;font-weight:600;padding:8px 16px;box-shadow:0 6px 18px rgba(0,67,106,.12);white-space:nowrap}
 .setupchip[hidden]{display:none}
+.tudi-btn{position:absolute;right:14px;top:108px;z-index:6;border:0;border-radius:999px;background:#b8322a;color:#fff6d6;font-size:13px;font-weight:700;padding:8px 14px;box-shadow:0 6px 18px rgba(120,20,10,.25)}
+body.ov-mode .tudi-btn,.tudi-btn[hidden],body.show-mode .tudi-btn,body.walk-mode .tudi-btn{display:none}
 .stroll-chip{position:absolute;left:50%;top:108px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:10px;border-radius:999px;background:#F9E573;color:#00436A;font-size:13px;font-weight:600;padding:6px 6px 6px 16px;box-shadow:0 6px 18px rgba(0,67,106,.18);white-space:nowrap}
 .stroll-chip[hidden],body.ov-mode .stroll-chip,body.show-mode .stroll-chip{display:none}
 .stroll-chip button{border:0;border-radius:999px;background:#00436A;color:#fff;font-size:12px;padding:6px 12px}
@@ -685,7 +687,8 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <span class="cp-dial" id="cp-dial"><i data-d="0">北</i><i data-d="90" class="sun am">東</i><i data-d="180">南</i><i data-d="270" class="sun pm">西</i><b class="cp-needle" id="cp-needle"></b></span>
       <span class="cp-label" id="cp-label">設定座向</span>
     </button>
-    <div class="stroll-chip" id="stroll-chip" hidden>點地板，土地公就會走過去<button id="stroll-done">完成</button></div>
+    <button class="tudi-btn" id="tudi-btn">🙏 請土地公</button>
+    <div class="stroll-chip" id="stroll-chip" hidden>點地板，土地公就會走過去，走完會自己回天庭<button id="stroll-done">完成</button></div>
     <button class="setupchip" id="setup-chip" hidden>這間還沒設定門窗・點這裡設定 ›</button>
     <div class="show-ui" id="show-ui">
       <button class="show-exit" id="show-exit">結束展示</button>
@@ -917,9 +920,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610241656';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610241656';
-import { registerExtras } from './extra-models.js?v=202610241656';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610251205';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610251205';
+import { registerExtras } from './extra-models.js?v=202610251205';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -2239,13 +2242,18 @@ function strollFrame() {
   }
   g.position.set(s.it.x, s.it.elev || 0, s.it.z); g.rotation.y = -s.it.rot * deg;
   s.rt = (s.rt || 0) + dt; if (s.rt > 0.12) { s.rt = 0; refresh(); }   // 選取框跟著走
-  if (s.spin && s.spin.t >= 2.75) {                                      // 轉完：收工
-    stroll = null; s.it.rot = Math.round(s.spin.base) % 360;
-    undoStack.push(s.before); $('#undo').disabled = false;
-    makeObj(s.it); refresh(); save();
-    for (let q = 0; q < 28; q++) spark(s.it, 10 + R() * 8, 20 + R() * 120, [45 + R() * 40, 15 + R() * 30], 0.7 + R() * 0.4, 7 + R() * 6);   // 最後輕輕閃一下
-    if (s.halo) { scene.remove(s.halo); s.halo.material.map.dispose(); s.halo.material.dispose(); }
-    toast('土地公加持 ✨ ' + (isFinite(s.minW) && s.minW < 300 ? `走到了・一路最窄的地方約 ${Math.round(s.minW)} 公分` + (s.minW < 75 ? '（有點擠，建議留 75 公分以上）' : '') : '走到了・一路都很寬敞'));
+  if (s.spin && s.spin.t >= 2.75) {                                      // 轉完：往上縮小、回天庭（自己消失）
+    const q = Math.min(1, (s.spin.t - 2.75) / 0.55), e2 = q * q;
+    g.scale.setScalar(Math.max(0.001, 1 - e2)); g.position.y = (s.it.elev || 0) + e2 * 120;
+    if (!s.spin.gone) { s.spin.gone = true; for (let q2 = 0; q2 < 28; q2++) spark(s.it, 10 + R() * 8, 20 + R() * 120, [45 + R() * 40, 30 + R() * 40], 0.7 + R() * 0.4, 7 + R() * 6); }
+    if (q >= 1) {
+      stroll = null;
+      undoStack.push(s.before); $('#undo').disabled = false;
+      state.items = state.items.filter(i => i !== s.it); furnGroup.remove(g); dispose(g); objs.delete(s.it.id);
+      if (s.halo) { scene.remove(s.halo); s.halo.material.map.dispose(); s.halo.material.dispose(); }
+      select(null); refresh(); save();
+      toast('土地公加持完畢，先回天庭了 ✨ ' + (isFinite(s.minW) && s.minW < 300 ? `一路最窄的地方約 ${Math.round(s.minW)} 公分` + (s.minW < 75 ? '（有點擠，建議留 75 公分以上）' : '') : '一路都很寬敞'));
+    }
   }
 }
 // 土地公加持：走路時身邊一直冒金光，走到時金光一圈散開
@@ -2276,7 +2284,7 @@ function fxPillar(it) {         // 金色光束從天而降：從天花板往下
   const top = (state.room.h || 280) - 5, geo = new THREE.CylinderGeometry(28, 34, top, 32, 1, true); geo.translate(0, -top / 2, 0);   // 原點在光束頂端（天花板），往下長
   const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
   m.position.copy(furnGroup.localToWorld(new THREE.Vector3(it.x, top, it.z))); m.scale.y = 0.001; m.raycast = () => { }; scene.add(m);
-  sparks.push({ sp: m, pillar: true, life: 3, age: 0, size: 1, it, landed: false });
+  sparks.push({ sp: m, pillar: true, life: 3.4, age: 0, size: 1, it, landed: false });
 }
 function sparkFrame() {
   const now = performance.now(), dt = Math.min(0.05, (now - (sparkLast || now)) / 1000); sparkLast = now;
@@ -2295,8 +2303,26 @@ function sparkFrame() {
 }
 function syncStrollChip() {
   const on = isPerson(cur()) && !showMode && !overview && !(walk && walk.on);
-  $('#stroll-chip').hidden = !on;
+  $('#stroll-chip').hidden = !on; $('#tudi-btn').hidden = on;   // 提示條出現時先收起「請土地公」，手機才不會擠在一起
 }
+// 請土地公：從天而降出現在空位上，選好等你點地板
+$('#tudi-btn').onclick = () => {
+  if (stroll) return;
+  let it = state.items.find(isPerson);
+  if (!it) {
+    addItem('person'); it = cur(); if (!it) return;
+    // 找一塊沒有家具的空地站（從中間往外找）
+    const obs = strollObstacles(it), Rr = (it.w || 46) / 2 + 5, W = state.room.w / 2 - Rr, D = state.room.d / 2 - Rr;
+    const ok = (x, z) => Math.abs(x) <= W && Math.abs(z) <= D && !obs.some(b => x > b.min.x - Rr && x < b.max.x + Rr && z > b.min.z - Rr && z < b.max.z + Rr);
+    let spot = null;
+    for (let r = 0; r < Math.max(W, D) * 2 && !spot; r += 20) for (let k = 0; k < Math.max(1, r / 10) && !spot; k++) { const t = k / Math.max(1, r / 10) * Math.PI * 2, x = Math.sin(t) * r, z = Math.cos(t) * r; if (ok(x, z)) spot = [x, z]; }
+    if (spot) { it.x = Math.round(spot[0]); it.z = Math.round(spot[1]); const g0 = objs.get(it.id); if (g0) g0.position.set(it.x, 0, it.z); refresh(); save(); }
+  }
+  else select(it.id);
+  fxPillar(it);
+  const g = objs.get(it.id); if (g) { g.scale.setScalar(0.001); const t0 = performance.now(); const grow = () => { const k = Math.min(1, (performance.now() - t0) / 450); g.scale.setScalar(Math.max(0.001, k * k * (3 - 2 * k))); if (k < 1) requestAnimationFrame(grow); }; setTimeout(grow, 250); }
+  toast('土地公來了 🙏 點地板，祂就會走過去');
+};
 $('#stroll-done').onclick = () => { if (stroll && stroll.halo) scene.remove(stroll.halo); stroll = null; select(null); };
 
 /* ================= 商品庫（縮圖自動產生） ================= */
