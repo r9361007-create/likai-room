@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610311132">
+<meta name="likai-build" content="202610311133">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -239,12 +239,12 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden;b
 .setupchip{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:5;border:0;border-radius:999px;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--accent);font-size:13px;font-weight:600;padding:8px 16px;box-shadow:0 6px 18px rgba(0,67,106,.12);white-space:nowrap}
 .setupchip[hidden]{display:none}
 .tudi-btn{position:absolute;right:14px;top:108px;z-index:6;border:0;border-radius:999px;background:#b8322a;color:#fff6d6;font-size:13px;font-weight:700;padding:8px 14px;box-shadow:0 6px 18px rgba(120,20,10,.25)}
-body.ov-mode .tudi-btn,.tudi-btn[hidden],body.show-mode .tudi-btn,body.walk-mode .tudi-btn{display:none}
+.tudi-btn[hidden],body.walk-mode .tudi-btn{display:none}
 .vac-btn{position:absolute;right:14px;top:150px;z-index:6;border:0;border-radius:999px;background:#00436A;color:#fff;font-size:13px;font-weight:700;padding:8px 14px;box-shadow:0 6px 18px rgba(0,67,106,.25)}
-body.ov-mode .vac-btn,.vac-btn[hidden],body.show-mode .vac-btn,body.walk-mode .vac-btn{display:none}
+.vac-btn[hidden],body.walk-mode .vac-btn{display:none}
 .stroll-chip .ghost{background:#fff;color:#00436A;border:1px solid #00436A}
 .vac-panel{position:absolute;left:12px;top:160px;z-index:7;width:min(320px,calc(100% - 24px));max-height:46vh;overflow:auto;background:var(--panel);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;font-size:13px;line-height:1.55}
-.vac-panel[hidden],body.ov-mode .vac-panel,body.show-mode .vac-panel{display:none}
+.vac-panel[hidden],body.ov-mode .vac-panel,body.walk-mode .vac-panel{display:none}
 .vac-panel b{display:block;color:var(--brand);font-size:14px;margin-bottom:4px}
 .vac-panel .lg{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 8px}
 .vac-panel .lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
@@ -252,7 +252,7 @@ body.ov-mode .vac-btn,.vac-btn[hidden],body.show-mode .vac-btn,body.walk-mode .v
 .vac-panel li{padding:4px 0;border-top:1px solid var(--line)}
 .vac-panel .x{float:right;border:0;background:none;font-size:18px;line-height:1;color:var(--muted)}
 .stroll-chip{position:absolute;left:0;right:0;margin:0 auto;width:fit-content;top:108px;z-index:6;display:flex;align-items:center;gap:8px;max-width:calc(100% - 24px);flex-wrap:wrap;justify-content:center;border-radius:999px;background:#F9E573;color:#00436A;font-size:13px;font-weight:600;padding:6px 6px 6px 16px;box-shadow:0 6px 18px rgba(0,67,106,.18);white-space:nowrap}
-.stroll-chip[hidden],body.ov-mode .stroll-chip,body.show-mode .stroll-chip{display:none}
+.stroll-chip[hidden],body.ov-mode .stroll-chip,body.walk-mode .stroll-chip{display:none}
 .stroll-chip button{border:0;border-radius:999px;background:#00436A;color:#fff;font-size:12px;padding:6px 12px}
 /* ---------- 匯入平面圖 ---------- */
 .plan-box{width:min(1180px,100%);height:min(820px,100%)}
@@ -933,9 +933,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610311132';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610311132';
-import { registerExtras } from './extra-models.js?v=202610311132';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610311133';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610311133';
+import { registerExtras } from './extra-models.js?v=202610311133';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -2151,7 +2151,7 @@ canvas.addEventListener('pointerup', e => {
   gyro.lastX = null;
   if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) {
     if (gyro.on) walkTo(floorPt(e));
-    else if (isPerson(cur()) && !showMode) strollTo(cur(), floorPt(e));   // 選著土地公（示意人）：點地板，它就走過去
+    else if (isPerson(cur())) strollTo(cur(), floorPt(e));   // 選著土地公（示意人）：點地板，它就走過去
     else select(null);
   }
 });
@@ -2443,7 +2443,7 @@ function sparkFrame() {
 }
 function syncStrollChip() {
   if (!isRobot(cur())) clearVacMap();
-  const it = cur(), on = isPerson(it) && !showMode && !overview && !(walk && walk.on), rb = on && isRobot(it);
+  const it = cur(), on = isPerson(it) && !overview && !(walk && walk.on), rb = on && isRobot(it);
   $('#stroll-chip').hidden = !on; $('#tudi-btn').hidden = on; $('#vac-btn').hidden = on;   // 提示條出現時先收起右上按鈕，手機才不會擠在一起
   $('#stroll-txt').textContent = rb ? '點地板，機器人就開過去' : '點地板，土地公就會走過去';
   $('#vac-map').hidden = !rb;
@@ -2459,6 +2459,7 @@ function placeFree(it) {
 // 請土地公：從天而降出現在空位上，選好等你點地板
 $('#tudi-btn').onclick = () => {
   if (stroll) return;
+  if (overview) { exitOverview(); toast('已進到「' + state.name + '」'); }   // 在總覽按：先進到目前這間
   let it = state.items.find(isGod);
   if (!it) { addItem('person'); it = cur(); if (!it) return; placeFree(it); }
   else select(it.id);
@@ -2470,6 +2471,7 @@ $('#stroll-done').onclick = () => { if (stroll && stroll.halo) scene.remove(stro
 $('#vac-map').onclick = () => { const it = cur(); if (isRobot(it)) showVacMap(it); };
 $('#vac-btn').onclick = () => {
   if (stroll) return;
+  if (overview) exitOverview();
   let it = state.items.find(isRobot);
   if (!it) { addItem('robotVac'); it = cur(); if (!it) return; placeFree(it); }
   else select(it.id);
@@ -2502,12 +2504,11 @@ $('#lib').addEventListener('click', e => {
 $('#lib-more-btn').onclick = () => { const m = $('#lib-more'); m.hidden = !m.hidden; $('#lib-more-btn').classList.toggle('on', !m.hidden); };
 let libAll = false;
 function filterLib() {                          // 只列出適合目前空間的分類；按「看全部」列出所有
-  const subs = SPACE_TYPES[state.type].subs, everything = ['living', 'ld'].includes(state.type), all = libAll || everything;   // 客廳、客餐廳：所有分類都列出來
+  const subs = SPACE_TYPES[state.type].subs, all = libAll;
   document.querySelectorAll('#pane-lib section').forEach(sec => { sec.style.display = all || subs.includes(sec.dataset.sub) ? '' : 'none'; });
   $('#lib-more-btn').hidden = ![...document.querySelectorAll('#lib-more section')].some(sec => sec.style.display !== 'none');
   if (state.type === 'bath') { $('#lib-more').hidden = false; $('#lib-more-btn').classList.add('on'); }   // 衛浴：馬桶、洗手台、淋浴、浴缸都在一般款，直接打開
   $('#lib-for').textContent = all ? '全部商品' : `適合${SPACE_TYPES[state.type].name}的家具`;
-  $('#lib-all').hidden = everything;
   $('#lib-all').textContent = libAll ? `只看${SPACE_TYPES[state.type].name}` : '看全部';
   $('#catbar').innerHTML = [...document.querySelectorAll('#lib section')].filter(sec => sec.style.display !== 'none').map(sec => `<button data-sub="${sec.dataset.sub}">${sec.dataset.sub}</button>`).join('')
     + ($('#lib-more-btn').hidden ? '' : '<button data-sub="__more">其他家具與佈置</button>');
