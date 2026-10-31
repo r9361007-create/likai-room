@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610251215">
+<meta name="likai-build" content="202610311127">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -920,9 +920,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610251215';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610251215';
-import { registerExtras } from './extra-models.js?v=202610251215';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610311127';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610311127';
+import { registerExtras } from './extra-models.js?v=202610311127';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -2335,7 +2335,7 @@ function renderLib() {
   for (const s of SUBS) {
     const keys = Object.keys(PRODUCTS).filter(k => PRODUCTS[k].sub === s && !PRODUCTS[k].libHide); if (!keys.length) continue;   // libHide：不列在商品庫
     const a = PROMOTE.has(s) ? keys.sort((x, y) => (PRODUCTS[x].generic ? 1 : 0) - (PRODUCTS[y].generic ? 1 : 0)) : keys.filter(k => !PRODUCTS[k].generic), b = PROMOTE.has(s) ? [] : keys.filter(k => PRODUCTS[k].generic);
-    const F2 = s === '餐桌' ? [['all', '全部'], ['pedestal', '中柱腳'], ['legs', '四支腳'], ['other', '其他造型']] : s === '床台' ? [['all', '全部'], ['floor', '落地款'], ['raised', '架高款']] : FORMS;
+    const F2 = s === '餐桌' ? [['all', '全部'], ['pedestal', '中柱腳'], ['legs', '四支腳'], ['other', '其他造型']] : s === '床台' ? [['all', '全部'], ['floor', '落地款'], ['raised', '架高款'], ['inset', '內嵌款']] : FORMS;
     const chips = s === '茶几' || s === '餐桌' || s === '床台' ? `<div class="formbar" data-forms>${F2.filter(([f]) => f === 'all' || a.some(k => PRODUCTS[k].form === f)).map(([f, n]) => `<button data-form="${f}" class="${f === 'all' ? 'on' : ''}">${n}</button>`).join('')}</div>` : '';
     if (a.length) own += `<section data-sub="${s}"><h3>${s}</h3>${chips}<div class="grid">${a.map(card).join('')}</div></section>`;
     if (b.length) more += `<section data-sub="${s}"><h3>${s}</h3><div class="grid">${b.map(card).join('')}</div></section>`;
