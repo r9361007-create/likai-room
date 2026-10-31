@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>莉凱空間配置</title>
-<meta name="likai-build" content="202610311127">
+<meta name="likai-build" content="202610311132">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#00436A">
@@ -240,7 +240,18 @@ main{grid-area:main;position:relative;min-width:0;min-height:0;overflow:hidden;b
 .setupchip[hidden]{display:none}
 .tudi-btn{position:absolute;right:14px;top:108px;z-index:6;border:0;border-radius:999px;background:#b8322a;color:#fff6d6;font-size:13px;font-weight:700;padding:8px 14px;box-shadow:0 6px 18px rgba(120,20,10,.25)}
 body.ov-mode .tudi-btn,.tudi-btn[hidden],body.show-mode .tudi-btn,body.walk-mode .tudi-btn{display:none}
-.stroll-chip{position:absolute;left:50%;top:108px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:10px;border-radius:999px;background:#F9E573;color:#00436A;font-size:13px;font-weight:600;padding:6px 6px 6px 16px;box-shadow:0 6px 18px rgba(0,67,106,.18);white-space:nowrap}
+.vac-btn{position:absolute;right:14px;top:150px;z-index:6;border:0;border-radius:999px;background:#00436A;color:#fff;font-size:13px;font-weight:700;padding:8px 14px;box-shadow:0 6px 18px rgba(0,67,106,.25)}
+body.ov-mode .vac-btn,.vac-btn[hidden],body.show-mode .vac-btn,body.walk-mode .vac-btn{display:none}
+.stroll-chip .ghost{background:#fff;color:#00436A;border:1px solid #00436A}
+.vac-panel{position:absolute;left:12px;top:160px;z-index:7;width:min(320px,calc(100% - 24px));max-height:46vh;overflow:auto;background:var(--panel);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;font-size:13px;line-height:1.55}
+.vac-panel[hidden],body.ov-mode .vac-panel,body.show-mode .vac-panel{display:none}
+.vac-panel b{display:block;color:var(--brand);font-size:14px;margin-bottom:4px}
+.vac-panel .lg{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 8px}
+.vac-panel .lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.vac-panel ul{margin:0;padding:0;list-style:none}
+.vac-panel li{padding:4px 0;border-top:1px solid var(--line)}
+.vac-panel .x{float:right;border:0;background:none;font-size:18px;line-height:1;color:var(--muted)}
+.stroll-chip{position:absolute;left:0;right:0;margin:0 auto;width:fit-content;top:108px;z-index:6;display:flex;align-items:center;gap:8px;max-width:calc(100% - 24px);flex-wrap:wrap;justify-content:center;border-radius:999px;background:#F9E573;color:#00436A;font-size:13px;font-weight:600;padding:6px 6px 6px 16px;box-shadow:0 6px 18px rgba(0,67,106,.18);white-space:nowrap}
 .stroll-chip[hidden],body.ov-mode .stroll-chip,body.show-mode .stroll-chip{display:none}
 .stroll-chip button{border:0;border-radius:999px;background:#00436A;color:#fff;font-size:12px;padding:6px 12px}
 /* ---------- 匯入平面圖 ---------- */
@@ -688,7 +699,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
       <span class="cp-label" id="cp-label">設定座向</span>
     </button>
     <button class="tudi-btn" id="tudi-btn">🙏 請土地公</button>
-    <div class="stroll-chip" id="stroll-chip" hidden>點地板，土地公就會走過去<button id="stroll-done">完成</button></div>
+    <button class="vac-btn" id="vac-btn">🤖 掃地機器人</button>
+    <div class="vac-panel" id="vac-panel" hidden></div>
+    <div class="stroll-chip" id="stroll-chip" hidden><span id="stroll-txt">點地板，土地公就會走過去</span><button id="vac-map" class="ghost" hidden>看哪裡掃得到</button><button id="stroll-done">完成</button></div>
     <button class="setupchip" id="setup-chip" hidden>這間還沒設定門窗・點這裡設定 ›</button>
     <div class="show-ui" id="show-ui">
       <button class="show-exit" id="show-exit">結束展示</button>
@@ -920,9 +933,9 @@ body.ov-mode #sel,body.ov-mode #veye{display:none!important}
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610311127';
-import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610311127';
-import { registerExtras } from './extra-models.js?v=202610311127';
+import { PRODUCTS, SUBS, optsOf, withDefaults, buildModel } from './models.js?v=202610311132';
+import { STYLES, STYLE_KEYS, DECOR_SIZE, floorTexture, wallTexture, scaleBoxUV } from './styles.js?v=202610311132';
+import { registerExtras } from './extra-models.js?v=202610311132';
 registerExtras(PRODUCTS, SUBS);                          // 蜂巢簾、穿越簾、茶几、餐桌、床架、櫃體
 
 const $ = s => document.querySelector(s);
@@ -1703,6 +1716,10 @@ function refresh() {
   for (const it of state.items) {
     const isSel = it.id === selId; if (!isSel && !bad.has(it.id)) continue;
     const b = boxOf(it), y = (it.elev || 0);
+    if (PRODUCTS[it.type].robot) {   // 掃地機器人是圓的：選取框也畫圓圈
+      const r = (it.w || 35) / 2, ring = new THREE.Mesh(new THREE.RingGeometry(r + 1, r + 3.5, 48), new THREE.MeshBasicMaterial({ color: 0x00436a, transparent: true, opacity: 0.85, depthWrite: false }));
+      ring.rotation.x = -Math.PI / 2; ring.position.copy(furnGroup.localToWorld(new THREE.Vector3(it.x, y + 0.6, it.z))); markGroup.add(ring); continue;
+    }
     markGroup.add(footprint(b, bad.has(it.id) ? 0xc23e4e : 0x00436a, y, isSel));
     if (isSel) { const top = new THREE.Box3Helper(b, bad.has(it.id) ? 0xc23e4e : 0x2d79a8); top.material.transparent = true; top.material.opacity = 0.35; markGroup.add(top); }   // 選到的再加一個很淡的外框
   }
@@ -2143,6 +2160,8 @@ canvas.addEventListener('pointerup', e => {
  * 選到土地公後點地板：用 10 公分的格子找一條繞過家具的路（身體寬 48 公分過得去才算），
  * 手腳擺動走過去；走完告訴你一路上最窄的地方幾公分。完全過不去就說被擋住 */
 const isPerson = it => !!it && PRODUCTS[it.type] && PRODUCTS[it.type].sub === '示意人';
+const isRobot = it => !!it && PRODUCTS[it.type] && !!PRODUCTS[it.type].robot;
+const isGod = it => isPerson(it) && !isRobot(it);
 let stroll = null;
 function strollObstacles(me) {
   const out = [];
@@ -2199,9 +2218,118 @@ function strollWidth(p, dx, dz, obs) {
   const side = sg => { for (let t = 0; t < 300; t += 2) { const x = p.x + nx * t * sg, z = p.z + nz * t * sg; if (Math.abs(x) > W || Math.abs(z) > D) return t; for (const b of obs) if (x > b.min.x && x < b.max.x && z > b.min.z && z < b.max.z) return t; } return 300; };
   return side(1) + side(-1);
 }
+/* ================= 掃地機器人 =================
+ * 用 5 公分的格子，從地板往上打一條線看每一格上面最低的家具有多高：
+ * 低於機器人高度＝鑽不進去；機身（直徑）整個放得下的格子才算開得過去 */
+function robotMap(me) {
+  const C = 5, W = state.room.w, D = state.room.d, nx = Math.max(1, Math.floor(W / C)), nz = Math.max(1, Math.floor(D / C)), H = me.h || 12, N = nx * nz;
+  const under = new Float32Array(N).fill(-1), owner = new Int32Array(N).fill(-1), low = new Uint8Array(N);
+  const cx = i => -W / 2 + (i + 0.5) * W / nx, cz = j => -D / 2 + (j + 0.5) * D / nz;
+  const items = [];
+  for (const o of state.items) {
+    if (o === me) continue; const T = PRODUCTS[o.type];
+    if (o.hidden || T.flat || T.noHit || T.ceil || T.sub === '窗簾' || T.sub === '掛畫' || T.sub === '示意人' || T.sub === '地毯') continue;
+    const g = objs.get(o.id); if (!g) continue; const b = boxOf(o); if (b.min.y > 150) continue;
+    items.push({ o, g, b });
+  }
+  const rc = new THREE.Raycaster(), up = new THREE.Vector3(0, 1, 0), p = new THREE.Vector3();
+  const shown = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    p.set(cx(i), -1, cz(j)); furnGroup.localToWorld(p);
+    let best = Infinity, who = -1;
+    for (let q = 0; q < items.length; q++) {
+      const b = items[q].b; if (p.x < b.min.x || p.x > b.max.x || p.z < b.min.z || p.z > b.max.z) continue;
+      rc.set(p, up); rc.far = 400; const hit = rc.intersectObject(items[q].g, true).find(h => shown(h.object));
+      if (hit && hit.distance - 1 < best) { best = Math.max(0, hit.distance - 1); who = q; }
+    }
+    if (who >= 0) { const k = j * nx + i; under[k] = best; owner[k] = who; if (best < H) low[k] = 1; }
+  }
+  // 機身中心能停的格子：離牆、離「太低的家具」都要至少半徑遠
+  const Rr = (me.w || 35) / 2, rc2 = Math.ceil(Rr / C), blk = new Uint8Array(N);
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const x = cx(i), z = cz(j); if (x < -W / 2 + Rr || x > W / 2 - Rr || z < -D / 2 + Rr || z > D / 2 - Rr) blk[j * nx + i] = 1; }
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) if (low[j * nx + i])
+    for (let b = Math.max(0, j - rc2); b <= Math.min(nz - 1, j + rc2); b++) for (let a = Math.max(0, i - rc2); a <= Math.min(nx - 1, i + rc2); a++)
+      if ((a - i) * (a - i) + (b - j) * (b - j) <= (Rr / C) * (Rr / C)) blk[b * nx + a] = 1;
+  const cell = (x, z) => [clamp(Math.floor((x + W / 2) / W * nx), 0, nx - 1), clamp(Math.floor((z + D / 2) / D * nz), 0, nz - 1)];
+  return { C, W, D, nx, nz, H, under, owner, low, blk, items, cx, cz, cell };
+}
+function astarGrid(nx, nz, blk, S, T0) {         // A*（8 方向、不切牆角），用堆積排序比較快
+  const N = nx * nz, g = new Float32Array(N).fill(Infinity), from = new Int32Array(N).fill(-1), done = new Uint8Array(N);
+  const ti = T0 % nx, tj = (T0 / nx) | 0, hc = k => Math.hypot(k % nx - ti, ((k / nx) | 0) - tj);
+  const heap = [], push = (k, f) => { heap.push([f, k]); let i = heap.length - 1; while (i > 0) { const pa = (i - 1) >> 1; if (heap[pa][0] <= heap[i][0]) break; [heap[pa], heap[i]] = [heap[i], heap[pa]]; i = pa; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = i * 2 + 1, r = l + 1; let m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top[1]; };
+  g[S] = 0; push(S, hc(S));
+  while (heap.length) {
+    const k = pop(); if (k === T0) break; if (done[k]) continue; done[k] = 1;
+    const i = k % nx, j = (k / nx) | 0;
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const a = i + di, b = j + dj; if (a < 0 || b < 0 || a >= nx || b >= nz) continue;
+      const n = b * nx + a; if (blk[n] || done[n]) continue;
+      if (di && dj && (blk[j * nx + a] || blk[b * nx + i])) continue;
+      const ng = g[k] + (di && dj ? 1.4142 : 1); if (ng < g[n]) { g[n] = ng; from[n] = k; push(n, ng + hc(n)); }
+    }
+  }
+  if (S !== T0 && from[T0] < 0) return null;
+  const cells = []; for (let k = T0; k >= 0 && k !== S; k = from[k]) cells.push(k); return cells.reverse();
+}
+function robotPlan(me, tx, tz) {
+  const m = robotMap(me), { nx, blk, cx, cz, cell } = m;
+  const [si, sj] = cell(me.x, me.z), [ti, tj] = cell(tx, tz), S = sj * nx + si, T0 = tj * nx + ti;
+  if (blk[T0]) return { fail: 'spot', m };
+  blk[S] = 0;
+  const cells = astarGrid(nx, m.nz, blk, S, T0); if (!cells) return { fail: 'block', m };
+  const pts = [{ x: me.x, z: me.z }, ...cells.map(k => ({ x: cx(k % nx), z: cz((k / nx) | 0) }))]; pts[pts.length - 1] = { x: tx, z: tz };
+  const free = (a, b) => { const n = Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 2.5); for (let q = 1; q < n; q++) { const [i, j] = cell(a.x + (b.x - a.x) * q / n, a.z + (b.z - a.z) * q / n); if (blk[j * nx + i] && j * nx + i !== S) return false; } return true; };
+  const path = [pts[0]]; let a = 0;
+  while (a < pts.length - 1) { let b = pts.length - 1; while (b > a + 1 && !free(pts[a], pts[b])) b--; path.push(pts[b]); a = b; }
+  return { path, m };
+}
+// 看哪裡掃得到：地上畫顏色（綠＝家具底下掃得到、紅＝太低鑽不進去、橘＝高度夠但腳太密機身塞不進去），旁邊列出每件家具底下幾公分
+let vacOverlay = null;
+function clearVacMap() { if (vacOverlay) { scene.remove(vacOverlay); vacOverlay.material.map.dispose(); vacOverlay.material.dispose(); vacOverlay.geometry.dispose(); vacOverlay = null; } $('#vac-panel').hidden = true; }
+function showVacMap(me) {
+  clearVacMap();
+  const m = robotMap(me), { nx, nz, blk, low, under, owner, items, H, cell } = m;
+  // 從機器人現在的位置能開到哪些格子
+  const reach = new Uint8Array(nx * nz), [si, sj] = cell(me.x, me.z), q = [sj * nx + si]; reach[q[0]] = 1;
+  for (let h = 0; h < q.length; h++) { const k = q[h], i = k % nx, j = (k / nx) | 0; for (const [a, b] of [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]]) { if (a < 0 || b < 0 || a >= nx || b >= nz) continue; const n = b * nx + a; if (!blk[n] && !reach[n]) { reach[n] = 1; q.push(n); } } }
+  // 機身蓋得到的格子（中心能到 → 半徑內都掃得到）
+  const Rc = Math.ceil((me.w || 35) / 2 / m.C), cover = new Uint8Array(nx * nz);
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) if (reach[j * nx + i])
+    for (let b = Math.max(0, j - Rc); b <= Math.min(nz - 1, j + Rc); b++) for (let a = Math.max(0, i - Rc); a <= Math.min(nx - 1, i + Rc); a++) if ((a - i) ** 2 + (b - j) ** 2 <= Rc * Rc) cover[b * nx + a] = 1;
+  const c = document.createElement('canvas'); c.width = nx; c.height = nz; const x = c.getContext('2d'), img = x.createImageData(nx, nz);
+  const stat = items.map(() => ({ n: 0, ok: 0, hs: [] }));
+  for (let k = 0; k < nx * nz; k++) {
+    if (owner[k] < 0) continue; const st = stat[owner[k]]; st.n++; st.hs.push(under[k]);
+    let col; if (low[k]) col = [226, 72, 60]; else if (cover[k]) { col = [46, 180, 100]; st.ok++; } else col = [240, 160, 40];
+    img.data.set([...col, 150], k * 4);
+  }
+  x.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(c); tex.magFilter = THREE.NearestFilter; tex.colorSpace = THREE.SRGBColorSpace;
+  vacOverlay = new THREE.Mesh(new THREE.PlaneGeometry(m.W, m.D), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false, opacity: 0.85 }));   // 蓋在家具上面畫，平面圖一看就知道
+  vacOverlay.rotation.x = -Math.PI / 2; vacOverlay.position.copy(furnGroup.localToWorld(new THREE.Vector3(0, 0.7, 0))); vacOverlay.raycast = () => { }; vacOverlay.renderOrder = 10; scene.add(vacOverlay);
+  const rows = items.map((t, i) => ({ t, st: stat[i] })).filter(r => r.st.n > 0).map(r => {
+    const hs = r.st.hs.sort((a, b) => a - b), med = Math.round(hs[Math.floor(hs.length * 0.6)]), pct = Math.round(r.st.ok / r.st.n * 100), nm = esc(PRODUCTS[r.t.o.type].name);
+    if (med < H) return [0, `⛔ ${nm}：底下約 ${med} 公分，鑽不進去`];
+    if (pct >= 60) return [2, `✅ ${nm}：底下約 ${med} 公分，掃得到（約 ${pct}%）`];
+    return [1, `⚠️ ${nm}：底下約 ${med} 公分，高度夠，但只掃得到約 ${pct}%（腳或旁邊太擠）`];
+  }).sort((a, b) => a[0] - b[0]);
+  $('#vac-panel').innerHTML = `<button class="x" id="vac-x" aria-label="關閉">×</button><b>掃地機器人（高 ${H} 公分、直徑 ${me.w || 35} 公分）</b>
+    <div class="lg"><span><i style="background:#2eb464"></i>掃得到</span><span><i style="background:#e2483c"></i>太低鑽不進去</span><span><i style="background:#f0a028"></i>高度夠但塞不進去</span></div>
+    <ul>${rows.length ? rows.map(r => '<li>' + r[1] + '</li>').join('') : '<li>這個空間沒有放在地上的家具</li>'}</ul>`;
+  $('#vac-panel').hidden = false;
+  $('#vac-x').onclick = clearVacMap;
+}
 function strollTo(it, p) {
   if (!p || !it) return;
   if (it.locked) { lockedMsg(it); return; }
+  if (isRobot(it)) {
+    const r = robotPlan(it, p.x, p.z);
+    if (r.fail === 'spot') { toast('那裡機器人到不了（離牆太近，或家具底下太低）'); return; }
+    if (r.fail === 'block') { toast('掃地機器人過不去：路被擋住了（家具底下要 ' + (it.h || 12) + ' 公分以上才鑽得進去）', 6000); return; }
+    stroll = { it, robot: true, m: r.m, under: new Map(), path: r.path, seg: 0, t: 0, phase: 0, last: performance.now(), walked: 0, before: JSON.stringify(state) };
+    return;
+  }
   const r = strollPlan(it, p.x, p.z);
   if (r.fail === 'spot') { toast('那裡站不下（離家具或牆太近）'); return; }
   if (r.fail === 'block') { toast('走不過去：路被家具擋住了，最少要留 ' + Math.round(Math.max(48, it.w || 48)) + ' 公分寬'); return; }
@@ -2211,7 +2339,7 @@ function strollTo(it, p) {
 function strollFrame() {
   const s = stroll, now = performance.now(), dt = Math.min(0.05, (now - s.last) / 1000); s.last = now;
   const g = objs.get(s.it.id); if (!g || !state.items.includes(s.it)) { stroll = null; return; }
-  let step = 110 * dt;                                                   // 每秒 110 公分（一般走路速度）
+  let step = (s.robot ? 45 : 110) * dt;                                  // 土地公每秒 110 公分；掃地機器人每秒 45 公分
   while (step > 0 && s.seg < s.path.length - 1) {
     const a = s.path[s.seg], b = s.path[s.seg + 1], L = Math.hypot(b.x - a.x, b.z - a.z) || 1e-6;
     const dx = (b.x - a.x) / L, dz = (b.z - a.z) / L, left = L - s.t, mv = Math.min(step, left);
@@ -2219,8 +2347,19 @@ function strollFrame() {
     s.it.x = a.x + dx * s.t; s.it.z = a.z + dz * s.t;
     const want = Math.atan2(-dx, dz) / deg; let cur0 = s.it.rot || 0, d = ((want - cur0 + 540) % 360) - 180;
     s.it.rot = (cur0 + d * Math.min(1, dt * 10) + 360) % 360;              // 慢慢轉向，不要一下子轉過去
-    if (s.walked > 25 && s.walked % 6 < mv + 0.01) s.minW = Math.min(s.minW, strollWidth(s.it, dx, dz, s.obs));
+    if (s.robot) { const m = s.m, [i, j] = m.cell(s.it.x, s.it.z), k = j * m.nx + i; if (m.owner[k] >= 0 && m.under[k] >= m.H) { const nm = PRODUCTS[m.items[m.owner[k]].o.type].name; s.under.set(nm, Math.min(s.under.get(nm) ?? 999, Math.round(m.under[k]))); } }
+    else if (s.walked > 25 && s.walked % 6 < mv + 0.01) s.minW = Math.min(s.minW, strollWidth(s.it, dx, dz, s.obs));
     if (s.t >= L - 1e-3) { s.seg++; s.t = 0; }
+  }
+  if (s.robot) {                                                          // 掃地機器人：開到就停
+    g.position.set(s.it.x, s.it.elev || 0, s.it.z); g.rotation.y = -s.it.rot * deg;
+    s.rt = (s.rt || 0) + dt; if (s.rt > 0.12) { s.rt = 0; refresh(); }
+    if (s.seg >= s.path.length - 1) {
+      stroll = null; s.it.rot = Math.round(s.it.rot); undoStack.push(s.before); $('#undo').disabled = false; makeObj(s.it); refresh(); save();
+      const list = [...s.under].map(([n, h]) => n + '（底下 ' + h + ' 公分）');
+      toast('🤖 掃地機器人到了 ' + (list.length ? '✅ 有鑽過：' + list.join('、') : '・一路沒有鑽到家具底下'), 30000);
+    }
+    return;
   }
   const arrived = s.seg >= s.path.length - 1, R = Math.random;
   if (!s.halo) s.halo = fxRing();
@@ -2303,28 +2442,39 @@ function sparkFrame() {
   if (!sparks.length) sparkLast = 0;
 }
 function syncStrollChip() {
-  const on = isPerson(cur()) && !showMode && !overview && !(walk && walk.on);
-  $('#stroll-chip').hidden = !on; $('#tudi-btn').hidden = on;   // 提示條出現時先收起「請土地公」，手機才不會擠在一起
+  if (!isRobot(cur())) clearVacMap();
+  const it = cur(), on = isPerson(it) && !showMode && !overview && !(walk && walk.on), rb = on && isRobot(it);
+  $('#stroll-chip').hidden = !on; $('#tudi-btn').hidden = on; $('#vac-btn').hidden = on;   // 提示條出現時先收起右上按鈕，手機才不會擠在一起
+  $('#stroll-txt').textContent = rb ? '點地板，機器人就開過去' : '點地板，土地公就會走過去';
+  $('#vac-map').hidden = !rb;
+}
+// 放到一塊沒有家具的空地（從房間中間往外找）
+function placeFree(it) {
+  const obs = strollObstacles(it), Rr = (it.w || 46) / 2 + 5, W = state.room.w / 2 - Rr, D = state.room.d / 2 - Rr;
+  const ok = (x, z) => Math.abs(x) <= W && Math.abs(z) <= D && !obs.some(b => x > b.min.x - Rr && x < b.max.x + Rr && z > b.min.z - Rr && z < b.max.z + Rr);
+  let spot = null;
+  for (let r = 0; r < Math.max(W, D) * 2 && !spot; r += 20) for (let k = 0; k < Math.max(1, r / 10) && !spot; k++) { const t = k / Math.max(1, r / 10) * Math.PI * 2, x = Math.sin(t) * r, z = Math.cos(t) * r; if (ok(x, z)) spot = [x, z]; }
+  if (spot) { it.x = Math.round(spot[0]); it.z = Math.round(spot[1]); const g0 = objs.get(it.id); if (g0) g0.position.set(it.x, it.elev || 0, it.z); refresh(); save(); }
 }
 // 請土地公：從天而降出現在空位上，選好等你點地板
 $('#tudi-btn').onclick = () => {
   if (stroll) return;
-  let it = state.items.find(isPerson);
-  if (!it) {
-    addItem('person'); it = cur(); if (!it) return;
-    // 找一塊沒有家具的空地站（從中間往外找）
-    const obs = strollObstacles(it), Rr = (it.w || 46) / 2 + 5, W = state.room.w / 2 - Rr, D = state.room.d / 2 - Rr;
-    const ok = (x, z) => Math.abs(x) <= W && Math.abs(z) <= D && !obs.some(b => x > b.min.x - Rr && x < b.max.x + Rr && z > b.min.z - Rr && z < b.max.z + Rr);
-    let spot = null;
-    for (let r = 0; r < Math.max(W, D) * 2 && !spot; r += 20) for (let k = 0; k < Math.max(1, r / 10) && !spot; k++) { const t = k / Math.max(1, r / 10) * Math.PI * 2, x = Math.sin(t) * r, z = Math.cos(t) * r; if (ok(x, z)) spot = [x, z]; }
-    if (spot) { it.x = Math.round(spot[0]); it.z = Math.round(spot[1]); const g0 = objs.get(it.id); if (g0) g0.position.set(it.x, 0, it.z); refresh(); save(); }
-  }
+  let it = state.items.find(isGod);
+  if (!it) { addItem('person'); it = cur(); if (!it) return; placeFree(it); }
   else select(it.id);
   fxPillar(it);
   const g = objs.get(it.id); if (g) { g.scale.setScalar(0.001); const t0 = performance.now(); const grow = () => { const k = Math.min(1, (performance.now() - t0) / 450); g.scale.setScalar(Math.max(0.001, k * k * (3 - 2 * k))); if (k < 1) requestAnimationFrame(grow); }; setTimeout(grow, 250); }
   toast('土地公來了 🙏 點地板，祂就會走過去');
 };
 $('#stroll-done').onclick = () => { if (stroll && stroll.halo) scene.remove(stroll.halo); stroll = null; select(null); };
+$('#vac-map').onclick = () => { const it = cur(); if (isRobot(it)) showVacMap(it); };
+$('#vac-btn').onclick = () => {
+  if (stroll) return;
+  let it = state.items.find(isRobot);
+  if (!it) { addItem('robotVac'); it = cur(); if (!it) return; placeFree(it); }
+  else select(it.id);
+  toast('掃地機器人來了 🤖');
+};
 
 /* ================= 商品庫（縮圖自動產生） ================= */
 function renderLib() {
@@ -2335,7 +2485,7 @@ function renderLib() {
   for (const s of SUBS) {
     const keys = Object.keys(PRODUCTS).filter(k => PRODUCTS[k].sub === s && !PRODUCTS[k].libHide); if (!keys.length) continue;   // libHide：不列在商品庫
     const a = PROMOTE.has(s) ? keys.sort((x, y) => (PRODUCTS[x].generic ? 1 : 0) - (PRODUCTS[y].generic ? 1 : 0)) : keys.filter(k => !PRODUCTS[k].generic), b = PROMOTE.has(s) ? [] : keys.filter(k => PRODUCTS[k].generic);
-    const F2 = s === '餐桌' ? [['all', '全部'], ['pedestal', '中柱腳'], ['legs', '四支腳'], ['other', '其他造型']] : s === '床台' ? [['all', '全部'], ['floor', '落地款'], ['raised', '架高款'], ['inset', '內嵌款']] : FORMS;
+    const F2 = s === '餐桌' ? [['all', '全部'], ['pedestal', '中柱腳'], ['legs', '四支腳'], ['other', '其他造型']] : s === '床台' ? [['all', '全部'], ['floor', '落地款'], ['raised', '架高款']] : FORMS;
     const chips = s === '茶几' || s === '餐桌' || s === '床台' ? `<div class="formbar" data-forms>${F2.filter(([f]) => f === 'all' || a.some(k => PRODUCTS[k].form === f)).map(([f, n]) => `<button data-form="${f}" class="${f === 'all' ? 'on' : ''}">${n}</button>`).join('')}</div>` : '';
     if (a.length) own += `<section data-sub="${s}"><h3>${s}</h3>${chips}<div class="grid">${a.map(card).join('')}</div></section>`;
     if (b.length) more += `<section data-sub="${s}"><h3>${s}</h3><div class="grid">${b.map(card).join('')}</div></section>`;
@@ -2352,11 +2502,12 @@ $('#lib').addEventListener('click', e => {
 $('#lib-more-btn').onclick = () => { const m = $('#lib-more'); m.hidden = !m.hidden; $('#lib-more-btn').classList.toggle('on', !m.hidden); };
 let libAll = false;
 function filterLib() {                          // 只列出適合目前空間的分類；按「看全部」列出所有
-  const subs = SPACE_TYPES[state.type].subs;
-  document.querySelectorAll('#pane-lib section').forEach(sec => { sec.style.display = libAll || subs.includes(sec.dataset.sub) ? '' : 'none'; });
+  const subs = SPACE_TYPES[state.type].subs, everything = ['living', 'ld'].includes(state.type), all = libAll || everything;   // 客廳、客餐廳：所有分類都列出來
+  document.querySelectorAll('#pane-lib section').forEach(sec => { sec.style.display = all || subs.includes(sec.dataset.sub) ? '' : 'none'; });
   $('#lib-more-btn').hidden = ![...document.querySelectorAll('#lib-more section')].some(sec => sec.style.display !== 'none');
   if (state.type === 'bath') { $('#lib-more').hidden = false; $('#lib-more-btn').classList.add('on'); }   // 衛浴：馬桶、洗手台、淋浴、浴缸都在一般款，直接打開
-  $('#lib-for').textContent = libAll ? '全部商品' : `適合${SPACE_TYPES[state.type].name}的家具`;
+  $('#lib-for').textContent = all ? '全部商品' : `適合${SPACE_TYPES[state.type].name}的家具`;
+  $('#lib-all').hidden = everything;
   $('#lib-all').textContent = libAll ? `只看${SPACE_TYPES[state.type].name}` : '看全部';
   $('#catbar').innerHTML = [...document.querySelectorAll('#lib section')].filter(sec => sec.style.display !== 'none').map(sec => `<button data-sub="${sec.dataset.sub}">${sec.dataset.sub}</button>`).join('')
     + ($('#lib-more-btn').hidden ? '' : '<button data-sub="__more">其他家具與佈置</button>');
